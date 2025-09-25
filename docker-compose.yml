@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: refdata
+      POSTGRES_USER: refdata
+      POSTGRES_PASSWORD: refdata
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U refdata']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - '5432:5432'
+
+  api:
+    build:
+      context: ./api
+    environment:
+      REFDATA_DATABASE_URL: postgresql+psycopg://refdata:refdata@db:5432/refdata
+      REFDATA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '8000:8000'
+
+  reviewer-ui:
+    build:
+      context: ./reviewer-ui
+      args:
+        VITE_API_BASE_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - '5173:80'
+
+volumes:
+  db_data:
