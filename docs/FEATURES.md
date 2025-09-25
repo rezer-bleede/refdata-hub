@@ -14,6 +14,7 @@
 - Offer UI and API pathways for reviewers to approve or reject suggestions.
 - Enable reviewers to add new mappings, merge duplicates, and maintain a clean catalog.
 - Track an auditable history recording who approved each change and when it happened.
+- Provide a Material UI-powered reviewer console with selectable dark, warm, cool, and lively themes for comfortable accessibility in varied environments.
 
 ## 4. Integration & Access
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.

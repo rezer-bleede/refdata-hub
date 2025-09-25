@@ -14,7 +14,7 @@ This command starts:
 
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
-- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173`.
+- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Material UI design system and multi-theme support.
 
 The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`.
 
@@ -31,7 +31,7 @@ The first boot performs all schema creation and seeding automatically. All runti
 └── README.md
 ```
 
-Each directory currently contains a placeholder `.gitkeep` file to keep the structure under version control. Implementation details will evolve as components are developed.
+Each directory currently contains a placeholder `.gitkeep` file to keep the structure under version control. Implementation details will evolve as components are developed. The Reviewer UI now ships with a polished Material UI experience that can switch between accessible dark, warm, cool, and lively themes directly from the header.
 
 ## Feature Breakdown
 
