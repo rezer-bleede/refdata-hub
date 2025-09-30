@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlmodel import Session, select
 
 from ..database import get_session
 from ..matcher import SemanticMatcher
 from ..models import CanonicalValue, RawValue, SystemConfig
-from ..schemas import CanonicalValueCreate, CanonicalValueRead, MatchRequest, MatchResponse
+from ..schemas import (
+    CanonicalValueCreate,
+    CanonicalValueRead,
+    CanonicalValueUpdate,
+    MatchRequest,
+    MatchResponse,
+)
 
 router = APIRouter(prefix="/reference", tags=["reference"])
 
@@ -31,11 +37,48 @@ def create_canonical_value(
 ) -> CanonicalValue:
     """Create and persist a canonical value."""
 
-    canonical = CanonicalValue(**payload.dict())
+    canonical = CanonicalValue(**payload.model_dump())
     session.add(canonical)
     session.commit()
     session.refresh(canonical)
     return canonical
+
+
+@router.put("/canonical/{canonical_id}", response_model=CanonicalValueRead)
+def update_canonical_value(
+    canonical_id: int,
+    payload: CanonicalValueUpdate,
+    session: Session = Depends(get_session),
+) -> CanonicalValue:
+    """Update an existing canonical value."""
+
+    canonical = session.get(CanonicalValue, canonical_id)
+    if not canonical:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Canonical value not found")
+
+    data = payload.model_dump(exclude_unset=True)
+    for key, value in data.items():
+        setattr(canonical, key, value)
+
+    session.add(canonical)
+    session.commit()
+    session.refresh(canonical)
+    return canonical
+
+
+@router.delete("/canonical/{canonical_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_canonical_value(
+    canonical_id: int, session: Session = Depends(get_session)
+) -> Response:
+    """Remove a canonical value."""
+
+    canonical = session.get(CanonicalValue, canonical_id)
+    if not canonical:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Canonical value not found")
+
+    session.delete(canonical)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/propose", response_model=MatchResponse)

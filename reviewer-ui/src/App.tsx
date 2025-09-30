@@ -1,262 +1,104 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Container,
-  CssBaseline,
-  Divider,
-  FormControl,
-  Grid,
-  InputLabel,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
-  Paper,
-  Select,
-  Snackbar,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Toolbar,
-  Typography,
-} from '@mui/material';
-import { createTheme, responsiveFontSizes, ThemeProvider } from '@mui/material/styles';
-import {
-  createCanonicalValue,
-  fetchCanonicalValues,
-  fetchConfig,
-  proposeMatch,
-  updateConfig,
-} from './api';
-import { themeDefinitions, themeOrder, ThemeChoice } from './themes';
-import type { CanonicalValue, MatchCandidate, MatchResponse, SystemConfig } from './types';
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
+import { Alert, AppBar, Box, Button, Chip, CircularProgress, Container, CssBaseline, FormControl, IconButton, InputLabel, ListItemIcon, ListItemText, MenuItem, Select, Snackbar, Stack, Toolbar, Typography } from '@mui/material';
+import { ThemeProvider, createTheme, responsiveFontSizes } from '@mui/material/styles';
 
-interface ToastMessage {
-  type: 'success' | 'error';
-  content: string;
+import ConnectionsPage from './pages/ConnectionsPage';
+import DashboardPage from './pages/DashboardPage';
+import FieldMappingsPage from './pages/FieldMappingsPage';
+import MappingHistoryPage from './pages/MappingHistoryPage';
+import MatchInsightsPage from './pages/MatchInsightsPage';
+import SuggestionsPage from './pages/SuggestionsPage';
+import { AppStateProvider, useAppState } from './state/AppStateContext';
+import { themeDefinitions, themeOrder, ThemeChoice } from './themes';
+import type { ToastMessage } from './types';
+
+interface AppScaffoldProps {
+  themeChoice: ThemeChoice;
+  onThemeChange: (choice: ThemeChoice) => void;
+  toast: ToastMessage | null;
+  toastKey: number;
+  onToast: (toast: ToastMessage) => void;
+  onCloseToast: () => void;
 }
 
-const matcherOptions = [
-  { value: 'embedding', label: 'Embedding based (default)' },
-  { value: 'llm', label: 'LLM orchestration' },
+interface NavItem {
+  path: string;
+  label: string;
+}
+
+const navItems: NavItem[] = [
+  { path: '/dashboard', label: 'Dashboard' },
+  { path: '/connections', label: 'Source Connections' },
+  { path: '/field-mappings', label: 'Field Mappings' },
+  { path: '/match-insights', label: 'Match Insights' },
+  { path: '/suggestions', label: 'Suggestions' },
+  { path: '/mapping-history', label: 'Mapping History' },
 ];
 
-const App = () => {
-  const [config, setConfig] = useState<SystemConfig | null>(null);
-  const [canonicalValues, setCanonicalValues] = useState<CanonicalValue[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [configDraft, setConfigDraft] = useState<Record<string, string>>({});
-  const [matchInput, setMatchInput] = useState('');
-  const [matchDimension, setMatchDimension] = useState('');
-  const [matchResults, setMatchResults] = useState<MatchResponse | null>(null);
-  const [newCanonical, setNewCanonical] = useState({
-    dimension: '',
-    canonical_label: '',
-    description: '',
-  });
-  const [savingConfig, setSavingConfig] = useState(false);
-  const [runningMatch, setRunningMatch] = useState(false);
-  const [creatingCanonical, setCreatingCanonical] = useState(false);
-  const [themeChoice, setThemeChoice] = useState<ThemeChoice>('dark');
+const AppScaffold = ({
+  themeChoice,
+  onThemeChange,
+  toast,
+  toastKey,
+  onToast,
+  onCloseToast,
+}: AppScaffoldProps) => {
+  const { config, isLoading, loadError, refresh } = useAppState();
+  const location = useLocation();
 
-  const theme = useMemo(
-    () => responsiveFontSizes(createTheme(themeDefinitions[themeChoice].options)),
-    [themeChoice],
-  );
-
-  const availableDimensions = useMemo(() => {
-    const dimensionSet = new Set<string>();
-    canonicalValues.forEach((value) => dimensionSet.add(value.dimension));
-    if (config?.default_dimension) {
-      dimensionSet.add(config.default_dimension);
-    }
-    return Array.from(dimensionSet).sort();
-  }, [canonicalValues, config?.default_dimension]);
-
-  const loadInitialData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [configResponse, canonicalResponse] = await Promise.all([
-        fetchConfig(),
-        fetchCanonicalValues(),
-      ]);
-      setConfig(configResponse);
-      setCanonicalValues(
-        canonicalResponse.sort((a, b) => a.canonical_label.localeCompare(b.canonical_label)),
-      );
-    } catch (error) {
-      console.error(error);
-      setToast({ type: 'error', content: 'Failed to load initial data' });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const handleRefresh = useCallback(async () => {
+    const ok = await refresh();
+    onToast({ type: ok ? 'success' : 'error', content: ok ? 'Synchronized with backend' : 'Unable to refresh all resources' });
+  }, [onToast, refresh]);
 
   useEffect(() => {
-    void loadInitialData();
-  }, [loadInitialData]);
-
-  const handleConfigChange = (key: string, value: string) => {
-    setConfigDraft((draft) => ({ ...draft, [key]: value }));
-  };
-
-  const handleSaveConfig = async () => {
-    if (!config) return;
-    setSavingConfig(true);
-    setToast(null);
-    try {
-      const payload: Record<string, string | number> = {};
-      Object.entries(configDraft).forEach(([key, value]) => {
-        if (value !== '') {
-          if (key === 'match_threshold' || key === 'top_k') {
-            payload[key] = Number(value);
-          } else {
-            payload[key] = value;
-          }
-        }
-      });
-      const updated = await updateConfig(payload);
-      setConfig(updated);
-      setConfigDraft({});
-      setToast({ type: 'success', content: 'Configuration updated' });
-    } catch (error) {
-      console.error(error);
-      setToast({ type: 'error', content: 'Unable to update configuration' });
-    } finally {
-      setSavingConfig(false);
+    if (loadError) {
+      onToast({ type: 'error', content: loadError });
     }
-  };
-
-  const handleRunMatch = async () => {
-    if (!matchInput.trim()) {
-      setToast({ type: 'error', content: 'Enter a raw value to match.' });
-      return;
-    }
-    setRunningMatch(true);
-    setToast(null);
-    try {
-      const response = await proposeMatch(matchInput.trim(), matchDimension || undefined);
-      setMatchResults(response);
-    } catch (error) {
-      console.error(error);
-      setToast({ type: 'error', content: 'Matching request failed' });
-    } finally {
-      setRunningMatch(false);
-    }
-  };
-
-  const handleCreateCanonical = async () => {
-    if (!newCanonical.dimension || !newCanonical.canonical_label) {
-      setToast({
-        type: 'error',
-        content: 'Provide dimension and label to create a canonical value.',
-      });
-      return;
-    }
-    setCreatingCanonical(true);
-    setToast(null);
-    try {
-      const created = await createCanonicalValue(newCanonical);
-      setCanonicalValues((values) =>
-        [...values, created].sort((a, b) => a.canonical_label.localeCompare(b.canonical_label)),
-      );
-      setNewCanonical({ dimension: '', canonical_label: '', description: '' });
-      setToast({ type: 'success', content: 'Canonical value added' });
-    } catch (error) {
-      console.error(error);
-      setToast({ type: 'error', content: 'Failed to add canonical value' });
-    } finally {
-      setCreatingCanonical(false);
-    }
-  };
-
-  const renderMatches = (matches: MatchCandidate[]) => {
-    if (!matches.length) {
-      return (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No matches met the configured threshold.
-        </Alert>
-      );
-    }
-
-    return (
-      <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
-        <Table size="small" aria-label="match results">
-          <TableHead>
-            <TableRow>
-              <TableCell>Label</TableCell>
-              <TableCell>Dimension</TableCell>
-              <TableCell>Score</TableCell>
-              <TableCell>Description</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {matches.map((match) => (
-              <TableRow key={match.canonical_id} hover>
-                <TableCell width="25%">{match.canonical_label}</TableCell>
-                <TableCell width="20%">{match.dimension}</TableCell>
-                <TableCell width="15%">{(match.score * 100).toFixed(1)}%</TableCell>
-                <TableCell>{match.description || '—'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    );
-  };
+  }, [loadError, onToast]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline enableColorScheme />
-      <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 6 }}>
-        <AppBar
-          position="sticky"
-          color="default"
-          elevation={0}
-          sx={{
-            backgroundImage: 'none',
-            borderBottom: 1,
-            borderColor: 'divider',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <Toolbar sx={{ gap: 3, alignItems: { xs: 'flex-start', sm: 'center' }, py: 2 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h5" fontWeight={600} gutterBottom>
-                RefData Hub
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Ship defaults instantly and route incremental changes through the reviewer UI.
-              </Typography>
-            </Box>
-            {config && (
-              <Chip
-                label={`Matcher: ${config.matcher_backend}`}
-                color="secondary"
-                variant="outlined"
-                sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
-              />
-            )}
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', pb: 6 }}>
+      <AppBar
+        position="sticky"
+        color="default"
+        elevation={0}
+        sx={{
+          backgroundImage: 'none',
+          borderBottom: 1,
+          borderColor: 'divider',
+          backdropFilter: 'blur(12px)',
+        }}
+      >
+        <Toolbar sx={{ flexWrap: 'wrap', gap: 2, py: 2 }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h5" fontWeight={600} gutterBottom>
+              RefData Hub
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Govern canonical reference data, source mappings, and match quality in one place.
+            </Typography>
+          </Box>
+
+          {config && (
+            <Chip
+              label={`Matcher: ${config.matcher_backend}`}
+              color="secondary"
+              variant="outlined"
+              sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
+            />
+          )}
+
+          <Stack direction="row" spacing={1} alignItems="center">
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <InputLabel id="theme-select-label">Theme</InputLabel>
               <Select
                 labelId="theme-select-label"
                 label="Theme"
                 value={themeChoice}
-                onChange={(event) => setThemeChoice(event.target.value as ThemeChoice)}
+                onChange={(event) => onThemeChange(event.target.value as ThemeChoice)}
               >
                 {themeOrder.map((choice) => (
                   <MenuItem key={choice} value={choice}>
@@ -276,310 +118,90 @@ const App = () => {
                 ))}
               </Select>
             </FormControl>
-          </Toolbar>
-        </AppBar>
 
-        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
-          {toast && (
-            <Snackbar
-              open
-              autoHideDuration={6000}
-              onClose={() => setToast(null)}
-              anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-              <Alert
-                onClose={() => setToast(null)}
-                severity={toast.type}
-                variant="filled"
-                sx={{ width: '100%' }}
+            <IconButton aria-label="Refresh" onClick={() => void handleRefresh()}>
+              {isLoading ? <CircularProgress size={22} /> : <RefreshRoundedIcon />}
+            </IconButton>
+          </Stack>
+        </Toolbar>
+        <Toolbar sx={{ gap: 1, flexWrap: 'wrap', pb: 2 }}>
+          {navItems.map((item) => {
+            const active = location.pathname.startsWith(item.path);
+            return (
+              <Button
+                key={item.path}
+                variant={active ? 'contained' : 'text'}
+                color={active ? 'primary' : 'inherit'}
+                component={Link}
+                to={item.path}
               >
-                {toast.content}
-              </Alert>
-            </Snackbar>
-          )}
+                {item.label}
+              </Button>
+            );
+          })}
+        </Toolbar>
+      </AppBar>
 
-          {isLoading ? (
-            <Paper elevation={0} variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
-              <CircularProgress size={32} sx={{ mb: 2 }} />
-              <Typography variant="body1">Loading application state…</Typography>
-            </Paper>
-          ) : (
-            <Stack spacing={4} component="main">
-              <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="h6" fontWeight={600} gutterBottom>
-                      Runtime Configuration
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Updates persist instantly and drive the semantic matcher—no environment variables required.
-                    </Typography>
-                  </Box>
-                  {config && (
-                    <Grid container spacing={2} columns={{ xs: 1, sm: 6, md: 12 }}>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="Default Dimension"
-                          defaultValue={config.default_dimension}
-                          fullWidth
-                          onChange={(event) => handleConfigChange('default_dimension', event.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="Match Threshold"
-                          type="number"
-                          inputProps={{ step: 0.05, min: 0, max: 1 }}
-                          defaultValue={config.match_threshold}
-                          fullWidth
-                          onChange={(event) => handleConfigChange('match_threshold', event.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <FormControl fullWidth>
-                          <InputLabel id="matcher-backend-label">Matcher Backend</InputLabel>
-                          <Select
-                            labelId="matcher-backend-label"
-                            label="Matcher Backend"
-                            defaultValue={config.matcher_backend}
-                            onChange={(event) => handleConfigChange('matcher_backend', event.target.value)}
-                          >
-                            {matcherOptions.map((option) => (
-                              <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="Embedding Model"
-                          defaultValue={config.embedding_model}
-                          fullWidth
-                          onChange={(event) => handleConfigChange('embedding_model', event.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="LLM Model"
-                          placeholder="gpt-4o-mini"
-                          defaultValue={config.llm_model ?? ''}
-                          fullWidth
-                          onChange={(event) => handleConfigChange('llm_model', event.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="LLM API Base URL"
-                          placeholder="https://api.openai.com/v1"
-                          defaultValue={config.llm_api_base ?? ''}
-                          fullWidth
-                          onChange={(event) => handleConfigChange('llm_api_base', event.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="LLM API Key"
-                          type="password"
-                          placeholder={
-                            config.llm_api_key_set ? 'Key already stored' : 'Paste secret key'
-                          }
-                          fullWidth
-                          onChange={(event) => handleConfigChange('llm_api_key', event.target.value)}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={6}>
-                        <TextField
-                          label="Top K Results"
-                          type="number"
-                          inputProps={{ min: 1, max: 20 }}
-                          defaultValue={config.top_k}
-                          fullWidth
-                          onChange={(event) => handleConfigChange('top_k', event.target.value)}
-                        />
-                      </Grid>
-                    </Grid>
-                  )}
-                  <Box>
-                    <Button
-                      variant="contained"
-                      onClick={() => void handleSaveConfig()}
-                      disabled={savingConfig}
-                      startIcon={<SaveRoundedIcon />}
-                    >
-                      {savingConfig ? 'Saving…' : 'Save Configuration'}
-                    </Button>
-                  </Box>
-                </Stack>
-              </Paper>
+      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage onToast={onToast} />} />
+          <Route path="/connections" element={<ConnectionsPage onToast={onToast} />} />
+          <Route path="/field-mappings" element={<FieldMappingsPage onToast={onToast} />} />
+          <Route path="/match-insights" element={<MatchInsightsPage onToast={onToast} />} />
+          <Route path="/suggestions" element={<SuggestionsPage onToast={onToast} />} />
+          <Route path="/mapping-history" element={<MappingHistoryPage onToast={onToast} />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Container>
 
-              <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-                <Stack spacing={3}>
-                  <Box>
-                    <Typography variant="h6" fontWeight={600} gutterBottom>
-                      Semantic Match Playground
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Experiment with live inputs to see how the matcher responds across dimensions.
-                    </Typography>
-                  </Box>
-                  <Box
-                    component="form"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void handleRunMatch();
-                    }}
-                  >
-                    <Stack spacing={2}>
-                      <TextField
-                        label="Raw value"
-                        placeholder="Enter a raw data value to match"
-                        multiline
-                        minRows={3}
-                        value={matchInput}
-                        onChange={(event) => setMatchInput(event.target.value)}
-                        fullWidth
-                      />
-                      <FormControl fullWidth>
-                        <InputLabel id="dimension-label">Dimension (optional)</InputLabel>
-                        <Select
-                          labelId="dimension-label"
-                          label="Dimension (optional)"
-                          value={matchDimension}
-                          onChange={(event) => setMatchDimension(event.target.value)}
-                        >
-                          <MenuItem value="">Use default</MenuItem>
-                          {availableDimensions.map((dimension) => (
-                            <MenuItem key={dimension} value={dimension}>
-                              {dimension}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <Box>
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          disabled={runningMatch}
-                          startIcon={<PlayArrowRoundedIcon />}
-                        >
-                          {runningMatch ? 'Matching…' : 'Run Match'}
-                        </Button>
-                      </Box>
-                    </Stack>
-                  </Box>
-                  {matchResults && (
-                    <Box>
-                      <Divider sx={{ mb: 2 }} />
-                      <Typography variant="subtitle1" fontWeight={600}>
-                        Matches for “{matchResults.raw_text}”
-                      </Typography>
-                      {renderMatches(matchResults.matches)}
-                    </Box>
-                  )}
-                </Stack>
-              </Paper>
+      {toast && (
+        <Snackbar
+          key={toastKey}
+          open
+          autoHideDuration={6000}
+          onClose={onCloseToast}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={onCloseToast} severity={toast.type} variant="filled" sx={{ width: '100%' }}>
+            {toast.content}
+          </Alert>
+        </Snackbar>
+      )}
+    </Box>
+  );
+};
 
-              <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-                <Stack spacing={3}>
-                  <Box>
-                    <Typography variant="h6" fontWeight={600} gutterBottom>
-                      Canonical Library
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Bootstrap reviewers with rich defaults and grow the knowledge base over time.
-                    </Typography>
-                  </Box>
-                  <Box
-                    component="form"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      void handleCreateCanonical();
-                    }}
-                  >
-                    <Grid container spacing={2} columns={{ xs: 1, sm: 6, md: 12 }}>
-                      <Grid item xs={1} sm={3} md={4}>
-                        <TextField
-                          label="Dimension"
-                          value={newCanonical.dimension}
-                          onChange={(event) =>
-                            setNewCanonical((draft) => ({
-                              ...draft,
-                              dimension: event.target.value,
-                            }))
-                          }
-                          fullWidth
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={3} md={4}>
-                        <TextField
-                          label="Canonical Label"
-                          value={newCanonical.canonical_label}
-                          onChange={(event) =>
-                            setNewCanonical((draft) => ({
-                              ...draft,
-                              canonical_label: event.target.value,
-                            }))
-                          }
-                          fullWidth
-                          required
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={6} md={4}>
-                        <TextField
-                          label="Description (optional)"
-                          value={newCanonical.description}
-                          onChange={(event) =>
-                            setNewCanonical((draft) => ({
-                              ...draft,
-                              description: event.target.value,
-                            }))
-                          }
-                          fullWidth
-                          multiline
-                          minRows={2}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={6} md={12}>
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          disabled={creatingCanonical}
-                          startIcon={<AddCircleRoundedIcon />}
-                        >
-                          {creatingCanonical ? 'Adding…' : 'Add Canonical Value'}
-                        </Button>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small" aria-label="canonical values">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Label</TableCell>
-                          <TableCell>Dimension</TableCell>
-                          <TableCell>Description</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {canonicalValues.map((value) => (
-                          <TableRow key={`${value.dimension}-${value.id}`} hover>
-                            <TableCell width="30%">{value.canonical_label}</TableCell>
-                            <TableCell width="25%">{value.dimension}</TableCell>
-                            <TableCell>{value.description || '—'}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Stack>
-              </Paper>
-            </Stack>
-          )}
-        </Container>
-      </Box>
+const App = () => {
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>('dark');
+  const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [toastKey, setToastKey] = useState(0);
+
+  const theme = useMemo(
+    () => responsiveFontSizes(createTheme(themeDefinitions[themeChoice].options)),
+    [themeChoice],
+  );
+
+  const handleToast = useCallback((message: ToastMessage) => {
+    setToast(message);
+    setToastKey((key) => key + 1);
+  }, []);
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline enableColorScheme />
+      <BrowserRouter>
+        <AppStateProvider>
+          <AppScaffold
+            themeChoice={themeChoice}
+            onThemeChange={setThemeChoice}
+            toast={toast}
+            toastKey={toastKey}
+            onToast={handleToast}
+            onCloseToast={() => setToast(null)}
+          />
+        </AppStateProvider>
+      </BrowserRouter>
     </ThemeProvider>
   );
 };
