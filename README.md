@@ -18,6 +18,32 @@ This command starts:
 
 The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`.
 
+### Reviewer UI at a glance
+
+The interface is organised into task-focused pages that surface the entire curation workflow:
+
+- **Dashboard** – configure matcher parameters, experiment with semantic suggestions, and curate canonical values with inline editing.
+- **Source Connections** – register and maintain connectivity metadata for upstream systems.
+- **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
+- **Match Insights** – visualise match rates per mapping, inspect top outliers, and track overall harmonisation health.
+- **Suggestions** – approve semantic suggestions or manually link raw values to canonical standards.
+- **Mapping History** – audit every approved mapping, edit or retire entries, and export a normalised view per connection.
+
+### API highlights
+
+The FastAPI service now exposes a rich set of endpoints under `/api`:
+
+- `/reference/canonical` – full CRUD for canonical reference values.
+- `/source/connections` – manage source system connection metadata.
+- `/source/connections/{id}/mappings` – create/update/delete field mappings to reference dimensions.
+- `/source/connections/{id}/samples` – ingest aggregated raw samples collected from source systems or manual uploads.
+- `/source/connections/{id}/match-stats` – compute match rates, top unmatched values, and semantic suggestions.
+- `/source/connections/{id}/unmatched` – retrieve unmatched raw values with inline suggestions for remediation.
+- `/source/connections/{id}/value-mappings` – approve, update, or delete specific raw-to-canonical mappings.
+- `/source/value-mappings` – consolidated view of all mappings across connections.
+
+Endpoints accept and return structured JSON payloads that align with the React TypeScript models in `reviewer-ui/src/types.ts`.
+
 ## Project Structure
 
 ```
@@ -31,7 +57,7 @@ The first boot performs all schema creation and seeding automatically. All runti
 └── README.md
 ```
 
-Each directory currently contains a placeholder `.gitkeep` file to keep the structure under version control. Implementation details will evolve as components are developed. The Reviewer UI now ships with a polished Material UI experience that can switch between accessible dark, warm, cool, and lively themes directly from the header.
+The repository now contains a fully functional end-to-end workflow with integration tests in `tests/`, a semantic matcher in `matcher/`, a FastAPI backend in `api/`, and a multi-page React dashboard in `reviewer-ui/` with accessible theme switching baked into the header.
 
 ## Feature Breakdown
 
