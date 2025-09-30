@@ -36,3 +36,8 @@
 - Provide a self-service reviewer dashboard with analytics (e.g., top inconsistent values).
 - Align with external ontologies and standards (e.g., ISO country codes, education classifications).
 - Integrate with data catalogs such as DataHub to surface lineage and metadata.
+
+## 8. Operational Hardening
+- Serve the Reviewer UI with an SPA-aware Nginx configuration so direct navigation to deep links (e.g., `/dashboard`) and
+  browser refreshes resolve without 404 responses.
+- Cache static assets aggressively while still surfacing errors for missing bundles, aiding troubleshooting during upgrades.

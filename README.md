@@ -14,7 +14,9 @@ This command starts:
 
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
-- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Material UI design system and multi-theme support.
+- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Material UI design system and multi-theme support. The
+  container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
+  `http://localhost:5173/dashboard` or browser refreshes on nested routes resolve correctly without returning a 404.
 
 The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`.
 
@@ -58,6 +60,18 @@ Endpoints accept and return structured JSON payloads that align with the React T
 ```
 
 The repository now contains a fully functional end-to-end workflow with integration tests in `tests/`, a semantic matcher in `matcher/`, a FastAPI backend in `api/`, and a multi-page React dashboard in `reviewer-ui/` with accessible theme switching baked into the header.
+
+## Testing
+
+Run the Python unit and integration test suite with:
+
+```bash
+pytest
+```
+
+The new Reviewer UI deployment checks verify that the custom Nginx configuration is copied into the container image and that it
+rewrites unknown application routes back to `index.html`. This prevents regressions where client-side routes return HTTP 404s
+after a page refresh.
 
 ## Feature Breakdown
 
