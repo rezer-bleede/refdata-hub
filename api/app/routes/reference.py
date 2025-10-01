@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlmodel import Session, select
 
@@ -16,6 +18,8 @@ from ..schemas import (
     MatchResponse,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/reference", tags=["reference"])
 
 
@@ -24,7 +28,9 @@ def list_canonical_values(session: Session = Depends(get_session)) -> list[Canon
     """Return all canonical values ordered by dimension and label."""
 
     statement = select(CanonicalValue).order_by(CanonicalValue.dimension, CanonicalValue.canonical_label)
-    return session.exec(statement).all()
+    results = session.exec(statement).all()
+    logger.debug("Canonical values requested", extra={"count": len(results)})
+    return results
 
 
 @router.post(

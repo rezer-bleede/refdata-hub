@@ -31,138 +31,168 @@ const fallbackBaseUrl = () => {
   return `${window.location.origin}:8000`;
 };
 
-const API_BASE_URL: string =
-  (typeof __API_BASE_URL__ !== 'undefined' && __API_BASE_URL__)
-    ? __API_BASE_URL__
-    : fallbackBaseUrl();
+const configuredBaseUrl =
+  typeof __API_BASE_URL__ !== 'undefined' && __API_BASE_URL__ ? __API_BASE_URL__ : fallbackBaseUrl();
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Request failed');
+const API_BASE_URL = configuredBaseUrl.replace(/\/+$/, '');
+
+const truncate = (value: string, limit = 500) => {
+  if (value.length <= limit) {
+    return value;
   }
-  return response.json() as Promise<T>;
+  return `${value.slice(0, limit)}…`;
+};
+
+const normalisePath = (path: string) => (path.startsWith('/') ? path : `/${path}`);
+
+interface RequestContext {
+  response: Response;
+  url: string;
+  method: string;
+}
+
+async function performRequest(path: string, init?: RequestInit): Promise<RequestContext> {
+  const method = init?.method ?? 'GET';
+  const url = `${API_BASE_URL}${normalisePath(path)}`;
+
+  console.debug(`[api] ${method} ${url}`);
+
+  try {
+    const response = await fetch(url, init);
+    return { response, url, method };
+  } catch (error) {
+    console.error(`[api] ${method} ${url} network error`, error);
+    throw error instanceof Error ? error : new Error('Network request failed');
+  }
+}
+
+async function apiFetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+  const { response, url, method } = await performRequest(path, init);
+
+  if (!response.ok) {
+    const body = truncate(await response.text());
+    console.error(`[api] ${method} ${url} failed`, {
+      status: response.status,
+      statusText: response.statusText,
+      body,
+    });
+    throw new Error(body || `Request failed with status ${response.status}`);
+  }
+
+  const data = (await response.json()) as T;
+  console.debug(`[api] ${method} ${url} <- ${response.status}`);
+  return data;
+}
+
+async function apiFetchVoid(path: string, init?: RequestInit): Promise<void> {
+  const { response, url, method } = await performRequest(path, init);
+
+  if (!response.ok) {
+    const body = truncate(await response.text());
+    console.error(`[api] ${method} ${url} failed`, {
+      status: response.status,
+      statusText: response.statusText,
+      body,
+    });
+    throw new Error(body || `Request failed with status ${response.status}`);
+  }
+
+  console.debug(`[api] ${method} ${url} <- ${response.status}`);
+}
+
+export function getApiBaseUrl(): string {
+  return API_BASE_URL;
 }
 
 export async function fetchCanonicalValues(): Promise<CanonicalValue[]> {
-  const response = await fetch(`${API_BASE_URL}/api/reference/canonical`);
-  return handleResponse<CanonicalValue[]>(response);
+  return apiFetchJson<CanonicalValue[]>('/api/reference/canonical');
 }
 
 export async function createCanonicalValue(payload: CanonicalValueUpdatePayload): Promise<CanonicalValue> {
-  const response = await fetch(`${API_BASE_URL}/api/reference/canonical`, {
+  return apiFetchJson<CanonicalValue>('/api/reference/canonical', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<CanonicalValue>(response);
 }
 
 export async function updateCanonicalValue(
   id: number,
   payload: CanonicalValueUpdatePayload,
 ): Promise<CanonicalValue> {
-  const response = await fetch(`${API_BASE_URL}/api/reference/canonical/${id}`, {
+  return apiFetchJson<CanonicalValue>(`/api/reference/canonical/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<CanonicalValue>(response);
 }
 
 export async function deleteCanonicalValue(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/reference/canonical/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Unable to delete canonical value');
-  }
+  await apiFetchVoid(`/api/reference/canonical/${id}`, { method: 'DELETE' });
 }
 
 export async function proposeMatch(raw_text: string, dimension?: string): Promise<MatchResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/reference/propose`, {
+  return apiFetchJson<MatchResponse>('/api/reference/propose', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ raw_text, dimension }),
   });
-  return handleResponse<MatchResponse>(response);
 }
 
 export async function fetchConfig(): Promise<SystemConfig> {
-  const response = await fetch(`${API_BASE_URL}/api/config`);
-  return handleResponse<SystemConfig>(response);
+  return apiFetchJson<SystemConfig>('/api/config');
 }
 
 export async function updateConfig(payload: SystemConfigUpdate): Promise<SystemConfig> {
-  const response = await fetch(`${API_BASE_URL}/api/config`, {
+  return apiFetchJson<SystemConfig>('/api/config', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<SystemConfig>(response);
 }
 
 export async function fetchSourceConnections(): Promise<SourceConnection[]> {
-  const response = await fetch(`${API_BASE_URL}/api/source/connections`);
-  return handleResponse<SourceConnection[]>(response);
+  return apiFetchJson<SourceConnection[]>('/api/source/connections');
 }
 
 export async function createSourceConnection(
   payload: SourceConnectionCreatePayload,
 ): Promise<SourceConnection> {
-  const response = await fetch(`${API_BASE_URL}/api/source/connections`, {
+  return apiFetchJson<SourceConnection>('/api/source/connections', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<SourceConnection>(response);
 }
 
 export async function updateSourceConnection(
   id: number,
   payload: SourceConnectionUpdatePayload,
 ): Promise<SourceConnection> {
-  const response = await fetch(`${API_BASE_URL}/api/source/connections/${id}`, {
+  return apiFetchJson<SourceConnection>(`/api/source/connections/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return handleResponse<SourceConnection>(response);
 }
 
 export async function deleteSourceConnection(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/source/connections/${id}`, {
-    method: 'DELETE',
-  });
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Unable to delete connection');
-  }
+  await apiFetchVoid(`/api/source/connections/${id}`, { method: 'DELETE' });
 }
 
-export async function fetchFieldMappings(
-  connectionId: number,
-): Promise<SourceFieldMapping[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/mappings`,
-  );
-  return handleResponse<SourceFieldMapping[]>(response);
+export async function fetchFieldMappings(connectionId: number): Promise<SourceFieldMapping[]> {
+  return apiFetchJson<SourceFieldMapping[]>(`/api/source/connections/${connectionId}/mappings`);
 }
 
 export async function createFieldMapping(
   connectionId: number,
   payload: SourceFieldMappingPayload,
 ): Promise<SourceFieldMapping> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/mappings`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    },
-  );
-  return handleResponse<SourceFieldMapping>(response);
+  return apiFetchJson<SourceFieldMapping>(`/api/source/connections/${connectionId}/mappings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function updateFieldMapping(
@@ -170,29 +200,15 @@ export async function updateFieldMapping(
   mappingId: number,
   payload: SourceFieldMappingPayload,
 ): Promise<SourceFieldMapping> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/mappings/${mappingId}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    },
-  );
-  return handleResponse<SourceFieldMapping>(response);
+  return apiFetchJson<SourceFieldMapping>(`/api/source/connections/${connectionId}/mappings/${mappingId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
-export async function deleteFieldMapping(
-  connectionId: number,
-  mappingId: number,
-): Promise<void> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/mappings/${mappingId}`,
-    { method: 'DELETE' },
-  );
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Unable to delete mapping');
-  }
+export async function deleteFieldMapping(connectionId: number, mappingId: number): Promise<void> {
+  await apiFetchVoid(`/api/source/connections/${connectionId}/mappings/${mappingId}`, { method: 'DELETE' });
 }
 
 export async function ingestSamples(
@@ -201,62 +217,38 @@ export async function ingestSamples(
   source_field: string,
   values: SourceSampleValuePayload[],
 ): Promise<SourceSample[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/samples`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ source_table, source_field, values }),
-    },
-  );
-  return handleResponse<SourceSample[]>(response);
+  return apiFetchJson<SourceSample[]>(`/api/source/connections/${connectionId}/samples`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ source_table, source_field, values }),
+  });
 }
 
-export async function fetchMatchStatistics(
-  connectionId: number,
-): Promise<FieldMatchStats[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/match-stats`,
-  );
-  return handleResponse<FieldMatchStats[]>(response);
+export async function fetchMatchStatistics(connectionId: number): Promise<FieldMatchStats[]> {
+  return apiFetchJson<FieldMatchStats[]>(`/api/source/connections/${connectionId}/match-stats`);
 }
 
-export async function fetchUnmatchedValues(
-  connectionId: number,
-): Promise<UnmatchedValueRecord[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/unmatched`,
-  );
-  return handleResponse<UnmatchedValueRecord[]>(response);
+export async function fetchUnmatchedValues(connectionId: number): Promise<UnmatchedValueRecord[]> {
+  return apiFetchJson<UnmatchedValueRecord[]>(`/api/source/connections/${connectionId}/unmatched`);
 }
 
 export async function createValueMapping(
   connectionId: number,
   payload: ValueMappingPayload,
 ): Promise<ValueMapping> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/value-mappings`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    },
-  );
-  return handleResponse<ValueMapping>(response);
+  return apiFetchJson<ValueMapping>(`/api/source/connections/${connectionId}/value-mappings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
-export async function fetchConnectionValueMappings(
-  connectionId: number,
-): Promise<ValueMappingExpanded[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/value-mappings`,
-  );
-  return handleResponse<ValueMappingExpanded[]>(response);
+export async function fetchConnectionValueMappings(connectionId: number): Promise<ValueMappingExpanded[]> {
+  return apiFetchJson<ValueMappingExpanded[]>(`/api/source/connections/${connectionId}/value-mappings`);
 }
 
 export async function fetchAllValueMappings(): Promise<ValueMappingExpanded[]> {
-  const response = await fetch(`${API_BASE_URL}/api/source/value-mappings`);
-  return handleResponse<ValueMappingExpanded[]>(response);
+  return apiFetchJson<ValueMappingExpanded[]>('/api/source/value-mappings');
 }
 
 export async function updateValueMapping(
@@ -264,29 +256,13 @@ export async function updateValueMapping(
   mappingId: number,
   payload: ValueMappingUpdatePayload,
 ): Promise<ValueMapping> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/value-mappings/${mappingId}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    },
-  );
-  return handleResponse<ValueMapping>(response);
+  return apiFetchJson<ValueMapping>(`/api/source/connections/${connectionId}/value-mappings/${mappingId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }
 
-export async function deleteValueMapping(
-  connectionId: number,
-  mappingId: number,
-): Promise<void> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/source/connections/${connectionId}/value-mappings/${mappingId}`,
-    {
-      method: 'DELETE',
-    },
-  );
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Unable to delete value mapping');
-  }
+export async function deleteValueMapping(connectionId: number, mappingId: number): Promise<void> {
+  await apiFetchVoid(`/api/source/connections/${connectionId}/value-mappings/${mappingId}`, { method: 'DELETE' });
 }
