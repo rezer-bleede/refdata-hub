@@ -18,7 +18,7 @@ This command starts:
   container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
   `http://localhost:5173/dashboard` or browser refreshes on nested routes resolve correctly without returning a 404.
 
-The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`.
+The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`. If you ever wipe the database manually, simply refresh the UI—the backend now recreates the default configuration record on demand so the dashboard no longer stalls with "Unable to load configuration" toasts.
 
 ### Reviewer UI at a glance
 

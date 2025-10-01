@@ -8,7 +8,7 @@ import os
 import sys
 
 from fastapi.testclient import TestClient
-from sqlmodel import Session
+from sqlmodel import Session, delete, select
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT_DIR not in sys.path:
@@ -19,6 +19,7 @@ os.environ.setdefault("REFDATA_DATABASE_URL", "sqlite:///:memory:")
 from api.app.main import create_app
 from api.app.config import Settings
 from api.app.database import create_db_engine, init_db, get_session
+from api.app.models import SystemConfig
 
 
 def build_test_client() -> TestClient:
@@ -169,3 +170,34 @@ def test_source_mapping_flow() -> None:
     all_mappings = client.get("/api/source/value-mappings")
     assert all_mappings.status_code == 200
     assert all_mappings.json()
+
+
+def test_config_endpoint_auto_seeds_when_missing(tmp_path) -> None:
+    db_path = tmp_path / "config.db"
+    settings = Settings(database_url=f"sqlite:///{db_path}")
+    app = create_app(settings)
+    engine = create_db_engine(settings)
+    app.state.engine = engine
+    init_db(engine, settings=settings)
+
+    def session_override() -> Iterator[Session]:
+        with Session(engine) as session:
+            yield session
+
+    app.dependency_overrides[get_session] = session_override
+
+    with TestClient(app) as client:
+        with Session(engine) as session:
+            session.exec(delete(SystemConfig))
+            session.commit()
+
+        response = client.get("/api/config")
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["default_dimension"] == settings.default_dimension
+        assert payload["match_threshold"] == settings.match_threshold
+
+        with Session(engine) as session:
+            config = session.exec(select(SystemConfig)).first()
+            assert config is not None
+            assert config.default_dimension == settings.default_dimension
