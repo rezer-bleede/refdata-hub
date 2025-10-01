@@ -1,18 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import DoneRoundedIcon from '@mui/icons-material/DoneRounded';
-import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
-import {
-  Box,
-  Button,
-  Chip,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Badge, Button, Card, Form, Spinner } from 'react-bootstrap';
 
 import {
   createValueMapping,
@@ -38,6 +25,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
   const [unmatched, setUnmatched] = useState<UnmatchedValueRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [manualSelection, setManualSelection] = useState<Record<string, number>>({});
+  const [linking, setLinking] = useState<string | null>(null);
 
   const canonicalByDimension = useMemo(() => {
     const map = new Map<string, CanonicalValue[]>();
@@ -46,7 +34,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
       list.push(value);
       map.set(value.dimension, list);
     });
-    map.forEach((list, key) => list.sort((a, b) => a.canonical_label.localeCompare(b.canonical_label)));
+    map.forEach((list) => list.sort((a, b) => a.canonical_label.localeCompare(b.canonical_label)));
     return map;
   }, [canonicalValues]);
 
@@ -59,22 +47,25 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
       }
     } catch (error) {
       console.error(error);
-      onToast({ type: 'error', content: 'Failed to load connections' });
+      onToast({ type: 'error', content: 'Failed to load connections.' });
     }
   }, [onToast, selectedConnectionId]);
 
-  const loadUnmatched = useCallback(async (connectionId: number) => {
-    setLoading(true);
-    try {
-      const records = await fetchUnmatchedValues(connectionId);
-      setUnmatched(records);
-    } catch (error) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Unable to load unmatched values' });
-    } finally {
-      setLoading(false);
-    }
-  }, [onToast]);
+  const loadUnmatched = useCallback(
+    async (connectionId: number) => {
+      setLoading(true);
+      try {
+        const records = await fetchUnmatchedValues(connectionId);
+        setUnmatched(records);
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Unable to load unmatched values.' });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [onToast],
+  );
 
   useEffect(() => {
     void loadConnections();
@@ -95,6 +86,8 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
     suggestedLabel?: string,
   ) => {
     if (!selectedConnectionId) return;
+    const key = `${record.mapping_id}:${record.raw_value}`;
+    setLinking(key);
     try {
       await createValueMapping(selectedConnectionId, {
         source_table: record.source_table,
@@ -109,7 +102,9 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
       onToast({ type: 'success', content: `Mapped ${record.raw_value}` });
     } catch (error) {
       console.error(error);
-      onToast({ type: 'error', content: 'Failed to store mapping' });
+      onToast({ type: 'error', content: 'Failed to store mapping.' });
+    } finally {
+      setLinking(null);
     }
   };
 
@@ -124,109 +119,128 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
   };
 
   return (
-    <Stack spacing={4} component="section">
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
+    <div className="d-flex flex-column gap-4">
+      <Card className="card-section">
+        <Card.Body className="d-flex flex-column gap-3">
+          <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+              <Card.Title as="h1" className="section-heading h4 mb-1">
                 Triage unmatched values
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </Card.Title>
+              <Card.Text className="text-body-secondary mb-0">
                 Review low-confidence matches and confirm the appropriate canonical record. Suggestions are ranked using the semantic matcher.
-              </Typography>
-            </Box>
-            <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel id="suggestions-connection-label">Connection</InputLabel>
-              <Select
-                labelId="suggestions-connection-label"
-                label="Connection"
+              </Card.Text>
+            </div>
+            <Form.Group controlId="suggestions-connection" className="w-auto">
+              <Form.Label>Connection</Form.Label>
+              <Form.Select
                 value={selectedConnectionId}
-                onChange={(event) => setSelectedConnectionId(Number(event.target.value))}
+                onChange={(event) => setSelectedConnectionId(event.target.value ? Number(event.target.value) : '')}
               >
+                <option value="">Select connection</option>
                 {connections.map((connection) => (
-                  <MenuItem key={connection.id} value={connection.id}>
+                  <option key={connection.id} value={connection.id}>
                     {connection.name}
-                  </MenuItem>
+                  </option>
                 ))}
-              </Select>
-            </FormControl>
-          </Box>
-          {loading && <Typography variant="body2">Loading unmatched values…</Typography>}
-        </Stack>
-      </Paper>
+              </Form.Select>
+            </Form.Group>
+          </div>
+          {loading && <Spinner animation="border" role="status" className="align-self-start" />}
+        </Card.Body>
+      </Card>
 
       {unmatched.map((record) => {
         const key = `${record.mapping_id}:${record.raw_value}`;
         const canonicalOptions = canonicalByDimension.get(record.ref_dimension) ?? [];
         return (
-          <Paper key={key} variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-            <Stack spacing={2}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={600}>
+          <Card key={key} className="card-section">
+            <Card.Body className="d-flex flex-column gap-3">
+              <div className="d-flex justify-content-between flex-wrap gap-3">
+                <div>
+                  <Card.Title as="h2" className="h5 mb-1">
                     {record.raw_value}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  </Card.Title>
+                  <Card.Text className="text-body-secondary mb-0">
                     {record.source_table}.{record.source_field} · {record.ref_dimension}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  </Card.Text>
+                  <Card.Text className="text-body-secondary small">
                     {record.occurrence_count} occurrences
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                  {record.suggestions.map((suggestion) => (
-                    <Chip
-                      key={suggestion.canonical_id}
-                      label={`${suggestion.canonical_label} (${(suggestion.score * 100).toFixed(0)}%)`}
-                      onClick={() => void applyMapping(record, suggestion.canonical_id, suggestion.score, suggestion.canonical_label)}
-                      icon={<DoneRoundedIcon />}
-                      variant="outlined"
-                    />
-                  ))}
-                </Stack>
-              </Box>
+                  </Card.Text>
+                </div>
+                <Badge bg="warning" text="dark">
+                  Needs review
+                </Badge>
+              </div>
 
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
-                <FormControl sx={{ minWidth: 220 }}>
-                  <InputLabel id={`manual-select-${key}`}>Select canonical</InputLabel>
-                  <Select
-                    labelId={`manual-select-${key}`}
-                    label="Select canonical"
-                    value={manualSelection[key] ?? ''}
-                    onChange={(event) =>
-                      setManualSelection((prev) => ({ ...prev, [key]: Number(event.target.value) }))
-                    }
+              <div className="d-flex flex-wrap gap-2">
+                {record.suggestions.map((suggestion) => (
+                  <Button
+                    key={suggestion.canonical_id}
+                    variant="outline-success"
+                    size="sm"
+                    onClick={() => void applyMapping(record, suggestion.canonical_id, suggestion.score, suggestion.canonical_label)}
+                    disabled={linking === key}
                   >
+                    {suggestion.canonical_label} ({(suggestion.score * 100).toFixed(0)}%)
+                  </Button>
+                ))}
+              </div>
+
+              <div className="d-flex flex-column flex-md-row gap-3 align-items-start">
+                <Form.Group controlId={`manual-select-${key}`} className="flex-grow-1">
+                  <Form.Label>Manual selection</Form.Label>
+                  <Form.Select
+                    value={manualSelection[key] ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setManualSelection((prev) => {
+                        const next = { ...prev };
+                        if (!value) {
+                          delete next[key];
+                        } else {
+                          next[key] = Number(value);
+                        }
+                        return next;
+                      });
+                    }}
+                  >
+                    <option value="">Select canonical value</option>
                     {canonicalOptions.map((option) => (
-                      <MenuItem key={option.id} value={option.id}>
+                      <option key={option.id} value={option.id}>
                         {option.canonical_label}
-                      </MenuItem>
+                      </option>
                     ))}
-                  </Select>
-                </FormControl>
+                  </Form.Select>
+                </Form.Group>
                 <Button
-                  variant="contained"
-                  startIcon={<LinkRoundedIcon />}
+                  variant="primary"
                   onClick={() => void handleManualApply(record)}
-                  disabled={!manualSelection[key]}
+                  disabled={linking === key}
                 >
-                  Link to canonical
+                  {linking === key ? (
+                    <span className="d-inline-flex align-items-center gap-2">
+                      <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                      Linking…
+                    </span>
+                  ) : (
+                    'Link to canonical'
+                  )}
                 </Button>
-              </Stack>
-            </Stack>
-          </Paper>
+              </div>
+            </Card.Body>
+          </Card>
         );
       })}
 
       {!unmatched.length && !loading && (
-        <Paper variant="outlined" sx={{ p: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            All sampled values are currently mapped. Great work!
-          </Typography>
-        </Paper>
+        <Card className="card-section">
+          <Card.Body>
+            <p className="text-body-secondary mb-0">All recent values are matched for this connection.</p>
+          </Card.Body>
+        </Card>
       )}
-    </Stack>
+    </div>
   );
 };
 

@@ -65,7 +65,8 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
     setIsLoading(false);
 
     if (errors.length) {
-      const message = `Unable to load ${errors.join(' & ')}`;
+      const joined = errors.length === 2 ? errors.join(' and ') : errors[0];
+      const message = `Unable to load ${joined} from the API. Confirm the backend service is running.`;
       setLoadError(message);
       return false;
     }
