@@ -34,3 +34,26 @@ Requests to `/api/reference/canonical` log the number of values returned. If the
 ## 4. Retry with a hard refresh
 
 After addressing connectivity issues, perform a hard refresh (`Ctrl` + `Shift` + `R` on most browsers) to clear cached bundles and re-run the initial data fetch. The enhanced UI logging will confirm whether configuration and canonical data load successfully on subsequent attempts.
+
+## 5. Resolve TypeScript build failures around mocked props
+
+When running `npm run build` locally or inside the Docker image, you may encounter errors similar to:
+
+```
+Type 'Mock<(choice: ThemeChoice) => void, any>' is not assignable to type '(choice: ThemeChoice) => void'
+```
+
+Vitest's `vi.fn()` helper returns a mock object rather than a plain function, which causes TypeScript to reject it as a valid prop value. The fix is to wrap the mock inside a thin inline callback and assert against the underlying mock instead of the prop itself. The updated `createProps` factory in `reviewer-ui/src/App.test.tsx` follows this approach:
+
+```ts
+const onThemeChange = vi.fn();
+
+const props = {
+  onThemeChange: (choice: ThemeChoice) => onThemeChange(choice),
+  // ...other props
+};
+
+expect(onThemeChange).toHaveBeenCalledWith('light');
+```
+
+This preserves full access to Vitest's assertion helpers while ensuring the JSX props satisfy the strict component typings.

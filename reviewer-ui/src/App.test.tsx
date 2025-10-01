@@ -1,9 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ComponentProps } from 'react';
 
 import { AppScaffold } from './App';
 import type { ThemeChoice } from './themes';
+
+type AppScaffoldProps = ComponentProps<typeof AppScaffold>;
 
 const refreshMock = vi.fn<[], Promise<boolean>>();
 let mockIsLoading = false;
@@ -19,14 +22,34 @@ vi.mock('./state/AppStateContext', () => ({
   }),
 }));
 
-const createProps = () => ({
-  themeChoice: 'dark' as ThemeChoice,
-  onThemeChange: vi.fn<(choice: ThemeChoice) => void>(),
-  toast: null,
-  toastKey: 0,
-  onToast: vi.fn(),
-  onCloseToast: vi.fn(),
-});
+const createProps = (): {
+  props: AppScaffoldProps;
+  mocks: {
+    onThemeChange: ReturnType<typeof vi.fn>;
+    onToast: ReturnType<typeof vi.fn>;
+    onCloseToast: ReturnType<typeof vi.fn>;
+  };
+} => {
+  const onThemeChange = vi.fn();
+  const onToast = vi.fn();
+  const onCloseToast = vi.fn();
+
+  return {
+    props: {
+      themeChoice: 'dark' as ThemeChoice,
+      onThemeChange: (choice) => onThemeChange(choice),
+      toast: null,
+      toastKey: 0,
+      onToast: (toast) => onToast(toast),
+      onCloseToast: () => onCloseToast(),
+    },
+    mocks: {
+      onThemeChange,
+      onToast,
+      onCloseToast,
+    },
+  };
+};
 
 describe('AppScaffold layout', () => {
   beforeEach(() => {
@@ -75,7 +98,7 @@ describe('AppScaffold layout', () => {
   });
 
   it('renders navigation items and highlights the active route', () => {
-    const props = createProps();
+    const { props } = createProps();
     render(
       <MemoryRouter initialEntries={["/connections"]}>
         <AppScaffold {...props} />
@@ -87,7 +110,7 @@ describe('AppScaffold layout', () => {
   });
 
   it('invokes the refresh workflow and surfaces success toasts', async () => {
-    const props = createProps();
+    const { props, mocks } = createProps();
     render(
       <MemoryRouter>
         <AppScaffold {...props} />
@@ -97,14 +120,14 @@ describe('AppScaffold layout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sync data' }));
 
     await waitFor(() => expect(refreshMock).toHaveBeenCalledTimes(1));
-    expect(props.onToast).toHaveBeenCalledWith(
+    expect(mocks.onToast).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'success', content: 'Synchronized with backend.' }),
     );
   });
 
   it('announces refresh failures via toast notifications', async () => {
     refreshMock.mockResolvedValueOnce(false);
-    const props = createProps();
+    const { props, mocks } = createProps();
     render(
       <MemoryRouter>
         <AppScaffold {...props} />
@@ -114,28 +137,28 @@ describe('AppScaffold layout', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sync data' }));
 
     await waitFor(() => expect(refreshMock).toHaveBeenCalledTimes(1));
-    expect(props.onToast).toHaveBeenCalledWith(
+    expect(mocks.onToast).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'error', content: 'Unable to refresh all resources.' }),
     );
   });
 
   it('bubbles initial load errors through the toast handler', async () => {
     mockLoadError = 'Unable to load configuration';
-    const props = createProps();
+    const { props, mocks } = createProps();
     render(
       <MemoryRouter>
         <AppScaffold {...props} />
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(props.onToast).toHaveBeenCalledWith({
+    await waitFor(() => expect(mocks.onToast).toHaveBeenCalledWith({
       type: 'error',
       content: 'Unable to load configuration',
     }));
   });
 
   it('allows theme changes via the header select control', () => {
-    const props = createProps();
+    const { props, mocks } = createProps();
     render(
       <MemoryRouter>
         <AppScaffold {...props} />
@@ -144,6 +167,6 @@ describe('AppScaffold layout', () => {
 
     fireEvent.change(screen.getByLabelText('Select UI theme'), { target: { value: 'light' } });
 
-    expect(props.onThemeChange).toHaveBeenCalledWith('light');
+    expect(mocks.onThemeChange).toHaveBeenCalledWith('light');
   });
 });

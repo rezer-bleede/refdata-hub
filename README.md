@@ -81,6 +81,23 @@ Run the Python unit and integration test suite with:
 pytest
 ```
 
+### Reviewer UI
+
+The React workspace ships with Vitest-driven unit and integration coverage. From the
+`reviewer-ui/` directory install dependencies and execute the frontend checks:
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+The build step runs TypeScript in strict mode alongside the Vite production bundle to
+catch typing regressions in mocked React components. The dedicated `createProps`
+helper inside `src/App.test.tsx` wraps Vitest mocks with real callbacks so TypeScript
+accepts them as valid `AppScaffold` props while still exposing rich assertion helpers
+for the tests.
+
 The new Reviewer UI deployment checks verify that the custom Nginx configuration is copied into the container image and that it
 rewrites unknown application routes back to `index.html`. This prevents regressions where client-side routes return HTTP 404s
 after a page refresh.
