@@ -60,7 +60,8 @@ To bulk load the dataset:
 ## Troubleshooting
 
 - **"Unable to load canonical library" toast** – Verify the backend container is running. The UI now reports which resources
-  failed to load.
+  failed to load, and the backend automatically recreates the default configuration if it has been wiped—refresh the page after
+  clearing a database.
 - **Import validation errors** – Ensure each row contains at least two columns (dimension + canonical label). Codes and
   descriptions may be optional but are strongly recommended.
 - **Duplicate records** – The API allows duplicates; run the export to CSV and deduplicate externally if necessary.
