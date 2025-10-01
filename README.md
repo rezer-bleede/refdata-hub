@@ -14,7 +14,7 @@ This command starts:
 
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
-- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Material UI design system and multi-theme support. The
+- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support. The
   container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
   `http://localhost:5173/dashboard` or browser refreshes on nested routes resolve correctly without returning a 404.
 
@@ -24,12 +24,16 @@ The first boot performs all schema creation and seeding automatically. All runti
 
 The interface is organised into task-focused pages that surface the entire curation workflow:
 
-- **Dashboard** – configure matcher parameters, experiment with semantic suggestions, and curate canonical values with inline editing.
+- **Dashboard** – configure matcher parameters and experiment with semantic suggestions in a live playground.
+- **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
 - **Match Insights** – visualise match rates per mapping, inspect top outliers, and track overall harmonisation health.
 - **Suggestions** – approve semantic suggestions or manually link raw values to canonical standards.
 - **Mapping History** – audit every approved mapping, edit or retire entries, and export a normalised view per connection.
+
+Detailed curation guidance, including an import-ready Abu Dhabi region dataset for the canonical library, lives in
+[`docs/CANONICAL_LIBRARY.md`](docs/CANONICAL_LIBRARY.md).
 
 ### API highlights
 

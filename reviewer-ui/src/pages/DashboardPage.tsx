@@ -1,47 +1,9 @@
 import { useMemo, useState } from 'react';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
-import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  FormControl,
-  Grid,
-  IconButton,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Badge, Button, Card, Col, Form, Row, Spinner, Table } from 'react-bootstrap';
 
-import {
-  createCanonicalValue,
-  deleteCanonicalValue,
-  proposeMatch,
-  updateCanonicalValue,
-  updateConfig,
-} from '../api';
+import { proposeMatch, updateConfig } from '../api';
 import { useAppState } from '../state/AppStateContext';
 import type {
-  CanonicalValue,
-  CanonicalValueUpdatePayload,
   MatchCandidate,
   MatchResponse,
   ToastMessage,
@@ -52,22 +14,13 @@ interface DashboardPageProps {
 }
 
 const DashboardPage = ({ onToast }: DashboardPageProps) => {
-  const { config, setConfig, canonicalValues, updateCanonicalValues, isLoading } = useAppState();
+  const { config, setConfig, canonicalValues, isLoading } = useAppState();
   const [configDraft, setConfigDraft] = useState<Record<string, string>>({});
   const [savingConfig, setSavingConfig] = useState(false);
   const [matchInput, setMatchInput] = useState('');
   const [matchDimension, setMatchDimension] = useState('');
   const [matchResults, setMatchResults] = useState<MatchResponse | null>(null);
   const [runningMatch, setRunningMatch] = useState(false);
-  const [creatingCanonical, setCreatingCanonical] = useState(false);
-  const [newCanonical, setNewCanonical] = useState<CanonicalValueUpdatePayload>({
-    dimension: '',
-    canonical_label: '',
-    description: '',
-  });
-  const [editingCanonical, setEditingCanonical] = useState<CanonicalValue | null>(null);
-  const [editDraft, setEditDraft] = useState<CanonicalValueUpdatePayload>({});
-  const [deleteTarget, setDeleteTarget] = useState<CanonicalValue | null>(null);
 
   const availableDimensions = useMemo(() => {
     const dimensionSet = new Set<string>();
@@ -77,6 +30,16 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
     }
     return Array.from(dimensionSet).sort();
   }, [canonicalValues, config?.default_dimension]);
+
+  const insights = useMemo(() => {
+    const uniqueDimensions = availableDimensions.length;
+    const canonicalCount = canonicalValues.length;
+    return {
+      uniqueDimensions,
+      canonicalCount,
+      matcher: config?.matcher_backend ?? '—',
+    };
+  }, [availableDimensions, canonicalValues.length, config?.matcher_backend]);
 
   const handleConfigChange = (key: string, value: string) => {
     setConfigDraft((draft) => ({ ...draft, [key]: value }));
@@ -99,10 +62,10 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
       const updated = await updateConfig(payload);
       setConfig(() => updated);
       setConfigDraft({});
-      onToast({ type: 'success', content: 'Configuration updated' });
+      onToast({ type: 'success', content: 'Configuration updated.' });
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to update configuration' });
+      onToast({ type: 'error', content: 'Unable to update configuration.' });
     } finally {
       setSavingConfig(false);
     }
@@ -119,432 +82,227 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
       setMatchResults(response);
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Matching request failed' });
+      onToast({ type: 'error', content: 'Matching request failed.' });
     } finally {
       setRunningMatch(false);
     }
   };
 
-  const handleCreateCanonical = async () => {
-    if (!newCanonical.dimension || !newCanonical.canonical_label) {
-      onToast({ type: 'error', content: 'Provide both dimension and label.' });
-      return;
-    }
-    setCreatingCanonical(true);
-    try {
-      const created = await createCanonicalValue(newCanonical);
-      updateCanonicalValues((values) => [...values, created]);
-      setNewCanonical({ dimension: '', canonical_label: '', description: '' });
-      onToast({ type: 'success', content: 'Canonical value added' });
-    } catch (error: unknown) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Failed to add canonical value' });
-    } finally {
-      setCreatingCanonical(false);
-    }
-  };
-
-  const openEditDialog = (value: CanonicalValue) => {
-    setEditingCanonical(value);
-    setEditDraft({
-      dimension: value.dimension,
-      canonical_label: value.canonical_label,
-      description: value.description ?? '',
-    });
-  };
-
-  const handleUpdateCanonical = async () => {
-    if (!editingCanonical) return;
-    try {
-      const updated = await updateCanonicalValue(editingCanonical.id, editDraft);
-      updateCanonicalValues((values) =>
-        values.map((item) => (item.id === updated.id ? updated : item)),
-      );
-      onToast({ type: 'success', content: 'Canonical value updated' });
-    } catch (error: unknown) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Unable to update canonical value' });
-      return;
-    } finally {
-      setEditingCanonical(null);
-    }
-  };
-
-  const handleDeleteCanonical = async () => {
-    if (!deleteTarget) return;
-    try {
-      await deleteCanonicalValue(deleteTarget.id);
-      updateCanonicalValues((values) => values.filter((item) => item.id !== deleteTarget.id));
-      onToast({ type: 'success', content: 'Canonical value removed' });
-    } catch (error: unknown) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Unable to delete canonical value' });
-    } finally {
-      setDeleteTarget(null);
-    }
-  };
-
   const renderMatches = (matches: MatchCandidate[]) => {
     if (!matches.length) {
-      return (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          No matches met the configured threshold.
-        </Alert>
-      );
+      return <p className="text-body-secondary mb-0">No matches returned for the supplied value.</p>;
     }
 
     return (
-      <TableContainer component={Paper} variant="outlined" sx={{ mt: 2 }}>
-        <Table size="small" aria-label="match results">
-          <TableHead>
-            <TableRow>
-              <TableCell>Label</TableCell>
-              <TableCell>Dimension</TableCell>
-              <TableCell>Score</TableCell>
-              <TableCell>Description</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {matches.map((match) => (
-              <TableRow key={match.canonical_id} hover>
-                <TableCell width="25%">{match.canonical_label}</TableCell>
-                <TableCell width="20%">{match.dimension}</TableCell>
-                <TableCell width="15%">{(match.score * 100).toFixed(1)}%</TableCell>
-                <TableCell>{match.description || '—'}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Table striped bordered hover responsive size="sm" className="mt-3">
+        <thead>
+          <tr>
+            <th>Canonical Label</th>
+            <th>Dimension</th>
+            <th>Description</th>
+            <th className="text-end">Confidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {matches.map((match) => (
+            <tr key={`${match.canonical_id}-${match.score}`}> 
+              <td>{match.canonical_label}</td>
+              <td>
+                <Badge bg="info" text="dark">{match.dimension}</Badge>
+              </td>
+              <td>{match.description || '—'}</td>
+              <td className="text-end text-monospaced">{(match.score * 100).toFixed(1)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
     );
   };
 
-  if (isLoading) {
-    return (
-      <Paper elevation={0} variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="body1">Loading application state…</Typography>
-      </Paper>
-    );
-  }
-
   return (
-    <Stack spacing={4} component="main">
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Box>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Runtime Configuration
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Updates persist instantly and drive the semantic matcher—no environment variables required.
-            </Typography>
-          </Box>
+    <div className="d-flex flex-column gap-4" aria-busy={isLoading}>
+      <Row xs={1} md={3} className="g-3">
+        <Col>
+          <Card className="card-section h-100">
+            <Card.Body>
+              <Card.Title className="section-heading">Canonical values</Card.Title>
+              <Card.Text className="display-6 fw-semibold mb-0">{insights.canonicalCount}</Card.Text>
+              <Card.Text className="text-body-secondary">Managed reference records</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col>
+          <Card className="card-section h-100">
+            <Card.Body>
+              <Card.Title className="section-heading">Dimensions</Card.Title>
+              <Card.Text className="display-6 fw-semibold mb-0">{insights.uniqueDimensions}</Card.Text>
+              <Card.Text className="text-body-secondary">Distinct semantic domains</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col>
+          <Card className="card-section h-100">
+            <Card.Body>
+              <Card.Title className="section-heading">Matcher backend</Card.Title>
+              <Card.Text className="display-6 fw-semibold mb-0 text-uppercase">{insights.matcher}</Card.Text>
+              <Card.Text className="text-body-secondary">Active configuration</Card.Text>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="card-section">
+        <Card.Body className="d-flex flex-column gap-4">
+          <div>
+            <Card.Title as="h2" className="section-heading h4 mb-2">
+              System configuration
+            </Card.Title>
+            <Card.Text className="text-body-secondary">
+              Fine-tune the matcher and default behaviours. Changes take effect immediately after saving.
+            </Card.Text>
+          </div>
           {config && (
-            <Grid container spacing={2} columns={{ xs: 1, sm: 6, md: 12 }}>
-              <Grid item xs={1} sm={3} md={6}>
-                <TextField
-                  label="Default Dimension"
+            <Form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSaveConfig();
+              }}
+              className="row g-3"
+            >
+              <Form.Group as={Col} md={6} controlId="config-default-dimension">
+                <Form.Label>Default dimension</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="e.g. region"
                   defaultValue={config.default_dimension}
-                  fullWidth
                   onChange={(event) => handleConfigChange('default_dimension', event.target.value)}
                 />
-              </Grid>
-              <Grid item xs={1} sm={3} md={6}>
-                <TextField
-                  label="Match Threshold"
+              </Form.Group>
+              <Form.Group as={Col} md={3} controlId="config-match-threshold">
+                <Form.Label>Match threshold</Form.Label>
+                <Form.Control
                   type="number"
-                  inputProps={{ step: 0.05, min: 0, max: 1 }}
+                  min={0}
+                  max={1}
+                  step="0.05"
                   defaultValue={config.match_threshold}
-                  fullWidth
                   onChange={(event) => handleConfigChange('match_threshold', event.target.value)}
                 />
-              </Grid>
-              <Grid item xs={1} sm={3} md={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="matcher-backend-label">Matcher Backend</InputLabel>
-                  <Select
-                    labelId="matcher-backend-label"
-                    label="Matcher Backend"
-                    defaultValue={config.matcher_backend}
-                    onChange={(event) => handleConfigChange('matcher_backend', event.target.value)}
-                  >
-                    <MenuItem value="embedding">Embedding based (default)</MenuItem>
-                    <MenuItem value="llm">LLM orchestration</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={1} sm={3} md={6}>
-                <TextField
-                  label="Embedding Model"
-                  defaultValue={config.embedding_model}
-                  fullWidth
-                  onChange={(event) => handleConfigChange('embedding_model', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={1} sm={3} md={6}>
-                <TextField
-                  label="LLM Model"
-                  placeholder="gpt-4o-mini"
-                  defaultValue={config.llm_model ?? ''}
-                  fullWidth
-                  onChange={(event) => handleConfigChange('llm_model', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={1} sm={3} md={6}>
-                <TextField
-                  label="LLM API Base URL"
-                  placeholder="https://api.openai.com/v1"
-                  defaultValue={config.llm_api_base ?? ''}
-                  fullWidth
-                  onChange={(event) => handleConfigChange('llm_api_base', event.target.value)}
-                />
-              </Grid>
-              <Grid item xs={1} sm={3} md={6}>
-                <TextField
-                  label="Top K Results"
+              </Form.Group>
+              <Form.Group as={Col} md={3} controlId="config-top-k">
+                <Form.Label>Top K results</Form.Label>
+                <Form.Control
                   type="number"
-                  inputProps={{ min: 1, max: 20 }}
+                  min={1}
+                  max={20}
                   defaultValue={config.top_k}
-                  fullWidth
                   onChange={(event) => handleConfigChange('top_k', event.target.value)}
                 />
-              </Grid>
-            </Grid>
+              </Form.Group>
+              <Form.Group as={Col} md={6} controlId="config-embedding-model">
+                <Form.Label>Embedding model</Form.Label>
+                <Form.Control
+                  type="text"
+                  defaultValue={config.embedding_model}
+                  onChange={(event) => handleConfigChange('embedding_model', event.target.value)}
+                />
+              </Form.Group>
+              <Form.Group as={Col} md={6} controlId="config-llm-model">
+                <Form.Label>LLM model</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="gpt-4o-mini"
+                  defaultValue={config.llm_model ?? ''}
+                  onChange={(event) => handleConfigChange('llm_model', event.target.value)}
+                />
+              </Form.Group>
+              <Form.Group as={Col} md={6} controlId="config-llm-api-base">
+                <Form.Label>LLM API base URL</Form.Label>
+                <Form.Control
+                  type="url"
+                  placeholder="https://api.openai.com/v1"
+                  defaultValue={config.llm_api_base ?? ''}
+                  onChange={(event) => handleConfigChange('llm_api_base', event.target.value)}
+                />
+              </Form.Group>
+              <Col xs={12} className="d-flex justify-content-end">
+                <Button type="submit" variant="primary" disabled={savingConfig}>
+                  {savingConfig ? (
+                    <span className="d-inline-flex align-items-center gap-2">
+                      <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                      Saving…
+                    </span>
+                  ) : (
+                    'Save configuration'
+                  )}
+                </Button>
+              </Col>
+            </Form>
           )}
-          <Box>
-            <Button
-              variant="contained"
-              onClick={() => void handleSaveConfig()}
-              disabled={savingConfig}
-              startIcon={<SaveRoundedIcon />}
-            >
-              {savingConfig ? 'Saving…' : 'Save Configuration'}
-            </Button>
-          </Box>
-        </Stack>
-      </Paper>
+        </Card.Body>
+      </Card>
 
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={3}>
-          <Box>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Semantic Match Playground
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Experiment with live inputs to see how the matcher responds across dimensions.
-            </Typography>
-          </Box>
-          <Box
-            component="form"
+      <Card className="card-section">
+        <Card.Body className="d-flex flex-column gap-4">
+          <div>
+            <Card.Title as="h2" className="section-heading h4 mb-2">
+              Semantic match playground
+            </Card.Title>
+            <Card.Text className="text-body-secondary">
+              Experiment with raw inputs to validate canonical coverage and scoring across dimensions.
+            </Card.Text>
+          </div>
+          <Form
             onSubmit={(event) => {
               event.preventDefault();
               void handleRunMatch();
             }}
+            className="d-flex flex-column gap-3"
           >
-            <Stack spacing={2}>
-              <TextField
-                label="Raw value"
+            <Form.Group controlId="match-raw-value">
+              <Form.Label>Raw value</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
                 placeholder="Enter a raw data value to match"
-                multiline
-                minRows={3}
                 value={matchInput}
                 onChange={(event) => setMatchInput(event.target.value)}
-                fullWidth
+                required
               />
-              <FormControl fullWidth>
-                <InputLabel id="dimension-label">Dimension (optional)</InputLabel>
-                <Select
-                  labelId="dimension-label"
-                  label="Dimension (optional)"
-                  value={matchDimension}
-                  onChange={(event) => setMatchDimension(event.target.value)}
-                >
-                  <MenuItem value="">Use default</MenuItem>
-                  {availableDimensions.map((dimension) => (
-                    <MenuItem key={dimension} value={dimension}>
-                      {dimension}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Box>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={runningMatch}
-                  startIcon={<PlayArrowRoundedIcon />}
-                >
-                  {runningMatch ? 'Matching…' : 'Run Match'}
-                </Button>
-              </Box>
-            </Stack>
-          </Box>
-          {matchResults && (
-            <Box>
-              <Divider sx={{ mb: 2 }} />
-              <Typography variant="subtitle1" fontWeight={600}>
-                Matches for “{matchResults.raw_text}”
-              </Typography>
-              {renderMatches(matchResults.matches)}
-            </Box>
-          )}
-        </Stack>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={3}>
-          <Box>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              Canonical Library
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Bootstrap reviewers with rich defaults and grow the knowledge base over time.
-            </Typography>
-          </Box>
-          <Box
-            component="form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleCreateCanonical();
-            }}
-          >
-            <Grid container spacing={2} columns={{ xs: 1, sm: 6, md: 12 }}>
-              <Grid item xs={1} sm={3} md={4}>
-                <TextField
-                  label="Dimension"
-                  value={newCanonical.dimension ?? ''}
-                  onChange={(event) =>
-                    setNewCanonical((draft) => ({
-                      ...draft,
-                      dimension: event.target.value,
-                    }))
-                  }
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={1} sm={3} md={4}>
-                <TextField
-                  label="Canonical Label"
-                  value={newCanonical.canonical_label ?? ''}
-                  onChange={(event) =>
-                    setNewCanonical((draft) => ({
-                      ...draft,
-                      canonical_label: event.target.value,
-                    }))
-                  }
-                  fullWidth
-                  required
-                />
-              </Grid>
-              <Grid item xs={1} sm={6} md={4}>
-                <TextField
-                  label="Description (optional)"
-                  value={newCanonical.description ?? ''}
-                  onChange={(event) =>
-                    setNewCanonical((draft) => ({
-                      ...draft,
-                      description: event.target.value,
-                    }))
-                  }
-                  fullWidth
-                  multiline
-                  minRows={2}
-                />
-              </Grid>
-              <Grid item xs={1} sm={6} md={12}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={creatingCanonical}
-                  startIcon={<AddCircleRoundedIcon />}
-                >
-                  {creatingCanonical ? 'Adding…' : 'Add Canonical Value'}
-                </Button>
-              </Grid>
-            </Grid>
-          </Box>
-          <TableContainer component={Paper} variant="outlined">
-            <Table size="small" aria-label="canonical values">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Label</TableCell>
-                  <TableCell>Dimension</TableCell>
-                  <TableCell>Description</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {canonicalValues.map((value) => (
-                  <TableRow key={`${value.dimension}-${value.id}`} hover>
-                    <TableCell width="30%">{value.canonical_label}</TableCell>
-                    <TableCell width="25%">{value.dimension}</TableCell>
-                    <TableCell>{value.description || '—'}</TableCell>
-                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                      <IconButton aria-label="Edit" onClick={() => openEditDialog(value)}>
-                        <EditRoundedIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton aria-label="Delete" onClick={() => setDeleteTarget(value)}>
-                        <DeleteRoundedIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
+            </Form.Group>
+            <Form.Group controlId="match-dimension">
+              <Form.Label>Dimension (optional)</Form.Label>
+              <Form.Select value={matchDimension} onChange={(event) => setMatchDimension(event.target.value)}>
+                <option value="">Use default</option>
+                {availableDimensions.map((dimension) => (
+                  <option key={dimension} value={dimension}>
+                    {dimension}
+                  </option>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Stack>
-      </Paper>
-
-      <Dialog open={Boolean(editingCanonical)} onClose={() => setEditingCanonical(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit canonical value</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={2}>
-            <TextField
-              label="Dimension"
-              value={editDraft.dimension ?? ''}
-              onChange={(event) => setEditDraft((draft) => ({ ...draft, dimension: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Canonical Label"
-              value={editDraft.canonical_label ?? ''}
-              onChange={(event) => setEditDraft((draft) => ({ ...draft, canonical_label: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Description"
-              value={editDraft.description ?? ''}
-              onChange={(event) => setEditDraft((draft) => ({ ...draft, description: event.target.value }))}
-              fullWidth
-              multiline
-              minRows={3}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditingCanonical(null)}>Cancel</Button>
-          <Button onClick={() => void handleUpdateCanonical()} variant="contained" startIcon={<SaveRoundedIcon />}>
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
-        <DialogTitle>Remove canonical value</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Delete “{deleteTarget?.canonical_label}” from the {deleteTarget?.dimension} dimension?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" onClick={() => void handleDeleteCanonical()} startIcon={<DeleteRoundedIcon />}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Stack>
+              </Form.Select>
+            </Form.Group>
+            <div>
+              <Button type="submit" variant="success" disabled={runningMatch}>
+                {runningMatch ? (
+                  <span className="d-inline-flex align-items-center gap-2">
+                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                    Matching…
+                  </span>
+                ) : (
+                  'Run match'
+                )}
+              </Button>
+            </div>
+          </Form>
+          {matchResults && (
+            <div>
+              <h3 className="h5">Matches for “{matchResults.raw_text}”</h3>
+              {renderMatches(matchResults.matches)}
+            </div>
+          )}
+        </Card.Body>
+      </Card>
+    </div>
   );
 };
 

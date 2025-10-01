@@ -1,0 +1,226 @@
+dimension	canonical_label	description
+region	Abu Dhabi Emirate	Code: 01 | Arabic: إمارة أبوظبي
+region	Abu Dhabi Region	Code: 0101 | Arabic: منطقة أبوظبي
+region	Al Ain Region	Code: 0102 | Arabic: منطقة العين
+region	Al Dhafra Region	Code: 0103 | Arabic: منطقة الظفرة
+district	Abu Dhabi Emirate	Code: 01 | Arabic: إمارة أبوظبي
+district	Abu Dhabi Region	Code: 0101 | Arabic: منطقة أبوظبي
+district	Al Danah	Code: 01010010 | Arabic: الدانة
+district	Al Manhal	Code: 01010020 | Arabic: المنهل
+district	Al Hisn	Code: 01010030 | Arabic: الحصن
+district	Al Zahiyah	Code: 01010040 | Arabic: الزاهية
+district	Al Nahyan	Code: 01010050 | Arabic: آل نهيان
+district	Al Lulu Island	Code: 01010060 | Arabic: جزيرة اللولو
+district	Qasr Al Bahr	Code: 01010070 | Arabic: قصر البحر
+district	Zayed Port	Code: 01010080 | Arabic: ميناء زايد
+district	Al Maryah Island	Code: 01010090 | Arabic: جزيرة المارية
+district	Al Reem Island	Code: 01010100 | Arabic: جزيرة الريم
+district	Al Khalidiyah	Code: 01010110 | Arabic: الخالدية
+district	Al Bateen	Code: 01010120 | Arabic: البطين
+district	Al Mushrif	Code: 01010130 | Arabic: المشرف
+district	Al Kasir	Code: 01010140 | Arabic: الكاسر
+district	Abu Dhabi Islands	Code: 01010150 | Arabic: جزر أبوظبي
+district	Hadbat Al Za'faranah	Code: 01010160 | Arabic: حدبة الزعفرانة
+district	Al Kheeran	Code: 01010170 | Arabic: الخيران
+district	Al Ras Al Akhdar	Code: 01010180 | Arabic: الرأس الأخضر
+district	Al Hidayriyyat	Code: 01010190 | Arabic: الحديريات
+district	Al Saadiyat Island	Code: 01010200 | Arabic: جزيرة السعديات
+district	Al Qurm	Code: 01010210 | Arabic: القرم
+district	Al Reem East Island	Code: 01010220 | Arabic: جزيرة الريم شرق
+district	Um Yifeenah Island	Code: 01010230 | Arabic: جزيرة أم يفينة
+district	Qirqishan	Code: 01010240 | Arabic: قرقشان
+district	Al Sa'adah	Code: 01010250 | Arabic: السعادة
+district	Al Rawdah	Code: 01010260 | Arabic: الروضة
+district	Al Muzoun	Code: 01010270 | Arabic: المزون
+district	Al Fteysi Island	Code: 01010280 | Arabic: جزيرة الفطيسي
+district	Al Muntazah	Code: 01010290 | Arabic: المنتزه
+district	Al Jubail Island	Code: 01010300 | Arabic: جزيرة الجبيل
+district	Bilrimaid Island	Code: 01010310 | Arabic: جزيرة بالرميد
+district	Sas Al Nakhl	Code: 01010320 | Arabic: ساس النخل
+district	Al Sammaliyyah Island	Code: 01010330 | Arabic: جزيرة السمالية
+district	Al Halah Island	Code: 01010340 | Arabic: جزيرة الحالة
+district	Rabdan	Code: 01010350 | Arabic: ربدان
+district	Musaffah	Code: 01010360 | Arabic: مصفح
+district	Ramhan Island	Code: 01010370 | Arabic: جزيرة رمحان
+district	Bilghaylam Island	Code: 01010380 | Arabic: جزيرة بلغيلم
+district	Bu Niyaydah	Code: 01010390 | Arabic: بو نييدة
+district	Khalifa City	Code: 01010400 | Arabic: مدينة خليفة
+district	Fahid Island	Code: 01010410 | Arabic: جزيرة فاهد
+district	Abu Dhabi Industrial City	Code: 01010420 | Arabic: مدينة أبوظبي الصناعية
+district	Al Rahah	Code: 01010430 | Arabic: الراحة
+district	Nourai Island	Code: 01010440 | Arabic: جزيرة نوراي
+district	Abu Al Habl Island	Code: 01010450 | Arabic: جزيرة أبو الحبل
+district	Al Aliah Island	Code: 01010460 | Arabic: جزيرة العالية
+district	Mohamed Bin Zayed City	Code: 01010470 | Arabic: مدينة محمد بن زايد
+district	Al Mihsinah	Code: 01010480 | Arabic: المحسنة
+district	Al Aryam Island	Code: 01010490 | Arabic: جزيرة الأريام
+district	Zayed City	Code: 01010500 | Arabic: مدينة زايد
+district	Yas Island	Code: 01010510 | Arabic: جزيرة ياس
+district	Al Selmiyyah	Code: 01010520 | Arabic: السلمية
+district	Al Heel Island	Code: 01010530 | Arabic: جزيرة الحيل
+district	Al Bahyah	Code: 01010540 | Arabic: الباهية
+district	Ujaij	Code: 01010550 | Arabic: عجيج
+district	Al Matar	Code: 01010560 | Arabic: المطار
+district	Al Bihouth	Code: 01010570 | Arabic: البحوث
+district	Al Zubarah	Code: 01010580 | Arabic: الزبارة
+district	Al Nouf	Code: 01010590 | Arabic: النوف
+district	Al Reef	Code: 01010600 | Arabic: الريف
+district	Shakhbout City	Code: 01010610 | Arabic: مدينة شخبوط
+district	Jarn Yafour	Code: 01010620 | Arabic: جرن يافور
+district	Al Shahamah	Code: 01010630 | Arabic: الشهامة
+district	Al Shinayin	Code: 01010640 | Arabic: الشناين
+district	Al Sader	Code: 01010650 | Arabic: الصدر
+district	Bani Yas	Code: 01010660 | Arabic: بني ياس
+district	Al Shelaylah Island	Code: 01010670 | Arabic: جزيرة الشليلة
+district	Al Shawamekh	Code: 01010680 | Arabic: الشوامخ
+district	Al Hanyourah	Code: 01010690 | Arabic: الحنيورة
+district	Rawdat Al Reef	Code: 01010700 | Arabic: روضة الريف
+district	Al Falah	Code: 01010710 | Arabic: الفلاح
+district	Al Shamkhah	Code: 01010720 | Arabic: الشامخة
+district	Al Rahbah	Code: 01010730 | Arabic: الرحبة
+district	Abu Mreikhah	Code: 01010740 | Arabic: أبو مريخة
+district	Al Wathbah	Code: 01010750 | Arabic: الوثبة
+district	Al Khidayrah	Code: 01010760 | Arabic: الخضيرة
+district	Madinat Al Riyad	Code: 01010770 | Arabic: مدينة الرياض
+district	Al Nahdah	Code: 01010780 | Arabic: النهضة
+district	Al Samhah	Code: 01010790 | Arabic: السمحة
+district	Al Taweelah	Code: 01010800 | Arabic: الطويلة
+district	Mshayrif	Code: 01010810 | Arabic: مشيرف
+district	Muwaylih	Code: 01010820 | Arabic: مويلح
+district	Zayed Military City	Code: 01010830 | Arabic: مدينة زايد العسكرية
+district	Al Mi'rad	Code: 01010840 | Arabic: المعراض
+district	Al Ma'mourah	Code: 01010850 | Arabic: المعمورة
+district	Al Haffar	Code: 01010860 | Arabic: الحفار
+district	Khalifa Industrial	Code: 01010870 | Arabic: خليفة الصناعية
+district	Ghanadhah	Code: 01010880 | Arabic: غناضة
+district	Al Smeeh	Code: 01010890 | Arabic: السميح
+district	Abu Al Abyad Island	Code: 01010900 | Arabic: جزيرة أبو الأبيض
+district	Al 'Adlah	Code: 01010910 | Arabic: العدلة
+district	Al 'Asheesh	Code: 01010920 | Arabic: العشيش
+district	Al Sout	Code: 01010930 | Arabic: السوت
+district	Al Fayah	Code: 01010940 | Arabic: الفاية
+district	Dhaharat Al Teeb	Code: 01010950 | Arabic: ظهارة الطيب
+district	Ghadeer Al Tayr	Code: 01010960 | Arabic: غدير الطير
+district	Al Layyan	Code: 01010970 | Arabic: الليان
+district	Dihan	Code: 01010980 | Arabic: دهان
+district	Al Khatm	Code: 01010990 | Arabic: الختم
+district	Ghantout	Code: 01011000 | Arabic: غنتوت
+district	Al Ain Region	Code: 0102 | Arabic: منطقة العين
+district	Al Jimi	Code: 01020010 | Arabic: الجيمي
+district	Al Mu'tarid	Code: 01020020 | Arabic: المعترض
+district	Al Qattarah	Code: 01020030 | Arabic: القطارة
+district	Al Mas'oudi	Code: 01020040 | Arabic: المسعودي
+district	Al Muwaij'i	Code: 01020050 | Arabic: المويجعي
+district	Al Tiwayya	Code: 01020060 | Arabic: الطوية
+district	Al Khibeesi	Code: 01020070 | Arabic: الخبيصي
+district	Central District	Code: 01020080 | Arabic: وسط المدينة
+district	Al Nabbagh	Code: 01020090 | Arabic: النباغ
+district	Al Jahili	Code: 01020100 | Arabic: الجاهلي
+district	Hili	Code: 01020110 | Arabic: هيلي
+district	Al Mutaw'ah	Code: 01020120 | Arabic: المطاوعة
+district	Falaj Hazza'	Code: 01020130 | Arabic: فلج هزاع
+district	Industrial Area	Code: 01020140 | Arabic: المنطقة الصناعية
+district	Al Sarouj	Code: 01020150 | Arabic: الصاروج
+district	Al Markhaniyyah	Code: 01020160 | Arabic: المرخانية
+district	Al Dahma	Code: 01020170 | Arabic: الدهماء
+district	'Asharij	Code: 01020180 | Arabic: عشارج
+district	Shiab Al Ashkhar	Code: 01020190 | Arabic: شعاب الأشخر
+district	Al Bateen	Code: 01020200 | Arabic: البطين
+district	Al Ruwaydat	Code: 01020210 | Arabic: الرويضات
+district	Al 'Iqabiyyah	Code: 01020220 | Arabic: العقابية
+district	Al Ain International Airport	Code: 01020230 | Arabic: مطار العين الدولي
+district	Bad' Bint Sa'oud	Code: 01020240 | Arabic: بدع بنت سعود
+district	Zakhir	Code: 01020250 | Arabic: زاخر
+district	Al Shuwaymah	Code: 01020260 | Arabic: الشويمة
+district	Al Fou'ah	Code: 01020270 | Arabic: الفوعة
+district	Al Aflaj	Code: 01020280 | Arabic: الأفلاج
+district	Al Maqam	Code: 01020290 | Arabic: المقام
+district	Ghnaymah	Code: 01020300 | Arabic: غنيمة
+district	Al Rawdah Al Sharqiyah	Code: 01020310 | Arabic: الروضة الشرقية
+district	Al Noud	Code: 01020320 | Arabic: النود
+district	Malaqit	Code: 01020330 | Arabic: ملاقط
+district	Mbazzarah Al Khadra	Code: 01020340 | Arabic: مبزرة الخضراء
+district	Ghireebah	Code: 01020350 | Arabic: غريبة
+district	Shi'bat Al Wutah	Code: 01020360 | Arabic: شعبة الوطاه
+district	Al Salamat	Code: 01020370 | Arabic: السلامات
+district	Ni'mah	Code: 01020380 | Arabic: نعمة
+district	Masakin	Code: 01020390 | Arabic: مساكن
+district	Jabal Hafeet	Code: 01020400 | Arabic: جبل حفيت
+district	Al Aamerah	Code: 01020410 | Arabic: العامرة
+district	Ain Al Faydah	Code: 01020420 | Arabic: عين الفايضة
+district	Al Qisees	Code: 01020430 | Arabic: القسيس
+district	Al Dhahir	Code: 01020440 | Arabic: الظاهر
+district	Sweihan	Code: 01020450 | Arabic: سويحان
+district	Khatm Al Shiklah	Code: 01020460 | Arabic: خطم الشكلة
+district	Industrial City	Code: 01020470 | Arabic: المدينة الصناعية
+district	Um Ghafah	Code: 01020480 | Arabic: أم غافة
+district	Nahil	Code: 01020490 | Arabic: ناهل
+district	Al Rawdah	Code: 01020500 | Arabic: الروضة
+district	Al Dhahrah	Code: 01020510 | Arabic: الظاهرة
+district	Sa'	Code: 01020520 | Arabic: صاع
+district	Mazyad	Code: 01020530 | Arabic: مزيد
+district	Al Sad	Code: 01020540 | Arabic: الساد
+district	Al Hiyar	Code: 01020550 | Arabic: الهير
+district	Rimah	Code: 01020560 | Arabic: رماح
+district	Abu Samrah	Code: 01020570 | Arabic: أبو سمرة
+district	Ramlat Sweihan	Code: 01020580 | Arabic: رملة سويحان
+district	Al Faqa'	Code: 01020590 | Arabic: الفقع
+district	Al 'Ajban	Code: 01020600 | Arabic: العجبان
+district	Bu Kirayyah	Code: 01020610 | Arabic: بو كرية
+district	Al Shiwayb	Code: 01020620 | Arabic: الشويب
+district	Al 'Arad	Code: 01020630 | Arabic: العراد
+district	Niqa Al Dheeb	Code: 01020640 | Arabic: نقا الذيب
+district	Al Khaznah	Code: 01020650 | Arabic: الخزنة
+district	Al Wiqan	Code: 01020660 | Arabic: الوقن
+district	Abu Hiraybah	Code: 01020670 | Arabic: أبو حريبة
+district	Al Qou'	Code: 01020680 | Arabic: القوع
+district	Um Al Zumoul	Code: 01020690 | Arabic: أم الزمول
+district	Al Dhafra Region	Code: 0103 | Arabic: منطقة الظفرة
+district	Zayed City	Code: 01030010 | Arabic: مدينة زايد
+district	Al Bday'Ah	Code: 01030020 | Arabic: البْدَيْعَة
+district	Bilji'An	Code: 01030030 | Arabic: بِلْجِعان
+district	Habshan	Code: 01030040 | Arabic: حَبْشَان
+district	Bu Al Dhiyab	Code: 01030050 | Arabic: بو الذياب
+district	Al 'Azeezah	Code: 01030060 | Arabic: العزيزة
+district	Bu Hasa	Code: 01030070 | Arabic: بُو حَصَا
+district	Um Laylah	Code: 01030080 | Arabic: أم ليله
+district	MzeerʻAh	Code: 01030090 | Arabic: مْزِيرْعَة
+district	Tarif	Code: 01030100 | Arabic: طَرِيف
+district	Al Taf Al Gharbi	Code: 01030110 | Arabic: الطف الغربي
+district	Al Zarraf	Code: 01030120 | Arabic: الزَّرَّاف
+district	Western Mahadir	Code: 01030130 | Arabic: المحاضر الغربية
+district	Eastern Mahadir	Code: 01030140 | Arabic: المحاضر الشرقية
+district	Al Rideem	Code: 01030150 | Arabic: الرِّدِيم
+district	Al Marfa	Code: 01030160 | Arabic: المرْفَأ
+district	Al Hadwaniyyah	Code: 01030170 | Arabic: الهدوانية
+district	Al Dhafra Islands	Code: 01030180 | Arabic: جزر منطقة الظفرة
+district	Milaysah	Code: 01030190 | Arabic: مِلَيسَة
+district	Bateen Liwa	Code: 01030200 | Arabic: بَطين ليوا
+district	Yaw Al Nadhrah	Code: 01030210 | Arabic: يَوْ النَّظْرَة
+district	Al Harmiyyah	Code: 01030220 | Arabic: الهَرميَّة
+district	Qirayn Al 'Aysh	Code: 01030230 | Arabic: قِرَيْنْ العَيْش
+district	Khasbat Al Reem	Code: 01030240 | Arabic: خَصبة الرِّيم
+district	Baynounah	Code: 01030250 | Arabic: بينونة
+district	Abu Qrayn	Code: 01030260 | Arabic: أبو قْرَيْن
+district	Mkhayriz	Code: 01030270 | Arabic: مْخَيرِز
+district	Hameem	Code: 01030280 | Arabic: حميم
+district	Al 'Ayif	Code: 01030290 | Arabic: العَايِف
+district	Ghiyathi	Code: 01030300 | Arabic: غِيَّاثِي
+district	Al Ruways	Code: 01030310 | Arabic: مدينة الرويس الصناعية
+district	Al Mirayr	Code: 01030320 | Arabic: المِرَيْر
+district	Yaw Al Ghadar	Code: 01030330 | Arabic: يَو الغَدَر
+district	Bad' Al Mutaw'Ah	Code: 01030340 | Arabic: بَدْع المُطاوْعة
+district	Jabal Al Dhannah	Code: 01030350 | Arabic: مدينة الظنة
+district	Al Jazeerah	Code: 01030360 | Arabic: الجَزيرَة
+district	Um Al Ashtan	Code: 01030370 | Arabic: أم الأشطان
+district	Al Hamra	Code: 01030380 | Arabic: الحَمْرَا
+district	Al Shuweehat	Code: 01030390 | Arabic: الشُّوِيهَات
+district	Barakah	Code: 01030400 | Arabic: بَرَاكَة
+district	Sabkhat Matti	Code: 01030410 | Arabic: سَبْخَة مَطِّي
+district	Delma	Code: 01030420 | Arabic: دلما
+district	Mahmiyyat Al Suqour	Code: 01030430 | Arabic: مَحْمِيَّة الصُّقُور
+district	Al Wuhaydah	Code: 01030440 | Arabic: الوُهَيْدَة
+district	Al Sila'	Code: 01030450 | Arabic: السِّلَع
+district	Ras Mshayrib	Code: 01030460 | Arabic: رَأس مْشَيْرِب
+district	Al Ghuweifat	Code: 01030470 | Arabic: الغويفات
+district	Ras Ghumeis	Code: 01030480 | Arabic: رأس غُمِيس

@@ -1,29 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Button, Card, Form, Modal, Spinner, Table } from 'react-bootstrap';
 
 import {
   deleteValueMapping,
@@ -54,6 +30,8 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
   const [editing, setEditing] = useState<ValueMappingExpanded | null>(null);
   const [editForm, setEditForm] = useState<ValueMappingUpdatePayload>({});
   const [deleteTarget, setDeleteTarget] = useState<ValueMappingExpanded | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   const canonicalByDimension = useMemo(() => {
     const map = new Map<string, CanonicalValue[]>();
@@ -72,24 +50,28 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
       setConnections(records);
     } catch (error) {
       console.error(error);
-      onToast({ type: 'error', content: 'Failed to load connections' });
+      onToast({ type: 'error', content: 'Failed to load connections.' });
     }
   }, [onToast]);
 
-  const loadMappings = useCallback(async (connection: number | 'all') => {
-    setLoading(true);
-    try {
-      const records = connection === 'all'
-        ? await fetchAllValueMappings()
-        : await fetchConnectionValueMappings(connection);
-      setMappings(records);
-    } catch (error) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Unable to load value mappings' });
-    } finally {
-      setLoading(false);
-    }
-  }, [onToast]);
+  const loadMappings = useCallback(
+    async (connection: number | 'all') => {
+      setLoading(true);
+      try {
+        const records =
+          connection === 'all'
+            ? await fetchAllValueMappings()
+            : await fetchConnectionValueMappings(connection);
+        setMappings(records);
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Unable to load value mappings.' });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [onToast],
+  );
 
   useEffect(() => {
     void loadConnections();
@@ -111,11 +93,11 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
 
   const handleUpdate = async () => {
     if (!editing) return;
+    setSaving(true);
     try {
       const payload: ValueMappingUpdatePayload = {
         ...editForm,
-        confidence:
-          typeof editForm.confidence === 'number' ? editForm.confidence : undefined,
+        confidence: typeof editForm.confidence === 'number' ? editForm.confidence : undefined,
         notes: editForm.notes === '' ? undefined : editForm.notes,
       };
       const updated = await updateValueMapping(editing.source_connection_id, editing.id, payload);
@@ -137,197 +119,222 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
             : item,
         ),
       );
-      onToast({ type: 'success', content: 'Mapping updated' });
+      onToast({ type: 'success', content: 'Mapping updated.' });
+      setEditing(null);
     } catch (error) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to update mapping' });
-      return;
+      onToast({ type: 'error', content: 'Unable to update mapping.' });
     } finally {
-      setEditing(null);
+      setSaving(false);
     }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setRemoving(true);
     try {
       await deleteValueMapping(deleteTarget.source_connection_id, deleteTarget.id);
       setMappings((prev) => prev.filter((item) => item.id !== deleteTarget.id));
-      onToast({ type: 'success', content: 'Mapping deleted' });
+      onToast({ type: 'success', content: 'Mapping deleted.' });
+      setDeleteTarget(null);
     } catch (error) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to delete mapping' });
+      onToast({ type: 'error', content: 'Unable to delete mapping.' });
     } finally {
+      setRemoving(false);
       setDeleteTarget(null);
     }
   };
 
+  const renderRows = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan={7} className="text-center py-4">
+            <Spinner animation="border" role="status" size="sm" className="me-2" /> Loading mappings…
+          </td>
+        </tr>
+      );
+    }
+
+    if (!mappings.length) {
+      return (
+        <tr>
+          <td colSpan={7} className="text-center text-body-secondary py-4">
+            No mappings available for the selected scope.
+          </td>
+        </tr>
+      );
+    }
+
+    return mappings.map((mapping) => (
+      <tr key={mapping.id}>
+        <td className="fw-semibold">{mapping.raw_value}</td>
+        <td>{mapping.canonical_label}</td>
+        <td>{mapping.ref_dimension}</td>
+        <td className="text-monospaced">{mapping.status}</td>
+        <td>
+          {mapping.confidence != null ? `${(mapping.confidence * 100).toFixed(1)}%` : '—'}
+        </td>
+        <td className="text-monospaced">{new Date(mapping.updated_at).toLocaleString()}</td>
+        <td className="text-end">
+          <div className="d-inline-flex gap-2">
+            <Button size="sm" variant="outline-primary" onClick={() => openEdit(mapping)}>
+              Edit
+            </Button>
+            <Button size="sm" variant="outline-danger" onClick={() => setDeleteTarget(mapping)}>
+              Delete
+            </Button>
+          </div>
+        </td>
+      </tr>
+    ));
+  };
+
   return (
-    <Stack spacing={4} component="section">
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
+    <div className="d-flex flex-column gap-4">
+      <Card className="card-section">
+        <Card.Body className="d-flex flex-column gap-3">
+          <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+              <Card.Title as="h1" className="section-heading h4 mb-1">
                 Mapping history
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Review every approved mapping across your reference datasets. Update or retire mappings as source systems evolve.
-              </Typography>
-            </Box>
-            <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel id="history-connection-label">Connection</InputLabel>
-              <Select
-                labelId="history-connection-label"
-                label="Connection"
+              </Card.Title>
+              <Card.Text className="text-body-secondary mb-0">
+                Review every approved mapping and ensure canonical assignments stay current.
+              </Card.Text>
+            </div>
+            <Form.Group controlId="history-connection" className="w-auto">
+              <Form.Label>Connection</Form.Label>
+              <Form.Select
                 value={selectedConnection}
                 onChange={(event) => {
                   const value = event.target.value;
                   setSelectedConnection(value === 'all' ? 'all' : Number(value));
                 }}
               >
-                <MenuItem value="all">All connections</MenuItem>
+                <option value="all">All connections</option>
                 {connections.map((connection) => (
-                  <MenuItem key={connection.id} value={connection.id}>
+                  <option key={connection.id} value={connection.id}>
                     {connection.name}
-                  </MenuItem>
+                  </option>
                 ))}
-              </Select>
-            </FormControl>
-          </Box>
-          {loading && <Typography variant="body2">Loading mappings…</Typography>}
-        </Stack>
-      </Paper>
+              </Form.Select>
+            </Form.Group>
+          </div>
+          <div className="table-responsive">
+            <Table striped hover className="align-middle table-nowrap">
+              <thead>
+                <tr>
+                  <th>Raw value</th>
+                  <th>Canonical label</th>
+                  <th>Dimension</th>
+                  <th>Status</th>
+                  <th>Confidence</th>
+                  <th>Updated</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>{renderRows()}</tbody>
+            </Table>
+          </div>
+        </Card.Body>
+      </Card>
 
-      <Paper variant="outlined" sx={{ p: { xs: 0 } }}>
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Connection</TableCell>
-                <TableCell>Source</TableCell>
-                <TableCell>Canonical value</TableCell>
-                <TableCell>Dimension</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Confidence</TableCell>
-                <TableCell>Updated</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {mappings.map((mapping) => (
-                <TableRow key={mapping.id} hover>
-                  <TableCell>
-                    {connections.find((conn) => conn.id === mapping.source_connection_id)?.name || mapping.source_connection_id}
-                  </TableCell>
-                  <TableCell>{mapping.source_table}.{mapping.source_field}</TableCell>
-                  <TableCell>{mapping.canonical_label}</TableCell>
-                  <TableCell>{mapping.ref_dimension}</TableCell>
-                  <TableCell>{mapping.status}</TableCell>
-                  <TableCell>{mapping.confidence != null ? `${(mapping.confidence * 100).toFixed(0)}%` : '—'}</TableCell>
-                  <TableCell>{new Date(mapping.updated_at).toLocaleString()}</TableCell>
-                  <TableCell align="right">
-                    <Button size="small" startIcon={<EditRoundedIcon fontSize="small" />} onClick={() => openEdit(mapping)}>
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      startIcon={<DeleteRoundedIcon fontSize="small" />}
-                      onClick={() => setDeleteTarget(mapping)}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
+      <Modal show={Boolean(editing)} onHide={() => setEditing(null)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit mapping</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="d-flex flex-column gap-3">
+          <Form.Group controlId="edit-canonical">
+            <Form.Label>Canonical value</Form.Label>
+            <Form.Select
+              value={editForm.canonical_id ?? ''}
+              onChange={(event) => setEditForm((prev) => ({ ...prev, canonical_id: Number(event.target.value) }))}
+            >
+              {(canonicalByDimension.get(editing?.ref_dimension ?? '') ?? canonicalValues).map((canonical) => (
+                <option key={canonical.id} value={canonical.id}>
+                  {canonical.canonical_label}
+                </option>
               ))}
-              {!mappings.length && !loading && (
-                <TableRow>
-                  <TableCell colSpan={8} align="center">
-                    <Typography variant="body2" color="text.secondary">
-                      No mappings recorded yet.
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-
-      <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit mapping</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={2}>
-            <FormControl fullWidth>
-              <InputLabel id="edit-canonical-label">Canonical value</InputLabel>
-              <Select
-                labelId="edit-canonical-label"
-                label="Canonical value"
-                value={editForm.canonical_id ?? ''}
-                onChange={(event) => setEditForm((prev) => ({ ...prev, canonical_id: Number(event.target.value) }))}
-              >
-                {editing &&
-                  (canonicalByDimension.get(editing.ref_dimension) ?? []).map((canonical) => (
-                    <MenuItem key={canonical.id} value={canonical.id}>
-                      {canonical.canonical_label}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
-              <InputLabel id="edit-status-label">Status</InputLabel>
-              <Select
-                labelId="edit-status-label"
-                label="Status"
-                value={editForm.status ?? 'approved'}
-                onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}
-              >
-                <MenuItem value="approved">Approved</MenuItem>
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="retired">Retired</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label="Confidence (0-1)"
+            </Form.Select>
+          </Form.Group>
+          <Form.Group controlId="edit-status">
+            <Form.Label>Status</Form.Label>
+            <Form.Select
+              value={editForm.status ?? editing?.status ?? 'approved'}
+              onChange={(event) => setEditForm((prev) => ({ ...prev, status: event.target.value }))}
+            >
+              <option value="approved">approved</option>
+              <option value="pending">pending</option>
+              <option value="rejected">rejected</option>
+            </Form.Select>
+          </Form.Group>
+          <Form.Group controlId="edit-confidence">
+            <Form.Label>Confidence</Form.Label>
+            <Form.Control
               type="number"
-              inputProps={{ min: 0, max: 1, step: 0.05 }}
+              min={0}
+              max={1}
+              step="0.01"
               value={editForm.confidence ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, confidence: event.target.value === '' ? undefined : Number(event.target.value) }))}
-              fullWidth
+              placeholder="0.85"
+              onChange={(event) =>
+                setEditForm((prev) => ({ ...prev, confidence: event.target.value ? Number(event.target.value) : undefined }))
+              }
             />
-            <TextField
-              label="Notes"
+          </Form.Group>
+          <Form.Group controlId="edit-notes">
+            <Form.Label>Notes</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
               value={editForm.notes ?? ''}
               onChange={(event) => setEditForm((prev) => ({ ...prev, notes: event.target.value }))}
-              fullWidth
-              multiline
-              minRows={3}
             />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditing(null)}>Cancel</Button>
-          <Button onClick={() => void handleUpdate()} variant="contained" startIcon={<SaveRoundedIcon />}>
-            Save
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setEditing(null)}>
+            Cancel
           </Button>
-        </DialogActions>
-      </Dialog>
+          <Button variant="primary" onClick={() => void handleUpdate()} disabled={saving}>
+            {saving ? (
+              <span className="d-inline-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Saving…
+              </span>
+            ) : (
+              'Save changes'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
-        <DialogTitle>Delete mapping</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Remove the mapping for “{deleteTarget?.raw_value}” from {deleteTarget?.source_table}.{deleteTarget?.source_field}?
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" onClick={() => void handleDelete()} startIcon={<DeleteRoundedIcon />}>
-            Delete
+      <Modal show={Boolean(deleteTarget)} onHide={() => setDeleteTarget(null)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete mapping</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Delete mapping for <strong>{deleteTarget?.raw_value}</strong> → <strong>{deleteTarget?.canonical_label}</strong>?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setDeleteTarget(null)}>
+            Cancel
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Stack>
+          <Button variant="danger" onClick={() => void handleDelete()} disabled={removing}>
+            {removing ? (
+              <span className="d-inline-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Deleting…
+              </span>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 };
 

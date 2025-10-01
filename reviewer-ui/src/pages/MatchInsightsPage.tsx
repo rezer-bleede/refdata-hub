@@ -1,17 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded';
-import {
-  Box,
-  Chip,
-  FormControl,
-  InputLabel,
-  LinearProgress,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Badge, Card, Form, ProgressBar, Spinner } from 'react-bootstrap';
 
 import { fetchMatchStatistics, fetchSourceConnections } from '../api';
 import type { FieldMatchStats, MatchCandidate, SourceConnection, ToastMessage } from '../types';
@@ -22,20 +10,21 @@ interface MatchInsightsPageProps {
 
 const renderSuggestions = (suggestions: MatchCandidate[]) => {
   if (!suggestions.length) {
-    return <Typography variant="body2">No suggestions above the relaxed threshold.</Typography>;
+    return <p className="text-body-secondary mb-0">No suggestions above the relaxed threshold.</p>;
   }
 
   return (
-    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+    <div className="d-flex flex-wrap gap-2">
       {suggestions.map((candidate) => (
-        <Chip
+        <Badge
           key={candidate.canonical_id}
-          label={`${candidate.canonical_label} (${(candidate.score * 100).toFixed(0)}%)`}
-          size="small"
-          color={candidate.score >= 0.6 ? 'primary' : 'default'}
-        />
+          bg={candidate.score >= 0.6 ? 'primary' : 'secondary'}
+          className="text-wrap"
+        >
+          {candidate.canonical_label} ({(candidate.score * 100).toFixed(0)}%)
+        </Badge>
       ))}
-    </Stack>
+    </div>
   );
 };
 
@@ -54,22 +43,25 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
       }
     } catch (error) {
       console.error(error);
-      onToast({ type: 'error', content: 'Failed to load connections' });
+      onToast({ type: 'error', content: 'Failed to load connections.' });
     }
   }, [onToast, selectedConnectionId]);
 
-  const loadStats = useCallback(async (connectionId: number) => {
-    setLoading(true);
-    try {
-      const response = await fetchMatchStatistics(connectionId);
-      setStats(response);
-    } catch (error) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Unable to compute match statistics' });
-    } finally {
-      setLoading(false);
-    }
-  }, [onToast]);
+  const loadStats = useCallback(
+    async (connectionId: number) => {
+      setLoading(true);
+      try {
+        const response = await fetchMatchStatistics(connectionId);
+        setStats(response);
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Unable to compute match statistics.' });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [onToast],
+  );
 
   useEffect(() => {
     void loadConnections();
@@ -97,107 +89,105 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
   }, [stats]);
 
   return (
-    <Stack spacing={4} component="section">
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 2 }}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" fontWeight={600} gutterBottom>
+    <div className="d-flex flex-column gap-4">
+      <Card className="card-section">
+        <Card.Body className="d-flex flex-column gap-3">
+          <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+            <div>
+              <Card.Title as="h1" className="section-heading h4 mb-1">
                 Match insights
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Monitor the alignment between raw source values and canonical records. Use these insights to prioritise review efforts.
-              </Typography>
-            </Box>
-            <FormControl size="small" sx={{ minWidth: 220 }}>
-              <InputLabel id="match-connection-label">Connection</InputLabel>
-              <Select
-                labelId="match-connection-label"
-                label="Connection"
+              </Card.Title>
+              <Card.Text className="text-body-secondary mb-0">
+                Monitor alignment between raw values and canonical records. Use the insights below to prioritise review efforts.
+              </Card.Text>
+            </div>
+            <Form.Group controlId="match-connection" className="w-auto">
+              <Form.Label>Connection</Form.Label>
+              <Form.Select
                 value={selectedConnectionId}
-                onChange={(event) => setSelectedConnectionId(Number(event.target.value))}
+                onChange={(event) =>
+                  setSelectedConnectionId(event.target.value ? Number(event.target.value) : '')
+                }
               >
+                <option value="">Select connection</option>
                 {connections.map((connection) => (
-                  <MenuItem key={connection.id} value={connection.id}>
+                  <option key={connection.id} value={connection.id}>
                     {connection.name}
-                  </MenuItem>
+                  </option>
                 ))}
-              </Select>
-            </FormControl>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <InsightsRoundedIcon color="primary" />
-            <Box>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Overall match rate
-              </Typography>
-              <Typography variant="h4" fontWeight={700}>
-                {(overallRate * 100).toFixed(1)}%
-              </Typography>
-            </Box>
-          </Box>
-          {loading && <LinearProgress />}
-        </Stack>
-      </Paper>
+              </Form.Select>
+            </Form.Group>
+          </div>
+          <div className="d-flex align-items-center gap-3">
+            <div>
+              <p className="text-body-secondary mb-1">Overall match rate</p>
+              <h2 className="display-6 fw-semibold mb-0">{(overallRate * 100).toFixed(1)}%</h2>
+            </div>
+            <div className="flex-grow-1">
+              <ProgressBar now={overallRate * 100} variant="success" style={{ height: '0.75rem' }} />
+            </div>
+          </div>
+          {loading && <Spinner animation="border" role="status" className="align-self-start" />}
+        </Card.Body>
+      </Card>
 
       {stats.map((item) => (
-        <Paper key={item.mapping_id} variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-          <Stack spacing={2}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-              <Box>
-                <Typography variant="subtitle1" fontWeight={600}>
+        <Card key={item.mapping_id} className="card-section">
+          <Card.Body className="d-flex flex-column gap-3">
+            <div className="d-flex justify-content-between flex-wrap gap-3">
+              <div>
+                <Card.Title as="h2" className="h5 mb-1">
                   {item.source_table}.{item.source_field}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
+                </Card.Title>
+                <Card.Text className="text-body-secondary mb-0">
                   Dimension: {item.ref_dimension}
-                </Typography>
-              </Box>
-              <Box textAlign="right">
-                <Typography variant="h5" fontWeight={700}>
-                  {(item.match_rate * 100).toFixed(1)}%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
+                </Card.Text>
+              </div>
+              <div className="text-end">
+                <div className="display-6 fw-semibold">{(item.match_rate * 100).toFixed(1)}%</div>
+                <div className="text-body-secondary">
                   {item.matched_values} / {item.total_values} matched
-                </Typography>
-              </Box>
-            </Box>
+                </div>
+              </div>
+            </div>
 
-            <Box>
-              <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                Top unmatched values
-              </Typography>
-              <Stack spacing={1}>
+            <div>
+              <h3 className="h6 mb-2">Top unmatched values</h3>
+              <div className="d-flex flex-column gap-2">
                 {item.top_unmatched.length ? (
                   item.top_unmatched.map((unmatched) => (
-                    <Paper key={unmatched.raw_value} variant="outlined" sx={{ p: 2 }}>
-                      <Typography variant="body2" fontWeight={600}>
-                        {unmatched.raw_value}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {unmatched.occurrence_count} occurrences
-                      </Typography>
-                      <Box sx={{ mt: 1 }}>{renderSuggestions(unmatched.suggestions)}</Box>
-                    </Paper>
+                    <Card key={unmatched.raw_value} body className="border-0 bg-body-tertiary">
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <div className="fw-semibold">{unmatched.raw_value}</div>
+                          <div className="text-body-secondary small">
+                            {unmatched.occurrence_count} occurrences
+                          </div>
+                        </div>
+                        <Badge bg="warning" text="dark">
+                          Needs review
+                        </Badge>
+                      </div>
+                      <div className="mt-2">{renderSuggestions(unmatched.suggestions)}</div>
+                    </Card>
                   ))
                 ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    Every sampled value met the configured threshold.
-                  </Typography>
+                  <p className="text-body-secondary mb-0">Every sampled value met the configured threshold.</p>
                 )}
-              </Stack>
-            </Box>
-          </Stack>
-        </Paper>
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
       ))}
 
       {!stats.length && !loading && (
-        <Paper variant="outlined" sx={{ p: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            No mappings available for the selected connection yet.
-          </Typography>
-        </Paper>
+        <Card className="card-section">
+          <Card.Body>
+            <p className="text-body-secondary mb-0">No mappings available for the selected connection yet.</p>
+          </Card.Body>
+        </Card>
       )}
-    </Stack>
+    </div>
   );
 };
 

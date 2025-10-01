@@ -1,28 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Grid,
-  IconButton,
-  Paper,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Button, Card, Col, Form, Modal, Row, Spinner, Table } from 'react-bootstrap';
 
 import {
   createSourceConnection,
@@ -68,7 +45,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
       setConnections(records);
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Failed to load connections' });
+      onToast({ type: 'error', content: 'Failed to load connections.' });
     } finally {
       setLoading(false);
     }
@@ -96,11 +73,11 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
       };
       const created = await createSourceConnection(payload);
       setConnections((prev) => [...prev, created]);
-      setForm(emptyForm);
-      onToast({ type: 'success', content: 'Connection added' });
+      setForm({ ...emptyForm });
+      onToast({ type: 'success', content: 'Connection added.' });
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to create connection' });
+      onToast({ type: 'error', content: 'Unable to create connection.' });
     } finally {
       setSubmitting(false);
     }
@@ -120,285 +97,334 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
     });
   };
 
+  const handleEditChange = (key: keyof SourceConnectionUpdatePayload, value: string) => {
+    setEditForm((prev) => ({ ...prev, [key]: key === 'port' ? Number(value) : value }));
+  };
+
   const handleUpdate = async () => {
     if (!editing) return;
+    setSubmitting(true);
     try {
       const payload: SourceConnectionUpdatePayload = {
         ...editForm,
-        port: typeof editForm.port === 'string' ? Number(editForm.port) : editForm.port,
+        options: editForm.options ? editForm.options : undefined,
+        password: editForm.password ? editForm.password : undefined,
       };
-      if (!payload.password) {
-        delete payload.password;
-      }
-      if (payload.options === '') {
-        payload.options = undefined;
-      }
       const updated = await updateSourceConnection(editing.id, payload);
       setConnections((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-      onToast({ type: 'success', content: 'Connection updated' });
+      setEditing(null);
+      onToast({ type: 'success', content: 'Connection updated.' });
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to update connection' });
-      return;
+      onToast({ type: 'error', content: 'Unable to update connection.' });
     } finally {
-      setEditing(null);
+      setSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+    setSubmitting(true);
     try {
       await deleteSourceConnection(deleteTarget.id);
       setConnections((prev) => prev.filter((item) => item.id !== deleteTarget.id));
-      onToast({ type: 'success', content: 'Connection removed' });
+      onToast({ type: 'success', content: 'Connection deleted.' });
+      setDeleteTarget(null);
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to delete connection' });
+      onToast({ type: 'error', content: 'Unable to delete connection.' });
     } finally {
-      setDeleteTarget(null);
+      setSubmitting(false);
     }
   };
 
-  const renderConnectionTable = () => {
-    if (!connections.length) {
-      return (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 3 }}>
-          No connections configured yet. Add one to start ingesting source data.
-        </Typography>
-      );
-    }
-
-    return (
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Type</TableCell>
-            <TableCell>Host</TableCell>
-            <TableCell>Database</TableCell>
-            <TableCell>User</TableCell>
-            <TableCell>Updated</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {connections.map((connection) => (
-            <TableRow key={connection.id} hover>
-              <TableCell>{connection.name}</TableCell>
-              <TableCell>{connection.db_type}</TableCell>
-              <TableCell>{connection.host}:{connection.port}</TableCell>
-              <TableCell>{connection.database}</TableCell>
-              <TableCell>{connection.username}</TableCell>
-              <TableCell>{new Date(connection.updated_at).toLocaleString()}</TableCell>
-              <TableCell align="right">
-                <IconButton onClick={() => openEdit(connection)} aria-label="Edit">
-                  <EditRoundedIcon fontSize="small" />
-                </IconButton>
-                <IconButton onClick={() => setDeleteTarget(connection)} aria-label="Delete">
-                  <DeleteRoundedIcon fontSize="small" />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
-  };
+  const sortedConnections = useMemo(
+    () => [...connections].sort((a, b) => a.name.localeCompare(b.name)),
+    [connections],
+  );
 
   return (
-    <Stack spacing={4} component="section">
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Box>
-            <Typography variant="h6" fontWeight={600} gutterBottom>
+    <div className="d-flex flex-column gap-4">
+      <Card className="card-section">
+        <Card.Body className="d-flex flex-column gap-4">
+          <div>
+            <Card.Title as="h1" className="section-heading h4 mb-1">
               Register a source connection
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Connection metadata is stored securely and used for field mapping, sampling, and reconciliation.
-            </Typography>
-          </Box>
-          <Grid container spacing={2} columns={{ xs: 1, sm: 6, md: 12 }}>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Connection Name"
-                value={form.name}
-                onChange={(event) => handleFormChange('name', event.target.value)}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Database Type"
-                value={form.db_type}
-                onChange={(event) => handleFormChange('db_type', event.target.value)}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Host"
-                value={form.host}
-                onChange={(event) => handleFormChange('host', event.target.value)}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Port"
-                type="number"
-                value={form.port}
-                onChange={(event) => handleFormChange('port', event.target.value)}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Database"
-                value={form.database}
-                onChange={(event) => handleFormChange('database', event.target.value)}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Username"
-                value={form.username}
-                onChange={(event) => handleFormChange('username', event.target.value)}
-                fullWidth
-                required
-              />
-            </Grid>
-            <Grid item xs={1} sm={3} md={4}>
-              <TextField
-                label="Password"
-                type="password"
-                value={form.password ?? ''}
-                onChange={(event) => handleFormChange('password', event.target.value)}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={1} sm={6} md={8}>
-              <TextField
-                label="Options (JSON)"
-                value={form.options ?? ''}
-                onChange={(event) => handleFormChange('options', event.target.value)}
-                fullWidth
-                placeholder='{"sslmode":"require"}'
-              />
-            </Grid>
-            <Grid item xs={1} sm={6} md={12}>
-              <Button
-                variant="contained"
-                startIcon={<AddCircleRoundedIcon />}
-                disabled={submitting}
-                onClick={() => void handleCreate()}
-              >
-                {submitting ? 'Adding…' : 'Add Connection'}
+            </Card.Title>
+            <Card.Text className="text-body-secondary mb-0">
+              Store connection metadata for sampling, mapping, and reconciliation workflows.
+            </Card.Text>
+          </div>
+
+          <Form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleCreate();
+            }}
+          >
+            <Row className="g-3">
+              <Col md={4}>
+                <Form.Group controlId="connection-name">
+                  <Form.Label>Connection name</Form.Label>
+                  <Form.Control
+                    value={form.name}
+                    onChange={(event) => handleFormChange('name', event.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group controlId="connection-type">
+                  <Form.Label>Database type</Form.Label>
+                  <Form.Control
+                    value={form.db_type}
+                    onChange={(event) => handleFormChange('db_type', event.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group controlId="connection-host">
+                  <Form.Label>Host</Form.Label>
+                  <Form.Control
+                    value={form.host}
+                    onChange={(event) => handleFormChange('host', event.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="connection-port">
+                  <Form.Label>Port</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={form.port}
+                    onChange={(event) => handleFormChange('port', event.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="connection-database">
+                  <Form.Label>Database</Form.Label>
+                  <Form.Control
+                    value={form.database}
+                    onChange={(event) => handleFormChange('database', event.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="connection-username">
+                  <Form.Label>Username</Form.Label>
+                  <Form.Control
+                    value={form.username}
+                    onChange={(event) => handleFormChange('username', event.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="connection-password">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    value={form.password ?? ''}
+                    onChange={(event) => handleFormChange('password', event.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group controlId="connection-options">
+                  <Form.Label>Options (JSON)</Form.Label>
+                  <Form.Control
+                    placeholder='{"sslmode":"require"}'
+                    value={form.options ?? ''}
+                    onChange={(event) => handleFormChange('options', event.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <div className="d-flex justify-content-end mt-4">
+              <Button type="submit" variant="primary" disabled={submitting}>
+                {submitting ? (
+                  <span className="d-inline-flex align-items-center gap-2">
+                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                    Adding…
+                  </span>
+                ) : (
+                  'Add connection'
+                )}
               </Button>
-            </Grid>
-          </Grid>
-        </Stack>
-      </Paper>
+            </div>
+          </Form>
+        </Card.Body>
+      </Card>
 
-      <Paper variant="outlined" sx={{ p: { xs: 3, md: 4 } }}>
-        <Typography variant="h6" fontWeight={600} gutterBottom>
-          Source connections
-        </Typography>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          Edit or remove existing integrations. Deleting a connection removes associated field mappings, samples, and value mappings.
-        </Typography>
-        <TableContainer>
-          {loading ? (
-            <Typography variant="body2" color="text.secondary" sx={{ p: 3 }}>
-              Loading connections…
-            </Typography>
-          ) : (
-            renderConnectionTable()
-          )}
-        </TableContainer>
-      </Paper>
+      <Card className="card-section">
+        <Card.Body>
+          <Card.Title as="h2" className="section-heading h4 mb-2">
+            Source connections
+          </Card.Title>
+          <Card.Text className="text-body-secondary">
+            Edit or remove existing integrations. Deleting a connection removes associated mappings and samples.
+          </Card.Text>
+          <div className="table-responsive">
+            <Table striped hover className="align-middle">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Database</th>
+                  <th>Host</th>
+                  <th className="text-nowrap">Updated</th>
+                  <th className="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4">
+                      Loading connections…
+                    </td>
+                  </tr>
+                )}
+                {!loading && sortedConnections.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center text-body-secondary py-4">
+                      No connections registered yet.
+                    </td>
+                  </tr>
+                )}
+                {!loading &&
+                  sortedConnections.map((connection) => (
+                    <tr key={connection.id}>
+                      <td className="fw-semibold">{connection.name}</td>
+                      <td>{connection.database}</td>
+                      <td>{connection.host}</td>
+                      <td className="text-monospaced">{new Date(connection.updated_at).toLocaleString()}</td>
+                      <td className="text-end">
+                        <div className="d-inline-flex gap-2">
+                          <Button size="sm" variant="outline-primary" onClick={() => openEdit(connection)}>
+                            Edit
+                          </Button>
+                          <Button size="sm" variant="outline-danger" onClick={() => setDeleteTarget(connection)}>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </Table>
+          </div>
+        </Card.Body>
+      </Card>
 
-      <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} maxWidth="sm" fullWidth>
-        <DialogTitle>Edit connection</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={2}>
-            <TextField
-              label="Connection Name"
-              value={editForm.name ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, name: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Database Type"
-              value={editForm.db_type ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, db_type: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Host"
-              value={editForm.host ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, host: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Port"
-              type="number"
-              value={editForm.port ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, port: Number(event.target.value) }))}
-              fullWidth
-            />
-            <TextField
-              label="Database"
-              value={editForm.database ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, database: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Username"
-              value={editForm.username ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, username: event.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="New Password"
-              type="password"
-              value={editForm.password ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, password: event.target.value }))}
-              fullWidth
-              helperText="Leave blank to keep the current secret"
-            />
-            <TextField
-              label="Options (JSON)"
-              value={editForm.options ?? ''}
-              onChange={(event) => setEditForm((prev) => ({ ...prev, options: event.target.value }))}
-              fullWidth
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditing(null)}>Cancel</Button>
-          <Button onClick={() => void handleUpdate()} variant="contained" startIcon={<SaveRoundedIcon />}>
-            Save
+      <Modal show={Boolean(editing)} onHide={() => setEditing(null)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit connection</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form className="d-flex flex-column gap-3">
+            <Form.Group controlId="edit-name">
+              <Form.Label>Name</Form.Label>
+              <Form.Control
+                value={editForm.name ?? ''}
+                onChange={(event) => handleEditChange('name', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-db-type">
+              <Form.Label>Database type</Form.Label>
+              <Form.Control
+                value={editForm.db_type ?? ''}
+                onChange={(event) => handleEditChange('db_type', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-host">
+              <Form.Label>Host</Form.Label>
+              <Form.Control
+                value={editForm.host ?? ''}
+                onChange={(event) => handleEditChange('host', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-port">
+              <Form.Label>Port</Form.Label>
+              <Form.Control
+                type="number"
+                value={editForm.port ?? 0}
+                onChange={(event) => handleEditChange('port', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-database">
+              <Form.Label>Database</Form.Label>
+              <Form.Control
+                value={editForm.database ?? ''}
+                onChange={(event) => handleEditChange('database', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-username">
+              <Form.Label>Username</Form.Label>
+              <Form.Control
+                value={editForm.username ?? ''}
+                onChange={(event) => handleEditChange('username', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-password">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                value={editForm.password ?? ''}
+                onChange={(event) => handleEditChange('password', event.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="edit-options">
+              <Form.Label>Options</Form.Label>
+              <Form.Control
+                value={editForm.options ?? ''}
+                onChange={(event) => handleEditChange('options', event.target.value)}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setEditing(null)}>
+            Cancel
           </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
-        <DialogTitle>Delete connection</DialogTitle>
-        <DialogContent>
-          <Typography>Remove the “{deleteTarget?.name}” connection and its related records?</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-          <Button color="error" onClick={() => void handleDelete()} startIcon={<DeleteRoundedIcon />}>
-            Delete
+          <Button variant="primary" onClick={() => void handleUpdate()} disabled={submitting}>
+            {submitting ? (
+              <span className="d-inline-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Saving…
+              </span>
+            ) : (
+              'Save changes'
+            )}
           </Button>
-        </DialogActions>
-      </Dialog>
-    </Stack>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={Boolean(deleteTarget)} onHide={() => setDeleteTarget(null)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete connection</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Delete “{deleteTarget?.name}”? Associated mappings, samples, and value mappings will also be removed.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={() => void handleDelete()} disabled={submitting}>
+            {submitting ? (
+              <span className="d-inline-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Deleting…
+              </span>
+            ) : (
+              'Delete'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </div>
   );
 };
 
