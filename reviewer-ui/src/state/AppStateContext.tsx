@@ -47,6 +47,10 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
     ]);
 
     const errors: string[] = [];
+    console.debug('App state refresh completed', {
+      configStatus: configResult.status,
+      canonicalStatus: canonicalResult.status,
+    });
 
     if (configResult.status === 'fulfilled') {
       setConfig(configResult.value);

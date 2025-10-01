@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+
 from sqlmodel import Session, select
 
 from ..config import Settings, load_settings
 from ..models import SystemConfig
 from ..schemas import SystemConfigRead
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_system_config(
@@ -16,9 +20,19 @@ def ensure_system_config(
 
     config = session.exec(select(SystemConfig)).first()
     if config:
+        logger.debug(
+            "System configuration already present", extra={"config_id": config.id}
+        )
         return config
 
     settings = settings or load_settings()
+    logger.info(
+        "System configuration record missing; seeding defaults", extra={
+            "default_dimension": settings.default_dimension,
+            "match_threshold": settings.match_threshold,
+            "matcher_backend": settings.matcher_backend,
+        }
+    )
     config = SystemConfig(
         default_dimension=settings.default_dimension,
         match_threshold=settings.match_threshold,
@@ -31,13 +45,17 @@ def ensure_system_config(
     session.add(config)
     session.commit()
     session.refresh(config)
+    logger.debug(
+        "System configuration defaults persisted",
+        extra={"config_id": config.id, "top_k": config.top_k},
+    )
     return config
 
 
 def system_config_to_read(config: SystemConfig) -> SystemConfigRead:
     """Map a ``SystemConfig`` ORM model to the API response schema."""
 
-    return SystemConfigRead(
+    response = SystemConfigRead(
         default_dimension=config.default_dimension,
         match_threshold=config.match_threshold,
         matcher_backend=config.matcher_backend,
@@ -47,3 +65,7 @@ def system_config_to_read(config: SystemConfig) -> SystemConfigRead:
         top_k=config.top_k,
         llm_api_key_set=bool(config.llm_api_key),
     )
+    logger.debug(
+        "Serialised system configuration", extra={"config_id": config.id}
+    )
+    return response

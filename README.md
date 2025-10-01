@@ -17,8 +17,10 @@ This command starts:
 - **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support. The
   container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
   `http://localhost:5173/dashboard` or browser refreshes on nested routes resolve correctly without returning a 404.
+  The image also bakes in a browser-friendly `VITE_API_BASE_URL` pointing at `http://localhost:8000`, so the dashboard can reach the
+  FastAPI backend without extra host aliases.
 
-The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`. If you ever wipe the database manually, simply refresh the UI—the backend now recreates the default configuration record on demand so the dashboard no longer stalls with "Unable to load configuration" toasts.
+The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`. If you ever wipe the database manually, simply refresh the UI—the backend now recreates the default configuration record on demand so the dashboard no longer stalls with "Unable to load configuration" toasts. For connectivity troubleshooting tips and a breakdown of the new debug logging surfaced in both the UI console and backend logs, see [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
 
 ### Reviewer UI at a glance
 

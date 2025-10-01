@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Sequence
 
 from sqlmodel import Session, select
@@ -9,6 +10,8 @@ from sqlmodel import Session, select
 from .config import Settings, load_settings
 from .models import CanonicalValue
 from .services.config import ensure_system_config
+
+logger = logging.getLogger(__name__)
 
 
 DEFAULT_CANONICAL_VALUES: Sequence[dict[str, str]] = (
@@ -30,7 +33,11 @@ def seed_database(engine, settings: Settings | None = None) -> None:
 
         existing = session.exec(select(CanonicalValue)).all()
         if not existing:
+            logger.info("Seeding default canonical values", extra={"count": len(DEFAULT_CANONICAL_VALUES)})
             for payload in DEFAULT_CANONICAL_VALUES:
                 session.add(CanonicalValue(**payload))
+        else:
+            logger.debug("Canonical library already seeded", extra={"count": len(existing)})
 
         session.commit()
+        logger.debug("Database seed process complete")
