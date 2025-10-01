@@ -26,6 +26,9 @@ The first boot performs all schema creation and seeding automatically. All runti
 
 The interface is organised into task-focused pages that surface the entire curation workflow:
 
+- A persistent navigation rail, global action header, and glassmorphism-inspired surfaces echo the ergonomics of
+  [OpenMetadata](https://open-metadata.org/), giving analysts a familiar observability workspace with responsive theme
+  switching and mobile-friendly navigation.
 - **Dashboard** – configure matcher parameters and experiment with semantic suggestions in a live playground.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems.
@@ -36,6 +39,9 @@ The interface is organised into task-focused pages that surface the entire curat
 
 Detailed curation guidance, including an import-ready Abu Dhabi region dataset for the canonical library, lives in
 [`docs/CANONICAL_LIBRARY.md`](docs/CANONICAL_LIBRARY.md).
+
+For a visual tour of the refreshed reviewer workspace, see [`docs/FEATURES.md`](docs/FEATURES.md) which now calls out the
+OpenMetadata-inspired experience and design principles.
 
 ### API highlights
 
