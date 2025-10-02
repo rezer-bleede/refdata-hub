@@ -2,8 +2,10 @@
 
 ## 1. Core Reference Data Service
 - Maintain authoritative mappings for key dimensions such as marital status, education, nationality, and employment status.
+- Curate the dimension catalog itself, including machine-friendly codes, reviewer labels, descriptions, and custom attribute schemas.
 - Capture synonyms and spelling variations (e.g., "Single", "Unmarried", "Never married").
 - Provide multilingual metadata to support future international roll-outs.
+- Model parent/child relationships between dimensions (e.g., region → district) and capture the canonical value pairings needed for drill-down analytics.
 
 ## 2. Semantic Matching
 - Use NLP and embedding models to suggest standardized values for new raw inputs.

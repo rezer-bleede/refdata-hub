@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -12,6 +12,7 @@ class CanonicalValueBase(BaseModel):
     dimension: str
     canonical_label: str
     description: Optional[str] = None
+    attributes: dict[str, Any] | None = None
 
 
 class CanonicalValueCreate(CanonicalValueBase):
@@ -28,6 +29,7 @@ class CanonicalValueUpdate(BaseModel):
     dimension: Optional[str] = None
     canonical_label: Optional[str] = None
     description: Optional[str] = None
+    attributes: Optional[dict[str, Any]] = None
 
 
 class RawValueRead(BaseModel):
@@ -229,3 +231,88 @@ class ValueMappingUpdate(BaseModel):
 class ValueMappingExpanded(ValueMappingRead):
     canonical_label: str
     ref_dimension: str
+
+
+class DimensionExtraFieldDefinition(BaseModel):
+    key: str = Field(..., min_length=1)
+    label: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    data_type: str = Field(..., pattern="^(string|number|boolean)$")
+    required: bool = False
+
+
+class DimensionBase(BaseModel):
+    code: str = Field(..., min_length=1)
+    label: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    extra_fields: List[DimensionExtraFieldDefinition] = Field(default_factory=list)
+
+
+class DimensionCreate(DimensionBase):
+    pass
+
+
+class DimensionUpdate(BaseModel):
+    label: Optional[str] = None
+    description: Optional[str] = None
+    extra_fields: Optional[List[DimensionExtraFieldDefinition]] = None
+
+
+class DimensionRead(DimensionBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DimensionRelationBase(BaseModel):
+    label: str
+    parent_dimension_code: str
+    child_dimension_code: str
+    description: Optional[str] = None
+
+
+class DimensionRelationCreate(DimensionRelationBase):
+    pass
+
+
+class DimensionRelationUpdate(BaseModel):
+    label: Optional[str] = None
+    description: Optional[str] = None
+
+
+class DimensionRelationRead(DimensionRelationBase):
+    id: int
+    parent_dimension: DimensionRead
+    child_dimension: DimensionRead
+    link_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DimensionRelationLinkBase(BaseModel):
+    parent_canonical_id: int
+    child_canonical_id: int
+
+
+class DimensionRelationLinkCreate(DimensionRelationLinkBase):
+    pass
+
+
+class DimensionRelationLinkRead(DimensionRelationLinkBase):
+    id: int
+    relation_id: int
+    parent_label: str
+    child_label: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BulkImportResult(BaseModel):
+    created: List[CanonicalValueRead]
+    errors: List[str]

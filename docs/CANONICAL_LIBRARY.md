@@ -6,12 +6,17 @@ UI and provides an Abu Dhabi–specific dataset ready for import.
 
 ## Page overview
 
-The library page offers four key capabilities:
+The library page offers five key capabilities:
 
 1. **Filter & search** – Narrow the table by dimension and/or keyword to locate existing canonical values quickly.
-2. **Create & edit** – Launch the editor modal to add brand-new entries or update labels, dimensions, and descriptions.
-3. **Bulk import** – Paste a tab- or comma-delimited payload to create many canonical rows at once.
-4. **Export** – Download the filtered table to CSV for auditing or offline collaboration.
+2. **Create & edit** – Launch the editor modal to add brand-new entries or update labels, dimensions, descriptions, and any
+   dimension-specific attributes.
+3. **Bulk import** – Upload CSV/TSV/Excel files or paste tabular rows and let the importer detect headers, attributes, and
+   dimensions automatically.
+4. **Attributes** – Capture the extra fields defined for the active dimension (for example, codes or international identifiers)
+   alongside each canonical value.
+5. **Export** – Download the filtered table to CSV for auditing or offline collaboration. The export includes attribute columns
+   so downstream tools can preserve the additional metadata.
 
 All changes are persisted via the `/api/reference/canonical` endpoints exposed by the FastAPI backend.
 
@@ -25,14 +30,15 @@ All changes are persisted via the `/api/reference/canonical` endpoints exposed b
 
 ## Bulk import walkthrough
 
-The importer expects rows in the following structure:
+The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column—`dimension`, `label`, and
+`description` columns are detected automatically, along with any extra attribute keys defined for the target dimension. When
+pasting rows directly into the modal, the same headers should appear in the first line.
 
-```
-dimension\tcanonical label\t(optional description columns)
-```
-
-* Columns can be separated by tabs, commas, or 2+ spaces. Additional columns are concatenated into the description.
-* Empty dimension cells inherit the "Default dimension" value provided in the modal (useful when pasting single-dimension data).
+* Columns can be separated by commas, tabs, or multiple spaces when pasting raw text.
+* Empty dimension cells inherit the "Default dimension" value provided in the modal (useful when supplying single-dimension data).
+* Any attribute columns that match the dimension's schema (for example `code`, `iso_code`, or `unesco_level`) are parsed and
+  stored alongside the canonical value.
+* Uploading both a file and pasted rows prioritises the file contents; remove the file to import the pasted data instead.
 
 ### Abu Dhabi regional dataset
 
@@ -47,15 +53,17 @@ To bulk load the dataset:
    cat docs/data/abu_dhabi_canonical.tsv
    ```
 2. Copy all rows starting from the second line (skip the header row).
-3. In the Reviewer UI, select **Bulk import** → paste the copied rows → click **Import rows**.
-4. The importer reports how many records were created and automatically sorts them alongside existing values.
+3. In the Reviewer UI, select **Bulk import** → either upload the TSV file or paste the copied rows → click **Import rows**.
+4. The importer reports how many records were created, highlights any issues inline, and automatically sorts the additions alongside existing values.
 
 ### Tips for custom datasets
 
-- Include stable identifiers (codes) in the description field so downstream consumers can map raw values reliably.
+- Include stable identifiers (codes) either in dedicated attribute columns or the description so downstream consumers can map raw values reliably.
 - Use consistent dimensions (e.g., `region`, `district`, `currency`) to keep filtering predictable.
 - When storing multilingual labels, concatenate translations with clear separators, for example: `English | Arabic`.
 - The importer ignores blank lines and lines prefixed with `#`, enabling lightweight in-line commentary.
+- For spreadsheet imports, multiple worksheets are supported—only the first sheet is read by default. Save each dataset as a
+  separate file for clarity.
 
 ## Troubleshooting
 
