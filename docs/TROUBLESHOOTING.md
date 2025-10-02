@@ -35,7 +35,17 @@ Requests to `/api/reference/canonical` log the number of values returned. If the
 
 After addressing connectivity issues, perform a hard refresh (`Ctrl` + `Shift` + `R` on most browsers) to clear cached bundles and re-run the initial data fetch. The enhanced UI logging will confirm whether configuration and canonical data load successfully on subsequent attempts.
 
-## 5. Resolve TypeScript build failures around mocked props
+## 5. Resolve `canonicalvalue.attributes` missing column errors
+
+Deployments created before the JSON `attributes` column was added to the `canonicalvalue` table can surface the following stack trace during API startup:
+
+```
+sqlalchemy.exc.ProgrammingError: (psycopg.errors.UndefinedColumn) column canonicalvalue.attributes does not exist
+```
+
+The backend now self-heals this legacy schema automatically by adding the column and backfilling existing rows with an empty JSON object. Restart the API container (or rerun `docker compose up --build`) to apply the fix. Once the service is back online, the Reviewer UI will be able to load canonical values and the error will no longer appear in the logs.
+
+## 6. Resolve TypeScript build failures around mocked props
 
 When running `npm run build` locally or inside the Docker image, you may encounter errors similar to:
 
