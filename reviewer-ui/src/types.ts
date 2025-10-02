@@ -3,12 +3,14 @@ export interface CanonicalValue {
   dimension: string;
   canonical_label: string;
   description?: string | null;
+  attributes?: Record<string, string | number | boolean | null> | null;
 }
 
 export interface CanonicalValueUpdatePayload {
   dimension?: string;
   canonical_label?: string;
   description?: string | null;
+  attributes?: Record<string, string | number | boolean | null> | null;
 }
 
 export interface MatchCandidate {
@@ -170,3 +172,82 @@ export interface ValueMappingPayload {
 }
 
 export interface ValueMappingUpdatePayload extends Partial<ValueMappingPayload> {}
+
+export type DimensionExtraFieldType = 'string' | 'number' | 'boolean';
+
+export interface DimensionExtraFieldDefinition {
+  key: string;
+  label: string;
+  description?: string | null;
+  data_type: DimensionExtraFieldType;
+  required: boolean;
+}
+
+export interface DimensionDefinition {
+  id: number;
+  code: string;
+  label: string;
+  description?: string | null;
+  extra_fields: DimensionExtraFieldDefinition[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DimensionCreatePayload {
+  code: string;
+  label: string;
+  description?: string | null;
+  extra_fields: DimensionExtraFieldDefinition[];
+}
+
+export interface DimensionUpdatePayload {
+  label?: string;
+  description?: string | null;
+  extra_fields?: DimensionExtraFieldDefinition[];
+}
+
+export interface DimensionRelationSummary {
+  id: number;
+  label: string;
+  description?: string | null;
+  parent_dimension_code: string;
+  child_dimension_code: string;
+  parent_dimension: DimensionDefinition;
+  child_dimension: DimensionDefinition;
+  link_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DimensionRelationCreatePayload {
+  label: string;
+  parent_dimension_code: string;
+  child_dimension_code: string;
+  description?: string | null;
+}
+
+export interface DimensionRelationUpdatePayload {
+  label?: string;
+  description?: string | null;
+}
+
+export interface DimensionRelationLink {
+  id: number;
+  relation_id: number;
+  parent_canonical_id: number;
+  child_canonical_id: number;
+  parent_label: string;
+  child_label: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DimensionRelationLinkPayload {
+  parent_canonical_id: number;
+  child_canonical_id: number;
+}
+
+export interface BulkImportResult {
+  created: CanonicalValue[];
+  errors: string[];
+}

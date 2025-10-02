@@ -16,9 +16,11 @@ vi.mock('./state/AppStateContext', () => ({
   useAppState: () => ({
     config: { matcher_backend: 'embedding' },
     canonicalValues: [],
+    dimensions: [],
     isLoading: mockIsLoading,
     loadError: mockLoadError,
     refresh: refreshMock,
+    updateDimensions: vi.fn(),
   }),
 }));
 

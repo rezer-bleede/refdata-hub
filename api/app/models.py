@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
+from sqlalchemy import Column, JSON, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -15,6 +16,11 @@ class CanonicalValue(SQLModel, table=True):
     dimension: str = Field(index=True, description="Semantic domain of the value.")
     canonical_label: str = Field(description="Normalized label reviewers have approved.")
     description: Optional[str] = Field(default=None, description="Additional reviewer notes.")
+    attributes: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON, nullable=False, server_default="{}"),
+        description="Dimension-specific attributes captured for this canonical value.",
+    )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False
     )
@@ -162,6 +168,104 @@ class ValueMapping(SQLModel, table=True):
     )
     suggested_label: Optional[str] = Field(default=None)
     notes: Optional[str] = Field(default=None)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+    def touch(self) -> None:
+        """Update modification timestamp."""
+
+        self.updated_at = datetime.now(timezone.utc)
+
+
+class Dimension(SQLModel, table=True):
+    """Describes a canonical dimension and its dynamic attribute schema."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code: str = Field(
+        index=True,
+        description="Unique identifier used by canonical values and mappings.",
+        sa_column_kwargs={"unique": True},
+    )
+    label: str = Field(description="Human readable name for the dimension.")
+    description: Optional[str] = Field(default=None)
+    extra_schema: list[dict[str, Any]] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False, server_default="[]"),
+        description="JSON schema describing additional fields captured per canonical value.",
+    )
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+    def touch(self) -> None:
+        """Update modification timestamp."""
+
+        self.updated_at = datetime.now(timezone.utc)
+
+
+class DimensionRelation(SQLModel, table=True):
+    """Represents a hierarchical link between two dimensions."""
+
+    __table_args__ = (
+        UniqueConstraint(
+            "parent_dimension_code",
+            "child_dimension_code",
+            "label",
+            name="uq_relation_parent_child_label",
+        ),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    label: str = Field(description="Display name describing the relation.")
+    parent_dimension_code: str = Field(
+        index=True, foreign_key="dimension.code", description="Parent dimension code."
+    )
+    child_dimension_code: str = Field(
+        index=True, foreign_key="dimension.code", description="Child dimension code."
+    )
+    description: Optional[str] = Field(default=None)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+    def touch(self) -> None:
+        """Update modification timestamp."""
+
+        self.updated_at = datetime.now(timezone.utc)
+
+
+class DimensionRelationLink(SQLModel, table=True):
+    """Associates canonical values across a dimension relation."""
+
+    __table_args__ = (
+        UniqueConstraint(
+            "relation_id",
+            "parent_canonical_id",
+            "child_canonical_id",
+            name="uq_relation_link_parent_child",
+        ),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    relation_id: int = Field(
+        foreign_key="dimensionrelation.id", index=True, nullable=False
+    )
+    parent_canonical_id: int = Field(
+        foreign_key="canonicalvalue.id", index=True, nullable=False
+    )
+    child_canonical_id: int = Field(
+        foreign_key="canonicalvalue.id", index=True, nullable=False
+    )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False
     )

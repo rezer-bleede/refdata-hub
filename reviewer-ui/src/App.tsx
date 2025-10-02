@@ -9,6 +9,8 @@ import MappingHistoryPage from './pages/MappingHistoryPage';
 import MatchInsightsPage from './pages/MatchInsightsPage';
 import SuggestionsPage from './pages/SuggestionsPage';
 import CanonicalLibraryPage from './pages/CanonicalLibraryPage';
+import DimensionsPage from './pages/DimensionsPage';
+import DimensionRelationsPage from './pages/DimensionRelationsPage';
 import { AppStateProvider, useAppState } from './state/AppStateContext';
 import { applyTheme, themeDefinitions, themeOrder, ThemeChoice } from './themes';
 import type { ToastMessage } from './types';
@@ -29,7 +31,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard' },
+  { path: '/dimensions', label: 'Dimensions' },
   { path: '/canonical-library', label: 'Canonical Library' },
+  { path: '/dimension-relations', label: 'Dimension Relations' },
   { path: '/connections', label: 'Source Connections' },
   { path: '/field-mappings', label: 'Field Mappings' },
   { path: '/match-insights', label: 'Match Insights' },
@@ -167,7 +171,9 @@ const AppScaffold = ({
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage onToast={onToast} />} />
+              <Route path="/dimensions" element={<DimensionsPage onToast={onToast} />} />
               <Route path="/canonical-library" element={<CanonicalLibraryPage onToast={onToast} />} />
+              <Route path="/dimension-relations" element={<DimensionRelationsPage onToast={onToast} />} />
               <Route path="/connections" element={<ConnectionsPage onToast={onToast} />} />
               <Route path="/field-mappings" element={<FieldMappingsPage onToast={onToast} />} />
               <Route path="/match-insights" element={<MatchInsightsPage onToast={onToast} />} />

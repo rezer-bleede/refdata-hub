@@ -31,6 +31,8 @@ The interface is organised into task-focused pages that surface the entire curat
   switching and mobile-friendly navigation.
 - **Dashboard** – configure matcher parameters and experiment with semantic suggestions in a live playground.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
+- **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema.
+- **Dimension Relations** – model parent/child hierarchies such as regions to districts and manage canonical value pairings.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
 - **Match Insights** – visualise match rates per mapping, inspect top outliers, and track overall harmonisation health.
@@ -48,6 +50,9 @@ OpenMetadata-inspired experience and design principles.
 The FastAPI service now exposes a rich set of endpoints under `/api`:
 
 - `/reference/canonical` – full CRUD for canonical reference values.
+- `/reference/canonical/import` – parse CSV/TSV/Excel uploads and create canonical values in bulk.
+- `/reference/dimensions` – manage the dimension catalog and attribute schema.
+- `/reference/dimension-relations` – define parent/child relationships and retrieve linked canonical pairs.
 - `/source/connections` – manage source system connection metadata.
 - `/source/connections/{id}/mappings` – create/update/delete field mappings to reference dimensions.
 - `/source/connections/{id}/samples` – ingest aggregated raw samples collected from source systems or manual uploads.
@@ -92,11 +97,11 @@ npm run build
 npm test
 ```
 
-The build step runs TypeScript in strict mode alongside the Vite production bundle to
-catch typing regressions in mocked React components. The dedicated `createProps`
-helper inside `src/App.test.tsx` wraps Vitest mocks with real callbacks so TypeScript
-accepts them as valid `AppScaffold` props while still exposing rich assertion helpers
-for the tests.
+The build step runs TypeScript in strict mode alongside the Vite production bundle to catch typing regressions in mocked React
+components. The dedicated `createProps` helper inside `src/App.test.tsx` wraps Vitest mocks with real callbacks so TypeScript
+accepts them as valid `AppScaffold` props while still exposing rich assertion helpers for the tests. The navigation suite now
+covers the new dimension governance and relation workspaces, ensuring the shared toast and routing scaffolding continue to
+operate as the UI grows.
 
 The new Reviewer UI deployment checks verify that the custom Nginx configuration is copied into the container image and that it
 rewrites unknown application routes back to `index.html`. This prevents regressions where client-side routes return HTTP 404s

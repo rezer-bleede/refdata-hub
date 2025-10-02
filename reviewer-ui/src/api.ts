@@ -1,6 +1,15 @@
 import type {
+  BulkImportResult,
   CanonicalValue,
   CanonicalValueUpdatePayload,
+  DimensionCreatePayload,
+  DimensionDefinition,
+  DimensionRelationCreatePayload,
+  DimensionRelationLink,
+  DimensionRelationLinkPayload,
+  DimensionRelationSummary,
+  DimensionRelationUpdatePayload,
+  DimensionUpdatePayload,
   FieldMatchStats,
   MatchResponse,
   SourceConnection,
@@ -131,12 +140,99 @@ export async function deleteCanonicalValue(id: number): Promise<void> {
   await apiFetchVoid(`/api/reference/canonical/${id}`, { method: 'DELETE' });
 }
 
+export async function bulkImportCanonicalValues(formData: FormData): Promise<BulkImportResult> {
+  return apiFetchJson<BulkImportResult>('/api/reference/canonical/import', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
 export async function proposeMatch(raw_text: string, dimension?: string): Promise<MatchResponse> {
   return apiFetchJson<MatchResponse>('/api/reference/propose', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ raw_text, dimension }),
   });
+}
+
+export async function fetchDimensions(): Promise<DimensionDefinition[]> {
+  return apiFetchJson<DimensionDefinition[]>('/api/reference/dimensions');
+}
+
+export async function createDimension(payload: DimensionCreatePayload): Promise<DimensionDefinition> {
+  return apiFetchJson<DimensionDefinition>('/api/reference/dimensions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateDimension(
+  code: string,
+  payload: DimensionUpdatePayload,
+): Promise<DimensionDefinition> {
+  return apiFetchJson<DimensionDefinition>(`/api/reference/dimensions/${encodeURIComponent(code)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDimension(code: string): Promise<void> {
+  await apiFetchVoid(`/api/reference/dimensions/${encodeURIComponent(code)}`, { method: 'DELETE' });
+}
+
+export async function fetchDimensionRelations(): Promise<DimensionRelationSummary[]> {
+  return apiFetchJson<DimensionRelationSummary[]>('/api/reference/dimension-relations');
+}
+
+export async function createDimensionRelation(
+  payload: DimensionRelationCreatePayload,
+): Promise<DimensionRelationSummary> {
+  return apiFetchJson<DimensionRelationSummary>('/api/reference/dimension-relations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateDimensionRelation(
+  relationId: number,
+  payload: DimensionRelationUpdatePayload,
+): Promise<DimensionRelationSummary> {
+  return apiFetchJson<DimensionRelationSummary>(`/api/reference/dimension-relations/${relationId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDimensionRelation(relationId: number): Promise<void> {
+  await apiFetchVoid(`/api/reference/dimension-relations/${relationId}`, { method: 'DELETE' });
+}
+
+export async function fetchDimensionRelationLinks(
+  relationId: number,
+): Promise<DimensionRelationLink[]> {
+  return apiFetchJson<DimensionRelationLink[]>(`/api/reference/dimension-relations/${relationId}/links`);
+}
+
+export async function createDimensionRelationLink(
+  relationId: number,
+  payload: DimensionRelationLinkPayload,
+): Promise<DimensionRelationLink> {
+  return apiFetchJson<DimensionRelationLink>(`/api/reference/dimension-relations/${relationId}/links`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDimensionRelationLink(
+  relationId: number,
+  linkId: number,
+): Promise<void> {
+  await apiFetchVoid(`/api/reference/dimension-relations/${relationId}/links/${linkId}`, { method: 'DELETE' });
 }
 
 export async function fetchConfig(): Promise<SystemConfig> {
