@@ -6,6 +6,8 @@
 - Capture synonyms and spelling variations (e.g., "Single", "Unmarried", "Never married").
 - Provide multilingual metadata to support future international roll-outs.
 - Model parent/child relationships between dimensions (e.g., region → district) and capture the canonical value pairings needed for drill-down analytics.
+- Inspect connected source systems in real time—connection records can be tested inline and their available tables/columns are
+  introspected to drive the mapping workflows without manual lookups.
 
 ## 2. Semantic Matching
 - Use NLP and embedding models to suggest standardized values for new raw inputs.

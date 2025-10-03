@@ -33,8 +33,11 @@ The interface is organised into task-focused pages that surface the entire curat
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
 - **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema.
 - **Dimension Relations** – model parent/child hierarchies such as regions to districts and manage canonical value pairings.
-- **Source Connections** – register and maintain connectivity metadata for upstream systems.
+- **Source Connections** – register and maintain connectivity metadata for upstream systems and verify credentials with the new
+  **Test connection** action before persisting changes.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
+  Available tables and columns are now surfaced directly from the connected database so analysts can choose valid metadata from
+  dropdowns instead of typing freeform text.
 - **Match Insights** – visualise match rates per mapping, inspect top outliers, and track overall harmonisation health.
 - **Suggestions** – approve semantic suggestions or manually link raw values to canonical standards.
 - **Mapping History** – audit every approved mapping, edit or retire entries, and export a normalised view per connection.
@@ -64,6 +67,12 @@ The FastAPI service now exposes a rich set of endpoints under `/api`:
 - `/reference/dimensions` – manage the dimension catalog and attribute schema.
 - `/reference/dimension-relations` – define parent/child relationships and retrieve linked canonical pairs.
 - `/source/connections` – manage source system connection metadata.
+- `/source/connections/test` – validate new connection details on demand and surface connection latency without saving the
+  record.
+- `/source/connections/{id}/tables` – discover available tables and views for a connection so mapping workflows can present
+  authoritative dropdowns.
+- `/source/connections/{id}/tables/{table}/fields` – inspect column metadata for a given table (or view) to power the field
+  selector in the reviewer UI.
 - `/source/connections/{id}/mappings` – create/update/delete field mappings to reference dimensions.
 - `/source/connections/{id}/samples` – ingest aggregated raw samples collected from source systems or manual uploads.
 - `/source/connections/{id}/match-stats` – compute match rates, top unmatched values, and semantic suggestions.

@@ -8,6 +8,9 @@ import json
 import os
 import sys
 import io
+import sqlite3
+import tempfile
+from pathlib import Path
 
 import pandas as pd
 from openpyxl import Workbook
@@ -40,6 +43,25 @@ def build_test_client() -> TestClient:
 
     app.dependency_overrides[get_session] = session_override
     return TestClient(app)
+
+
+def create_sqlite_source() -> tuple[Path, tempfile.TemporaryDirectory]:
+    temp_dir = tempfile.TemporaryDirectory()
+    db_path = Path(temp_dir.name) / "source.db"
+    connection = sqlite3.connect(db_path)
+    try:
+        cursor = connection.cursor()
+        cursor.execute(
+            "CREATE TABLE customers (id INTEGER PRIMARY KEY, name TEXT, email TEXT)"
+        )
+        cursor.execute(
+            "CREATE VIEW customer_view AS SELECT name FROM customers"
+        )
+        connection.commit()
+    finally:
+        connection.close()
+
+    return db_path, temp_dir
 
 
 def test_health_endpoint() -> None:
@@ -783,6 +805,94 @@ def test_source_mapping_flow() -> None:
     all_mappings = client.get("/api/source/value-mappings")
     assert all_mappings.status_code == 200
     assert all_mappings.json()
+
+
+def test_source_connection_test_endpoint_success() -> None:
+    client = build_test_client()
+    db_path, temp_dir = create_sqlite_source()
+    try:
+        response = client.post(
+            "/api/source/connections/test",
+            json={
+                "name": "analytics-sqlite",
+                "db_type": "sqlite",
+                "host": "localhost",
+                "port": 5432,
+                "database": str(db_path),
+                "username": "ignored",
+            },
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["success"] is True
+        assert "Connection succeeded" in payload["message"]
+        assert isinstance(payload["latency_ms"], float)
+
+        failure = client.post(
+            "/api/source/connections/test",
+            json={
+                "db_type": "sqlite",
+                "host": "localhost",
+                "port": 5432,
+                "database": str(db_path),
+                "username": "ignored",
+                "options": '{"schema":',
+            },
+        )
+        assert failure.status_code == 400
+        assert "detail" in failure.json()
+    finally:
+        temp_dir.cleanup()
+
+
+def test_source_connection_metadata_and_existing_test() -> None:
+    client = build_test_client()
+    db_path, temp_dir = create_sqlite_source()
+    try:
+        create_response = client.post(
+            "/api/source/connections",
+            json={
+                "name": "warehouse-sqlite",
+                "db_type": "sqlite",
+                "host": "localhost",
+                "port": 5432,
+                "database": str(db_path),
+                "username": "ignored",
+            },
+        )
+        assert create_response.status_code == 201
+        connection_id = create_response.json()["id"]
+
+        tables_response = client.get(f"/api/source/connections/{connection_id}/tables")
+        assert tables_response.status_code == 200
+        tables = tables_response.json()
+        assert any(table["name"] == "customers" for table in tables)
+        assert any(table["type"] == "view" for table in tables)
+
+        fields_response = client.get(
+            f"/api/source/connections/{connection_id}/tables/customers/fields",
+        )
+        assert fields_response.status_code == 200
+        fields = fields_response.json()
+        assert any(field["name"] == "email" for field in fields)
+
+        schema_fields_response = client.get(
+            f"/api/source/connections/{connection_id}/tables/customer_view/fields?schema=main",
+        )
+        assert schema_fields_response.status_code == 200
+        schema_fields = schema_fields_response.json()
+        assert any(field["name"] == "name" for field in schema_fields)
+
+        success = client.post(f"/api/source/connections/{connection_id}/test")
+        assert success.status_code == 200
+
+        override_failure = client.post(
+            f"/api/source/connections/{connection_id}/test",
+            json={"db_type": "oracle"},
+        )
+        assert override_failure.status_code == 400
+    finally:
+        temp_dir.cleanup()
 
 
 def test_config_endpoint_auto_seeds_when_missing(tmp_path) -> None:

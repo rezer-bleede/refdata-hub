@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -114,6 +114,40 @@ class SourceConnectionUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = Field(default=None, min_length=1)
     options: Optional[str] = None
+
+
+class SourceConnectionTestPayload(BaseModel):
+    name: Optional[str] = None
+    db_type: str
+    host: str
+    port: int = Field(default=5432, ge=1, le=65535)
+    database: str
+    username: str
+    password: Optional[str] = Field(default=None, min_length=1)
+    options: Optional[str] = None
+
+
+class SourceConnectionTestOverrides(SourceConnectionUpdate):
+    pass
+
+
+class SourceConnectionTestResult(BaseModel):
+    success: bool
+    message: str
+    latency_ms: Optional[float] = None
+
+
+class SourceTableMetadata(BaseModel):
+    name: str
+    schema: Optional[str] = None
+    type: Literal["table", "view"]
+
+
+class SourceFieldMetadata(BaseModel):
+    name: str
+    data_type: Optional[str] = None
+    nullable: Optional[bool] = None
+    default: Optional[str] = None
 
 
 class SourceFieldMappingBase(BaseModel):
