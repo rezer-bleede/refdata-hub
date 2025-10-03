@@ -68,12 +68,16 @@ DIMENSION_COLUMN_KEYS = {
     "dimension",
     "dimension_code",
     "dimensionid",
+    "dimension_name",
+    "dimension_label",
     "dim",
     "domain",
     "category",
 }
 LABEL_COLUMN_KEYS = {
     "canonical_label",
+    "canonical_value",
+    "canonical_name",
     "label",
     "name",
     "value",
@@ -81,6 +85,8 @@ LABEL_COLUMN_KEYS = {
     "canonicalvalue",
 }
 DESCRIPTION_COLUMN_KEYS = {
+    "canonical_description",
+    "long_description",
     "description",
     "detail",
     "details",
@@ -104,6 +110,10 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
 
     extension = (Path(filename or "").suffix or "").lower()
     stream = io.BytesIO(buffer)
+    logger.debug(
+        "Attempting to parse uploaded table",
+        extra={"filename": filename, "extension": extension, "size_bytes": len(buffer)},
+    )
 
     if extension in {".xls", ".xlsx"}:
         try:
@@ -143,6 +153,10 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
         )
 
     df.columns = [str(column) for column in df.columns]
+    logger.debug(
+        "Parsed uploaded table",
+        extra={"row_count": len(df.index), "column_count": len(df.columns)},
+    )
     return df
 
 
@@ -674,10 +688,33 @@ async def import_canonical_values(
     else:
         payload_bytes = inline_text.encode("utf-8")
 
+    logger.info(
+        "Bulk canonical import received",
+        extra={
+            "filename": filename,
+            "bytes": len(payload_bytes),
+            "provided_dimension": dimension,
+            "has_file": bool(file),
+            "has_inline_text": bool(inline_text and inline_text.strip()),
+        },
+    )
+
     dataframe = _load_dataframe(payload_bytes, filename)
     column_map = _identify_columns(list(dataframe.columns))
+    logger.debug(
+        "Detected import columns",
+        extra={
+            "dimension_column": column_map.get("dimension"),
+            "label_column": column_map.get("label"),
+            "description_column": column_map.get("description"),
+        },
+    )
     label_column = column_map.get("label")
     if not label_column:
+        logger.warning(
+            "Bulk import aborted: missing canonical label column",
+            extra={"available_columns": list(dataframe.columns)},
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
