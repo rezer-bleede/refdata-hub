@@ -247,8 +247,19 @@ export interface DimensionRelationLinkPayload {
   child_canonical_id: number;
 }
 
+export interface BulkImportDuplicateRecord {
+  row_number: number;
+  dimension: string;
+  canonical_label: string;
+  existing_value: CanonicalValue;
+  incoming_description?: string | null;
+  incoming_attributes: Record<string, unknown>;
+}
+
 export interface BulkImportResult {
   created: CanonicalValue[];
+  updated: CanonicalValue[];
+  duplicates: BulkImportDuplicateRecord[];
   errors: string[];
 }
 
@@ -269,6 +280,9 @@ export interface BulkImportPreview {
   columns: BulkImportPreviewColumn[];
   suggested_dimension?: string | null;
   proposed_dimension?: ProposedDimensionSuggestion | null;
+  available_sheets: string[];
+  selected_sheet?: string | null;
+  duplicates: BulkImportDuplicateRecord[];
 }
 
 export interface BulkImportColumnMapping {

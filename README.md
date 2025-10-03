@@ -55,6 +55,10 @@ The FastAPI service now exposes a rich set of endpoints under `/api`:
   allow brand-new dimensions to be created automatically during an import. The loader now scans every worksheet in an Excel
   workbook, skips prefatory metadata blocks, and promotes the first detected header row even when it appears below merged
   title cells or version banners, making it resilient to the multi-sheet templates typically shared by governance teams.
+  When a workbook includes multiple tabs, the API reports every sheet so the UI can prompt the reviewer to pick which one to
+  import. Each request processes exactly one sheet, making it safe to work through large templates sequentially. The import
+  workflow also performs a dry run to surface existing canonical values before anything is written—reviewers can decide to
+  update the matching records in place or skip them entirely.
 - `/reference/canonical/import/preview` – analyse an uploaded table and return detected columns, suggested roles, and proposed
   dimension mappings. The Reviewer UI uses this endpoint to power the interactive bulk-import wizard.
 - `/reference/dimensions` – manage the dimension catalog and attribute schema.

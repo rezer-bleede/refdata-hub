@@ -37,6 +37,11 @@ backend now scans every worksheet, discards prefatory rows until it finds the fi
 below it even when earlier cells are merged. When the dataset targets a brand-new dimension, you can capture the dimension label
 and optional description inline—the backend will create the dimension and its attribute schema automatically during the import.
 
+- If an Excel workbook contains multiple sheets, the preview step now lists every sheet so you can choose which one to import.
+  Work through larger templates one tab at a time without having to split the workbook manually.
+- Every import now performs a dry run before committing rows. The UI highlights any canonical values that already exist and lets
+  you decide whether to update those entries or skip the duplicates entirely.
+
 * Columns can be separated by commas, tabs, or multiple spaces when pasting raw text.
 * Empty dimension cells inherit the selected target dimension when no dimension column is mapped—helpful for single-dimension
   datasets.
@@ -81,7 +86,8 @@ To bulk load the dataset:
   clearing a database.
 - **Import validation errors** – Ensure each row contains at least two columns (dimension + canonical label). Codes and
   descriptions may be optional but are strongly recommended.
-- **Duplicate records** – The API allows duplicates; run the export to CSV and deduplicate externally if necessary.
+- **Duplicate records** – Duplicates are surfaced during the dry run; choose whether to overwrite the existing canonical values
+  or skip the incoming rows directly in the importer.
 
 With these enhancements the canonical library is resilient enough to manage the full Abu Dhabi reference taxonomy and any future
 expansions.
