@@ -31,6 +31,11 @@ These messages confirm the configuration row exists and is returned to the UI. I
 
 Requests to `/api/reference/canonical` log the number of values returned. If the log shows `count: 0`, reseed the database or add canonical entries through the UI. A zero-length response will not trigger the toast, but the debug output can help verify the request succeeded.
 
+Bulk imports now produce structured log entries that call out the uploaded filename, detected headers, and any blocking
+validation issues. Look for messages such as `Bulk canonical import received` and `Bulk import aborted: missing canonical label
+column` to confirm whether the parser recognised the provided headers (including aliases like `Canonical Value` or `Long
+Description`). These logs make it easier to align the spreadsheet headers with the expected schema.
+
 ## 4. Retry with a hard refresh
 
 After addressing connectivity issues, perform a hard refresh (`Ctrl` + `Shift` + `R` on most browsers) to clear cached bundles and re-run the initial data fetch. The enhanced UI logging will confirm whether configuration and canonical data load successfully on subsequent attempts.

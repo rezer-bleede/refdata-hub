@@ -281,6 +281,53 @@ def test_bulk_import_csv_and_excel() -> None:
     assert not excel_payload["errors"]
 
 
+def test_bulk_import_accepts_canonical_value_header() -> None:
+    client = build_test_client()
+
+    client.post(
+        "/api/reference/dimensions",
+        json={
+            "code": "bulk_headers",
+            "label": "Bulk header dimension",
+            "description": "Dimension used to verify header detection",
+            "extra_fields": [
+                {
+                    "key": "numeric_code",
+                    "label": "Numeric Code",
+                    "data_type": "number",
+                    "required": False,
+                }
+            ],
+        },
+    )
+
+    csv_content = (
+        "dimension name,canonical value,long description,Numeric Code\n"
+        "bulk_headers,Header Label,Additional context,7\n"
+    )
+
+    response = client.post(
+        "/api/reference/canonical/import",
+        data={"dimension": "bulk_headers"},
+        files={
+            "file": (
+                "headers.csv",
+                csv_content.encode("utf-8"),
+                "text/csv",
+            )
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["errors"] == []
+    assert len(payload["created"]) == 1
+    created_entry = payload["created"][0]
+    assert created_entry["canonical_label"] == "Header Label"
+    assert created_entry["description"] == "Additional context"
+    assert created_entry["attributes"]["numeric_code"] == 7
+
+
 def test_source_mapping_flow() -> None:
     client = build_test_client()
 

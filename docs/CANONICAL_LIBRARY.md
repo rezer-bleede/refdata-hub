@@ -32,12 +32,17 @@ All changes are persisted via the `/api/reference/canonical` endpoints exposed b
 
 The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column—`dimension`, `label`, and
 `description` columns are detected automatically, along with any extra attribute keys defined for the target dimension. When
-pasting rows directly into the modal, the same headers should appear in the first line.
+pasting rows directly into the modal, the same headers should appear in the first line. Common aliases such as **Dimension
+Name**, **Canonical Value**, **Canonical Name**, **Canonical Description**, and **Long Description** are now recognised out of the
+box, ensuring legacy spreadsheets are parsed without manual edits.
 
 * Columns can be separated by commas, tabs, or multiple spaces when pasting raw text.
 * Empty dimension cells inherit the "Default dimension" value provided in the modal (useful when supplying single-dimension data).
 * Any attribute columns that match the dimension's schema (for example `code`, `iso_code`, or `unesco_level`) are parsed and
   stored alongside the canonical value.
+* Backend logs include the resolved filename, detected columns, and the number of created versus skipped rows. Check the FastAPI
+  container logs for entries such as `Bulk canonical import received` or `Bulk import aborted: missing canonical label column`
+  when diagnosing issues.
 * Uploading both a file and pasted rows prioritises the file contents; remove the file to import the pasted data instead.
 
 ### Abu Dhabi regional dataset
