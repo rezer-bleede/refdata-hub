@@ -67,8 +67,7 @@ export interface SourceConnection {
   updated_at: string;
 }
 
-export interface SourceConnectionCreatePayload {
-  name: string;
+export interface SourceConnectionCredentials {
   db_type: string;
   host: string;
   port: number;
@@ -78,7 +77,34 @@ export interface SourceConnectionCreatePayload {
   options?: string | null;
 }
 
+export interface SourceConnectionCreatePayload extends SourceConnectionCredentials {
+  name: string;
+}
+
 export interface SourceConnectionUpdatePayload extends Partial<SourceConnectionCreatePayload> {}
+
+export interface SourceConnectionTestPayload extends SourceConnectionCredentials {
+  name?: string;
+}
+
+export interface SourceConnectionTestResult {
+  success: boolean;
+  message: string;
+  latency_ms?: number | null;
+}
+
+export interface SourceTableMetadata {
+  name: string;
+  schema?: string | null;
+  type: 'table' | 'view';
+}
+
+export interface SourceFieldMetadata {
+  name: string;
+  data_type?: string | null;
+  nullable?: boolean | null;
+  default?: string | null;
+}
 
 export interface SourceFieldMapping {
   id: number;

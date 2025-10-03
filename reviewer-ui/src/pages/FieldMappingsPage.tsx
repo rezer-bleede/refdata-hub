@@ -6,6 +6,8 @@ import {
   deleteFieldMapping,
   fetchFieldMappings,
   fetchSourceConnections,
+  fetchSourceFields,
+  fetchSourceTables,
   ingestSamples,
   updateFieldMapping,
 } from '../api';
@@ -14,7 +16,9 @@ import type {
   SourceConnection,
   SourceFieldMapping,
   SourceFieldMappingPayload,
+  SourceFieldMetadata,
   SourceSampleValuePayload,
+  SourceTableMetadata,
   ToastMessage,
 } from '../types';
 
@@ -27,6 +31,46 @@ const initialMapping: SourceFieldMappingPayload = {
   source_field: '',
   ref_dimension: '',
   description: '',
+};
+
+type TableOption = SourceTableMetadata & { identifier: string; label: string };
+
+const toTableOption = (table: SourceTableMetadata): TableOption => {
+  const identifier = table.schema ? `${table.schema}.${table.name}` : table.name;
+  const suffix = table.type === 'view' ? ' (view)' : '';
+  return {
+    ...table,
+    identifier,
+    label: `${identifier}${suffix}`,
+  };
+};
+
+const fallbackTableOption = (identifier: string): TableOption => ({
+  name: identifier,
+  schema: undefined,
+  type: 'table',
+  identifier,
+  label: identifier,
+});
+
+const fallbackField = (name: string): SourceFieldMetadata => ({
+  name,
+  data_type: undefined,
+  nullable: undefined,
+  default: undefined,
+});
+
+const parseTableIdentifier = (identifier: string): { schema?: string; name: string } => {
+  if (!identifier) {
+    return { schema: undefined, name: identifier };
+  }
+  const [maybeSchema, maybeName] = identifier.split('.', 2);
+  if (maybeName) {
+    const schema = maybeSchema.replace(/^"|"$/g, '');
+    const name = maybeName.replace(/^"|"$/g, '');
+    return { schema: schema || undefined, name };
+  }
+  return { schema: undefined, name: identifier.replace(/^"|"$/g, '') };
 };
 
 const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
@@ -47,6 +91,10 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
   const [sampleDimension, setSampleDimension] = useState('');
   const [sampleInput, setSampleInput] = useState('');
   const [ingesting, setIngesting] = useState(false);
+  const [tablesLoading, setTablesLoading] = useState(false);
+  const [tableOptions, setTableOptions] = useState<TableOption[]>([]);
+  const [fieldsByTable, setFieldsByTable] = useState<Record<string, SourceFieldMetadata[]>>({});
+  const [loadingFieldsFor, setLoadingFieldsFor] = useState<string | null>(null);
 
   const availableDimensions = useMemo(() => {
     const set = new Set<string>();
@@ -83,6 +131,23 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
     [onToast],
   );
 
+  const loadTables = useCallback(
+    async (connectionId: number) => {
+      setTablesLoading(true);
+      try {
+        const records = await fetchSourceTables(connectionId);
+        const options = records.map(toTableOption).sort((a, b) => a.label.localeCompare(b.label));
+        setTableOptions(options);
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Failed to load source tables.' });
+      } finally {
+        setTablesLoading(false);
+      }
+    },
+    [onToast],
+  );
+
   useEffect(() => {
     void loadConnections();
   }, [loadConnections]);
@@ -94,6 +159,120 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
       setMappings([]);
     }
   }, [selectedConnectionId, loadMappings]);
+
+  useEffect(() => {
+    if (selectedConnectionId) {
+      void loadTables(selectedConnectionId);
+    } else {
+      setTableOptions([]);
+      setFieldsByTable({});
+    }
+  }, [selectedConnectionId, loadTables]);
+
+  useEffect(() => {
+    setForm({ ...initialMapping });
+    setEditForm({ ...initialMapping });
+    setEditing(null);
+    setDeleteTarget(null);
+    setSampleTable('');
+    setSampleField('');
+    setSampleDimension('');
+    setLoadingFieldsFor(null);
+  }, [selectedConnectionId]);
+
+  const ensureFieldsLoaded = useCallback(
+    async (connectionId: number, identifier: string) => {
+      if (!identifier || fieldsByTable[identifier]) {
+        return;
+      }
+
+      const table = tableOptions.find((item) => item.identifier === identifier);
+      const parsed = parseTableIdentifier(identifier);
+      const targetSchema = table?.schema ?? parsed.schema;
+      const targetName = table?.name ?? parsed.name;
+
+      setLoadingFieldsFor(identifier);
+      try {
+        const fields = await fetchSourceFields(connectionId, targetName, targetSchema ?? undefined);
+        setFieldsByTable((prev) => ({ ...prev, [identifier]: fields }));
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Failed to load source fields.' });
+      } finally {
+        setLoadingFieldsFor((current) => (current === identifier ? null : current));
+      }
+    },
+    [fieldsByTable, tableOptions, onToast],
+  );
+
+  const getFieldOptions = useCallback(
+    (identifier: string, selected?: string) => {
+      const fields = fieldsByTable[identifier] ?? [];
+      if (selected && !fields.some((field) => field.name === selected)) {
+        return [...fields, fallbackField(selected)];
+      }
+      return fields;
+    },
+    [fieldsByTable],
+  );
+
+  const tableOptionList = useMemo(() => {
+    const map = new Map<string, TableOption>();
+    tableOptions.forEach((table) => {
+      map.set(table.identifier, table);
+    });
+    const ensure = (identifier: string) => {
+      if (identifier && !map.has(identifier)) {
+        map.set(identifier, fallbackTableOption(identifier));
+      }
+    };
+
+    ensure(form.source_table);
+    ensure(sampleTable);
+    ensure(editForm.source_table);
+
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [tableOptions, form.source_table, sampleTable, editForm.source_table]);
+
+  const mappingFieldOptions = useMemo(
+    () => getFieldOptions(form.source_table, form.source_field),
+    [getFieldOptions, form.source_table, form.source_field],
+  );
+
+  const sampleFieldOptions = useMemo(
+    () => getFieldOptions(sampleTable, sampleField),
+    [getFieldOptions, sampleTable, sampleField],
+  );
+
+  const editFieldOptions = useMemo(
+    () => getFieldOptions(editForm.source_table, editForm.source_field),
+    [getFieldOptions, editForm.source_table, editForm.source_field],
+  );
+
+  const tablePlaceholder = tablesLoading
+    ? 'Loading tables…'
+    : tableOptionList.length > 0
+    ? 'Select table'
+    : 'No tables available';
+
+  const getFieldPlaceholder = (tableId: string, options: SourceFieldMetadata[]): string => {
+    if (!tableId) {
+      return 'Select table first';
+    }
+    if (loadingFieldsFor === tableId && options.length === 0) {
+      return 'Loading fields…';
+    }
+    if (options.length === 0) {
+      return 'No fields available';
+    }
+    return 'Select field';
+  };
+
+  useEffect(() => {
+    if (editing && selectedConnectionId && editForm.source_table) {
+      void ensureFieldsLoaded(selectedConnectionId, editForm.source_table);
+    }
+  }, [editing, editForm.source_table, ensureFieldsLoaded, selectedConnectionId]);
 
   const handleCreate = async () => {
     if (!selectedConnectionId) {
@@ -243,19 +422,46 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
           >
             <Form.Group as={Col} md={4} controlId="mapping-table">
               <Form.Label>Source table</Form.Label>
-              <Form.Control
+              <Form.Select
                 value={form.source_table}
-                onChange={(event) => setForm((prev) => ({ ...prev, source_table: event.target.value }))}
+                disabled={!selectedConnectionId || tablesLoading || tableOptionList.length === 0}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setForm((prev) => ({ ...prev, source_table: value, source_field: '' }));
+                  if (selectedConnectionId && value) {
+                    void ensureFieldsLoaded(selectedConnectionId, value);
+                  }
+                }}
                 required
-              />
+              >
+                <option value="">{tablePlaceholder}</option>
+                {tableOptionList.map((table) => (
+                  <option key={table.identifier} value={table.identifier}>
+                    {table.label}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group as={Col} md={4} controlId="mapping-field">
               <Form.Label>Source field</Form.Label>
-              <Form.Control
+              <Form.Select
                 value={form.source_field}
-                onChange={(event) => setForm((prev) => ({ ...prev, source_field: event.target.value }))}
+                disabled={
+                  !form.source_table ||
+                  (loadingFieldsFor === form.source_table && mappingFieldOptions.length === 0)
+                }
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, source_field: event.target.value }))
+                }
                 required
-              />
+              >
+                <option value="">{getFieldPlaceholder(form.source_table, mappingFieldOptions)}</option>
+                {mappingFieldOptions.map((field) => (
+                  <option key={field.name} value={field.name}>
+                    {field.name}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group as={Col} md={4} controlId="mapping-dimension">
               <Form.Label>Reference dimension</Form.Label>
@@ -370,11 +576,45 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
           <Form className="row g-3" onSubmit={(event) => event.preventDefault()}>
             <Form.Group as={Col} md={4} controlId="sample-table">
               <Form.Label>Source table</Form.Label>
-              <Form.Control value={sampleTable} onChange={(event) => setSampleTable(event.target.value)} required />
+              <Form.Select
+                value={sampleTable}
+                disabled={!selectedConnectionId || tablesLoading || tableOptionList.length === 0}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setSampleTable(value);
+                  setSampleField('');
+                  if (selectedConnectionId && value) {
+                    void ensureFieldsLoaded(selectedConnectionId, value);
+                  }
+                }}
+                required
+              >
+                <option value="">{tablePlaceholder}</option>
+                {tableOptionList.map((table) => (
+                  <option key={table.identifier} value={table.identifier}>
+                    {table.label}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group as={Col} md={4} controlId="sample-field">
               <Form.Label>Source field</Form.Label>
-              <Form.Control value={sampleField} onChange={(event) => setSampleField(event.target.value)} required />
+              <Form.Select
+                value={sampleField}
+                disabled={
+                  !sampleTable ||
+                  (loadingFieldsFor === sampleTable && sampleFieldOptions.length === 0)
+                }
+                onChange={(event) => setSampleField(event.target.value)}
+                required
+              >
+                <option value="">{getFieldPlaceholder(sampleTable, sampleFieldOptions)}</option>
+                {sampleFieldOptions.map((field) => (
+                  <option key={field.name} value={field.name}>
+                    {field.name}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group as={Col} md={4} controlId="sample-dimension">
               <Form.Label>Dimension (optional)</Form.Label>
@@ -418,17 +658,42 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
           <Form className="d-flex flex-column gap-3">
             <Form.Group controlId="edit-source-table">
               <Form.Label>Source table</Form.Label>
-              <Form.Control
+              <Form.Select
                 value={editForm.source_table}
-                onChange={(event) => setEditForm((prev) => ({ ...prev, source_table: event.target.value }))}
-              />
+                disabled={tableOptionList.length === 0}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setEditForm((prev) => ({ ...prev, source_table: value, source_field: '' }));
+                  if (editing && selectedConnectionId && value) {
+                    void ensureFieldsLoaded(selectedConnectionId, value);
+                  }
+                }}
+              >
+                <option value="">{tablePlaceholder}</option>
+                {tableOptionList.map((table) => (
+                  <option key={table.identifier} value={table.identifier}>
+                    {table.label}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group controlId="edit-source-field">
               <Form.Label>Source field</Form.Label>
-              <Form.Control
+              <Form.Select
                 value={editForm.source_field}
+                disabled={
+                  !editForm.source_table ||
+                  (loadingFieldsFor === editForm.source_table && editFieldOptions.length === 0)
+                }
                 onChange={(event) => setEditForm((prev) => ({ ...prev, source_field: event.target.value }))}
-              />
+              >
+                <option value="">{getFieldPlaceholder(editForm.source_table, editFieldOptions)}</option>
+                {editFieldOptions.map((field) => (
+                  <option key={field.name} value={field.name}>
+                    {field.name}
+                  </option>
+                ))}
+              </Form.Select>
             </Form.Group>
             <Form.Group controlId="edit-dimension">
               <Form.Label>Reference dimension</Form.Label>

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Iterable, List, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, and_, delete, select
 
@@ -24,17 +24,30 @@ from ..schemas import (
     SourceConnectionCreate,
     SourceConnectionRead,
     SourceConnectionUpdate,
+    SourceConnectionTestOverrides,
+    SourceConnectionTestPayload,
+    SourceConnectionTestResult,
     SourceFieldMappingCreate,
     SourceFieldMappingRead,
     SourceFieldMappingUpdate,
+    SourceFieldMetadata,
     SourceSampleIngestRequest,
     SourceSampleRead,
+    SourceTableMetadata,
     UnmatchedValuePreview,
     UnmatchedValueRecord,
     ValueMappingCreate,
     ValueMappingExpanded,
     ValueMappingRead,
     ValueMappingUpdate,
+)
+from ..services.source_connections import (
+    SourceConnectionServiceError,
+    list_fields as service_list_fields,
+    list_tables as service_list_tables,
+    merge_settings,
+    settings_from_payload,
+    test_connection as service_test_connection,
 )
 
 
@@ -67,6 +80,17 @@ def _canonical_lookup(session: Session, identifiers: set[int]) -> dict[int, Cano
         return {}
     statement = select(CanonicalValue).where(CanonicalValue.id.in_(identifiers))
     return {canonical.id: canonical for canonical in session.exec(statement).all()}
+
+
+def _build_connection_test_result(latency_ms: float) -> SourceConnectionTestResult:
+    rounded = round(latency_ms, 2)
+    if rounded >= 1:
+        message = f"Connection succeeded ({rounded:.0f} ms)."
+    elif rounded > 0:
+        message = f"Connection succeeded ({rounded:.2f} ms)."
+    else:
+        message = "Connection succeeded."
+    return SourceConnectionTestResult(success=True, message=message, latency_ms=rounded)
 
 
 @router.get("/connections", response_model=List[SourceConnectionRead])
@@ -147,6 +171,95 @@ def delete_connection(
     session.delete(connection)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/connections/test", response_model=SourceConnectionTestResult)
+def test_connection_endpoint(
+    payload: SourceConnectionTestPayload,
+) -> SourceConnectionTestResult:
+    try:
+        settings = settings_from_payload(payload.model_dump(exclude_none=True))
+        latency_ms = service_test_connection(settings)
+    except SourceConnectionServiceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return _build_connection_test_result(latency_ms)
+
+
+@router.post(
+    "/connections/{connection_id}/test",
+    response_model=SourceConnectionTestResult,
+)
+def test_existing_connection(
+    connection_id: int,
+    overrides: SourceConnectionTestOverrides | None = Body(default=None),
+    session: Session = Depends(get_session),
+) -> SourceConnectionTestResult:
+    connection = _require_connection(session, connection_id)
+    override_data = (
+        overrides.model_dump(exclude_unset=True, exclude_none=True)
+        if overrides
+        else None
+    )
+
+    try:
+        settings = merge_settings(connection, override_data)
+        latency_ms = service_test_connection(settings)
+    except SourceConnectionServiceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return _build_connection_test_result(latency_ms)
+
+
+@router.get(
+    "/connections/{connection_id}/tables",
+    response_model=List[SourceTableMetadata],
+)
+def list_source_tables(
+    connection_id: int, session: Session = Depends(get_session)
+) -> List[SourceTableMetadata]:
+    connection = _require_connection(session, connection_id)
+
+    try:
+        settings = merge_settings(connection)
+        records = service_list_tables(settings)
+    except SourceConnectionServiceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return [SourceTableMetadata(**record) for record in records]
+
+
+@router.get(
+    "/connections/{connection_id}/tables/{table_name}/fields",
+    response_model=List[SourceFieldMetadata],
+)
+def list_source_fields(
+    connection_id: int,
+    table_name: str,
+    schema: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> List[SourceFieldMetadata]:
+    connection = _require_connection(session, connection_id)
+
+    effective_schema = schema
+    effective_table = table_name
+    if effective_schema is None and "." in table_name:
+        potential_schema, potential_table = table_name.split(".", 1)
+        if potential_table:
+            effective_schema = potential_schema or None
+            effective_table = potential_table
+
+    if effective_schema:
+        effective_schema = effective_schema.strip('"')
+    effective_table = effective_table.strip('"')
+
+    try:
+        settings = merge_settings(connection)
+        records = service_list_fields(settings, effective_table, effective_schema)
+    except SourceConnectionServiceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return [SourceFieldMetadata(**record) for record in records]
 
 
 @router.get(

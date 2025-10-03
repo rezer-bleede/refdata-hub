@@ -5,12 +5,15 @@ import {
   createSourceConnection,
   deleteSourceConnection,
   fetchSourceConnections,
+  testExistingSourceConnection,
+  testSourceConnection,
   updateSourceConnection,
 } from '../api';
 import type {
   SourceConnection,
   SourceConnectionCreatePayload,
   SourceConnectionUpdatePayload,
+  SourceConnectionTestResult,
   ToastMessage,
 } from '../types';
 
@@ -29,6 +32,33 @@ const emptyForm: SourceConnectionCreatePayload = {
   options: '',
 };
 
+const formatLatencyLabel = (latency?: number | null): string | null => {
+  if (latency === undefined || latency === null) {
+    return null;
+  }
+  if (latency >= 1) {
+    return `${Math.round(latency)} ms`;
+  }
+  if (latency > 0) {
+    return `${latency.toFixed(2)} ms`;
+  }
+  return null;
+};
+
+const formatTestToast = (result: SourceConnectionTestResult, connectionName?: string): string => {
+  const base = result.message || 'Connection succeeded.';
+  const latency = formatLatencyLabel(result.latency_ms);
+  const message = latency ? `${base} (${latency})` : base;
+  return connectionName ? `${connectionName}: ${message}` : message;
+};
+
+const resolveErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+};
+
 const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
   const [connections, setConnections] = useState<SourceConnection[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +67,8 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
   const [editing, setEditing] = useState<SourceConnection | null>(null);
   const [editForm, setEditForm] = useState<SourceConnectionUpdatePayload>({});
   const [deleteTarget, setDeleteTarget] = useState<SourceConnection | null>(null);
+  const [testingNewConnection, setTestingNewConnection] = useState(false);
+  const [testingExistingId, setTestingExistingId] = useState<number | null>(null);
 
   const loadConnections = useCallback(async () => {
     setLoading(true);
@@ -57,6 +89,58 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
 
   const handleFormChange = (key: keyof SourceConnectionCreatePayload, value: string) => {
     setForm((prev) => ({ ...prev, [key]: key === 'port' ? Number(value) : value }));
+  };
+
+  const handleTestNewConnection = async () => {
+    if (!form.host || !form.database || !form.username) {
+      onToast({ type: 'error', content: 'Provide host, database, and username before testing.' });
+      return;
+    }
+
+    setTestingNewConnection(true);
+    try {
+      const payload = {
+        ...form,
+        options: form.options ? form.options : undefined,
+        password: form.password ? form.password : undefined,
+      };
+      const result = await testSourceConnection(payload);
+      onToast({
+        type: 'success',
+        content: formatTestToast(result, form.name || undefined),
+      });
+    } catch (error: unknown) {
+      console.error(error);
+      onToast({
+        type: 'error',
+        content: resolveErrorMessage(error, 'Unable to test connection.'),
+      });
+    } finally {
+      setTestingNewConnection(false);
+    }
+  };
+
+  const handleTestExistingConnection = async (
+    connectionId: number,
+    overrides?: SourceConnectionUpdatePayload,
+  ) => {
+    setTestingExistingId(connectionId);
+    try {
+      const result = await testExistingSourceConnection(connectionId, overrides);
+      const connectionName = connections.find((item) => item.id === connectionId)?.name;
+      onToast({
+        type: 'success',
+        content: formatTestToast(result, connectionName),
+      });
+    } catch (error: unknown) {
+      console.error(error);
+      onToast({
+        type: 'error',
+        content: resolveErrorMessage(error, 'Unable to test connection.'),
+      });
+    } finally {
+      setTestingExistingId(null);
+    }
   };
 
   const handleCreate = async () => {
@@ -243,8 +327,23 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 </Form.Group>
               </Col>
             </Row>
-            <div className="d-flex justify-content-end mt-4">
-              <Button type="submit" variant="primary" disabled={submitting}>
+            <div className="d-flex justify-content-end mt-4 gap-2">
+              <Button
+                type="button"
+                variant="outline-secondary"
+                onClick={() => void handleTestNewConnection()}
+                disabled={testingNewConnection || submitting}
+              >
+                {testingNewConnection ? (
+                  <span className="d-inline-flex align-items-center gap-2">
+                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                    Testing…
+                  </span>
+                ) : (
+                  'Test connection'
+                )}
+              </Button>
+              <Button type="submit" variant="primary" disabled={submitting || testingNewConnection}>
                 {submitting ? (
                   <span className="d-inline-flex align-items-center gap-2">
                     <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
@@ -302,6 +401,21 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                       <td className="text-monospaced">{new Date(connection.updated_at).toLocaleString()}</td>
                       <td className="text-end">
                         <div className="d-inline-flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline-secondary"
+                            onClick={() => void handleTestExistingConnection(connection.id)}
+                            disabled={testingExistingId === connection.id}
+                          >
+                            {testingExistingId === connection.id ? (
+                              <span className="d-inline-flex align-items-center gap-2">
+                                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                                Testing…
+                              </span>
+                            ) : (
+                              'Test'
+                            )}
+                          </Button>
                           <Button size="sm" variant="outline-primary" onClick={() => openEdit(connection)}>
                             Edit
                           </Button>
@@ -387,6 +501,20 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
         <Modal.Footer>
           <Button variant="outline-secondary" onClick={() => setEditing(null)}>
             Cancel
+          </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => editing && void handleTestExistingConnection(editing.id, editForm)}
+            disabled={!editing || testingExistingId === editing.id}
+          >
+            {editing && testingExistingId === editing.id ? (
+              <span className="d-inline-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Testing…
+              </span>
+            ) : (
+              'Test connection'
+            )}
           </Button>
           <Button variant="primary" onClick={() => void handleUpdate()} disabled={submitting}>
             {submitting ? (

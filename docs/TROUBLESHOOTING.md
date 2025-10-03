@@ -27,7 +27,14 @@ DEBUG api.app.routes.config Configuration retrieved {'config_id': 1}
 
 These messages confirm the configuration row exists and is returned to the UI. If the API logs show errors, restart the service and ensure the database is reachable.
 
-## 3. Review canonical library availability
+## 3. Validate credentials with the Test connection action
+
+The Source Connections page now includes a **Test connection** button next to the save action. Use it to confirm new or updated
+credentials before committing them to the catalog. The Reviewer UI will display a toast with the outcome and measured latency, and
+the API logs an audit-friendly entry if the connection attempt fails. If the test reports an error, adjust the host, port, or
+options JSON without leaving the modal until it succeeds.
+
+## 4. Review canonical library availability
 
 Requests to `/api/reference/canonical` log the number of values returned. If the log shows `count: 0`, reseed the database or add canonical entries through the UI. A zero-length response will not trigger the toast, but the debug output can help verify the request succeeded.
 
@@ -36,11 +43,11 @@ validation issues. Look for messages such as `Bulk canonical import received` an
 column` to confirm whether the parser recognised the provided headers (including aliases like `Canonical Value` or `Long
 Description`). These logs make it easier to align the spreadsheet headers with the expected schema.
 
-## 4. Retry with a hard refresh
+## 5. Retry with a hard refresh
 
 After addressing connectivity issues, perform a hard refresh (`Ctrl` + `Shift` + `R` on most browsers) to clear cached bundles and re-run the initial data fetch. The enhanced UI logging will confirm whether configuration and canonical data load successfully on subsequent attempts.
 
-## 5. Resolve `canonicalvalue.attributes` missing column errors
+## 6. Resolve `canonicalvalue.attributes` missing column errors
 
 Deployments created before the JSON `attributes` column was added to the `canonicalvalue` table can surface the following stack trace during API startup:
 
@@ -50,7 +57,7 @@ sqlalchemy.exc.ProgrammingError: (psycopg.errors.UndefinedColumn) column canonic
 
 The backend now self-heals this legacy schema automatically by adding the column and backfilling existing rows with an empty JSON object. Restart the API container (or rerun `docker compose up --build`) to apply the fix. Once the service is back online, the Reviewer UI will be able to load canonical values and the error will no longer appear in the logs.
 
-## 6. Resolve TypeScript build failures around mocked props
+## 7. Resolve TypeScript build failures around mocked props
 
 When running `npm run build` locally or inside the Docker image, you may encounter errors similar to:
 

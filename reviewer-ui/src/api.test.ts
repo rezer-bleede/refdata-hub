@@ -57,4 +57,94 @@ describe('api client helpers', () => {
       expect.objectContaining({ status: 503, statusText: 'Service Unavailable', body: 'backend exploded' }),
     );
   });
+
+  it('sends connection testing and metadata requests to the backend', async () => {
+    vi.stubGlobal('__API_BASE_URL__', '');
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('/connections/test')) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ success: true, message: 'ok', latency_ms: 12.5 }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        );
+      }
+      if (url.endsWith('/tables')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([{ name: 'customers', schema: 'public', type: 'table' }]),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          ),
+        );
+      }
+      if (url.includes('/fields')) {
+        return Promise.resolve(
+          new Response(JSON.stringify([{ name: 'id', data_type: 'integer' }]), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        );
+      }
+      return Promise.resolve(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const {
+      testSourceConnection,
+      testExistingSourceConnection,
+      fetchSourceTables,
+      fetchSourceFields,
+    } = await import('./api');
+
+    await testSourceConnection({
+      name: 'local',
+      db_type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      database: 'analytics',
+      username: 'svc',
+      password: 'secret',
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/source/connections/test',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const firstBody = JSON.parse((fetchMock.mock.calls[0][1]?.body as string) ?? '{}');
+    expect(firstBody).toMatchObject({ db_type: 'postgres', password: 'secret' });
+
+    fetchMock.mockClear();
+
+    await testExistingSourceConnection(3, { host: 'db.internal', password: 'override' });
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/source/connections/3/test',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const overridePayload = JSON.parse((fetchMock.mock.calls[0][1]?.body as string) ?? '{}');
+    expect(overridePayload).toMatchObject({ host: 'db.internal', password: 'override' });
+
+    fetchMock.mockClear();
+
+    await fetchSourceTables(5);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/source/connections/5/tables',
+      undefined,
+    );
+
+    fetchMock.mockClear();
+
+    await fetchSourceFields(5, 'customers', 'public');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/source/connections/5/tables/customers/fields?schema=public',
+      undefined,
+    );
+  });
 });

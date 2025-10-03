@@ -16,10 +16,14 @@ import type {
   SourceConnection,
   SourceConnectionCreatePayload,
   SourceConnectionUpdatePayload,
+  SourceConnectionTestPayload,
+  SourceConnectionTestResult,
   SourceFieldMapping,
   SourceFieldMappingPayload,
+  SourceFieldMetadata,
   SourceSample,
   SourceSampleValuePayload,
+  SourceTableMetadata,
   SystemConfig,
   SystemConfigUpdate,
   UnmatchedValueRecord,
@@ -282,6 +286,82 @@ export async function updateSourceConnection(
 
 export async function deleteSourceConnection(id: number): Promise<void> {
   await apiFetchVoid(`/api/source/connections/${id}`, { method: 'DELETE' });
+}
+
+export async function testSourceConnection(
+  payload: SourceConnectionTestPayload,
+): Promise<SourceConnectionTestResult> {
+  const body = {
+    ...payload,
+    password: payload.password ? payload.password : undefined,
+    options:
+      payload.options === undefined || payload.options === null || payload.options === ''
+        ? undefined
+        : payload.options,
+  };
+
+  return apiFetchJson<SourceConnectionTestResult>('/api/source/connections/test', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
+export async function testExistingSourceConnection(
+  connectionId: number,
+  overrides?: SourceConnectionUpdatePayload,
+): Promise<SourceConnectionTestResult> {
+  let body: string | undefined;
+  if (overrides) {
+    const sanitised: Record<string, unknown> = {};
+    Object.entries(overrides).forEach(([key, value]) => {
+      if (value === undefined || value === null) {
+        return;
+      }
+      if (key === 'password' && value === '') {
+        return;
+      }
+      if (key === 'options' && value === '') {
+        return;
+      }
+      sanitised[key] = value;
+    });
+
+    if (Object.keys(sanitised).length > 0) {
+      body = JSON.stringify(sanitised);
+    }
+  }
+
+  return apiFetchJson<SourceConnectionTestResult>(
+    `/api/source/connections/${connectionId}/test`,
+    body
+      ? {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+        }
+      : { method: 'POST' },
+  );
+}
+
+export async function fetchSourceTables(connectionId: number): Promise<SourceTableMetadata[]> {
+  return apiFetchJson<SourceTableMetadata[]>(`/api/source/connections/${connectionId}/tables`);
+}
+
+export async function fetchSourceFields(
+  connectionId: number,
+  tableName: string,
+  schema?: string | null,
+): Promise<SourceFieldMetadata[]> {
+  const params = new URLSearchParams();
+  if (schema) {
+    params.set('schema', schema);
+  }
+  const query = params.toString();
+  const suffix = query ? `?${query}` : '';
+  return apiFetchJson<SourceFieldMetadata[]>(
+    `/api/source/connections/${connectionId}/tables/${encodeURIComponent(tableName)}/fields${suffix}`,
+  );
 }
 
 export async function fetchFieldMappings(connectionId: number): Promise<SourceFieldMapping[]> {
