@@ -52,7 +52,9 @@ The FastAPI service now exposes a rich set of endpoints under `/api`:
 - `/reference/canonical` – full CRUD for canonical reference values.
 - `/reference/canonical/import` – parse CSV/TSV/Excel uploads and create canonical values in bulk. Requests now accept an
   explicit column mapping payload so spreadsheets with arbitrary headers can be harmonised, and optional dimension definitions
-  allow brand-new dimensions to be created automatically during an import.
+  allow brand-new dimensions to be created automatically during an import. The loader now scans every worksheet in an Excel
+  workbook, skips prefatory metadata blocks, and promotes the first detected header row even when it appears below merged
+  title cells or version banners, making it resilient to the multi-sheet templates typically shared by governance teams.
 - `/reference/canonical/import/preview` – analyse an uploaded table and return detected columns, suggested roles, and proposed
   dimension mappings. The Reviewer UI uses this endpoint to power the interactive bulk-import wizard.
 - `/reference/dimensions` – manage the dimension catalog and attribute schema.

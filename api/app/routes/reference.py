@@ -108,6 +108,118 @@ def _normalise(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.strip().lower()).strip("_")
 
 
+def _looks_numeric(value: str | None) -> bool:
+    if value is None:
+        return False
+    try:
+        float(value)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
+def _build_header_names(header: pd.Series) -> list[str]:
+    names: list[str] = []
+    seen: set[str] = set()
+    for index, value in enumerate(header.tolist()):
+        text = _safe_str(value)
+        if not text:
+            text = f"column_{index + 1}"
+        if text in seen:
+            suffix = 2
+            candidate = f"{text}_{suffix}"
+            while candidate in seen:
+                suffix += 1
+                candidate = f"{text}_{suffix}"
+            text = candidate
+        seen.add(text)
+        names.append(text)
+    return names
+
+
+def _find_header_row(dataframe: pd.DataFrame) -> int | None:
+    if dataframe.empty:
+        return None
+
+    sanitised: list[list[str | None]] = [
+        [_safe_str(value) for value in dataframe.iloc[row_index].tolist()]
+        for row_index in range(len(dataframe.index))
+    ]
+
+    best_index: int | None = None
+    best_score = float("-inf")
+    column_count = len(dataframe.columns)
+
+    for row_index, values in enumerate(sanitised):
+        non_empty = [value for value in values if value]
+        if len(non_empty) < 2:
+            continue
+
+        subsequent_rows = sanitised[row_index + 1 :]
+        data_rows = sum(1 for row in subsequent_rows if any(row))
+        if data_rows == 0:
+            continue
+
+        alpha_count = sum(1 for value in non_empty if any(char.isalpha() for char in value))
+        alpha_ratio = alpha_count / len(non_empty)
+        unique_ratio = len(set(non_empty)) / len(non_empty)
+        numeric_like = sum(1 for value in non_empty if _looks_numeric(value))
+        coverage_ratio = len(non_empty) / column_count if column_count else 0.0
+
+        score = (
+            data_rows * 5
+            + len(non_empty) * 5
+            + alpha_ratio * 40
+            + unique_ratio * 10
+            + coverage_ratio * 10
+            - numeric_like * 3
+        )
+
+        if score > best_score:
+            best_score = score
+            best_index = row_index
+
+    return best_index
+
+
+def _extract_tabular_region(dataframe: pd.DataFrame) -> pd.DataFrame | None:
+    if dataframe.empty:
+        return None
+
+    trimmed = dataframe.copy()
+    trimmed = trimmed.dropna(axis=1, how="all")
+    trimmed = trimmed.dropna(how="all")
+    if trimmed.empty:
+        return None
+
+    trimmed = trimmed.reset_index(drop=True)
+    header_index = _find_header_row(trimmed)
+    if header_index is None:
+        return None
+
+    table = trimmed.iloc[header_index:].reset_index(drop=True)
+    header = _build_header_names(table.iloc[0])
+    data = table.iloc[1:].reset_index(drop=True)
+    data.columns = header
+    data = data.dropna(how="all")
+    data = data.dropna(axis=1, how="all")
+    data = data.reset_index(drop=True)
+
+    if data.empty:
+        return None
+
+    return data
+
+
+def _score_dataframe(dataframe: pd.DataFrame | None) -> float:
+    if dataframe is None or dataframe.empty:
+        return float("-inf")
+    row_count = len(dataframe.index)
+    column_count = len(dataframe.columns)
+    populated_cells = int(dataframe.count().sum())
+    return row_count * 1000 + column_count * 10 + populated_cells
+
+
 def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
     if not buffer:
         raise HTTPException(
@@ -116,7 +228,6 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
         )
 
     extension = (Path(filename or "").suffix or "").lower()
-    stream = io.BytesIO(buffer)
     logger.debug(
         "Attempting to parse uploaded table",
         extra={"filename": filename, "extension": extension, "size_bytes": len(buffer)},
@@ -124,25 +235,73 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
 
     if extension in {".xls", ".xlsx"}:
         try:
-            df = pd.read_excel(stream)
+            excel_file = pd.ExcelFile(io.BytesIO(buffer))
         except ValueError as exc:  # pragma: no cover - defensive guard
             logger.exception("Failed to parse Excel payload", exc_info=exc)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Unable to parse Excel file. Ensure the sheet includes a header row.",
+                detail="Unable to parse Excel file. Ensure the workbook includes a tabular sheet.",
             ) from exc
+
+        selected_frame: pd.DataFrame | None = None
+        selected_sheet: str | None = None
+        best_score = float("-inf")
+
+        for sheet_name in excel_file.sheet_names:
+            raw_sheet = excel_file.parse(sheet_name, header=None, dtype=object)
+            candidate = _extract_tabular_region(raw_sheet)
+            score = _score_dataframe(candidate)
+            if score > best_score:
+                best_score = score
+                selected_frame = candidate
+                selected_sheet = sheet_name
+
+        if selected_frame is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Unable to locate a data table within the uploaded Excel file. "
+                    "Ensure one of the sheets contains a header row followed by data rows."
+                ),
+            )
+
+        logger.debug(
+            "Selected Excel sheet for import",
+            extra={
+                "filename": filename,
+                "sheet": selected_sheet,
+                "row_count": len(selected_frame.index),
+                "column_count": len(selected_frame.columns),
+            },
+        )
+        df = selected_frame
     else:
-        df = None
+        selected_frame = None
+        selected_separator: str | None = None
+        best_score = float("-inf")
+
         for separator in [None, ",", ";", "\t", "|"]:
-            stream.seek(0)
+            stream = io.BytesIO(buffer)
             try:
-                candidate = pd.read_csv(stream, sep=separator, engine="python")
+                candidate_raw = pd.read_csv(
+                    stream,
+                    sep=separator,
+                    engine="python",
+                    header=None,
+                    dtype=object,
+                    skip_blank_lines=False,
+                )
             except Exception:  # pragma: no cover - pandas raises numerous subclasses
                 continue
-            if not candidate.empty:
-                df = candidate
-                break
-        if df is None:
+
+            candidate = _extract_tabular_region(candidate_raw)
+            score = _score_dataframe(candidate)
+            if score > best_score:
+                best_score = score
+                selected_frame = candidate
+                selected_separator = separator if separator is not None else "auto"
+
+        if selected_frame is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=(
@@ -150,6 +309,17 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
                     "with a header row describing each column."
                 ),
             )
+
+        logger.debug(
+            "Selected delimited payload for import",
+            extra={
+                "filename": filename,
+                "separator": selected_separator,
+                "row_count": len(selected_frame.index),
+                "column_count": len(selected_frame.columns),
+            },
+        )
+        df = selected_frame
 
     df = df.dropna(how="all")
     df = df.dropna(axis=1, how="all")
