@@ -1,4 +1,5 @@
 import type {
+  BulkImportPreview,
   BulkImportResult,
   CanonicalValue,
   CanonicalValueUpdatePayload,
@@ -142,6 +143,13 @@ export async function deleteCanonicalValue(id: number): Promise<void> {
 
 export async function bulkImportCanonicalValues(formData: FormData): Promise<BulkImportResult> {
   return apiFetchJson<BulkImportResult>('/api/reference/canonical/import', {
+    method: 'POST',
+    body: formData,
+  });
+}
+
+export async function previewBulkImportCanonicalValues(formData: FormData): Promise<BulkImportPreview> {
+  return apiFetchJson<BulkImportPreview>('/api/reference/canonical/import/preview', {
     method: 'POST',
     body: formData,
   });

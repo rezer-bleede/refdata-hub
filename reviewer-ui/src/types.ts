@@ -251,3 +251,31 @@ export interface BulkImportResult {
   created: CanonicalValue[];
   errors: string[];
 }
+
+export interface BulkImportPreviewColumn {
+  name: string;
+  sample: string[];
+  suggested_role?: 'label' | 'dimension' | 'description' | 'attribute';
+  suggested_attribute_key?: string;
+  suggested_dimension?: string;
+}
+
+export interface ProposedDimensionSuggestion {
+  code: string;
+  label: string;
+}
+
+export interface BulkImportPreview {
+  columns: BulkImportPreviewColumn[];
+  suggested_dimension?: string | null;
+  proposed_dimension?: ProposedDimensionSuggestion | null;
+}
+
+export interface BulkImportColumnMapping {
+  label?: string;
+  dimension?: string;
+  description?: string;
+  attributes: Record<string, string>;
+  default_dimension?: string;
+  dimension_definition?: DimensionCreatePayload;
+}

@@ -11,8 +11,8 @@ The library page offers five key capabilities:
 1. **Filter & search** – Narrow the table by dimension and/or keyword to locate existing canonical values quickly.
 2. **Create & edit** – Launch the editor modal to add brand-new entries or update labels, dimensions, descriptions, and any
    dimension-specific attributes.
-3. **Bulk import** – Upload CSV/TSV/Excel files or paste tabular rows and let the importer detect headers, attributes, and
-   dimensions automatically.
+3. **Bulk import** – Upload CSV/TSV/Excel files or paste tabular rows, review the automatic column suggestions, and map headers
+   to canonical fields before committing the import.
 4. **Attributes** – Capture the extra fields defined for the active dimension (for example, codes or international identifiers)
    alongside each canonical value.
 5. **Export** – Download the filtered table to CSV for auditing or offline collaboration. The export includes attribute columns
@@ -30,19 +30,19 @@ All changes are persisted via the `/api/reference/canonical` endpoints exposed b
 
 ## Bulk import walkthrough
 
-The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column—`dimension`, `label`, and
-`description` columns are detected automatically, along with any extra attribute keys defined for the target dimension. When
-pasting rows directly into the modal, the same headers should appear in the first line. Common aliases such as **Dimension
-Name**, **Canonical Value**, **Canonical Name**, **Canonical Description**, and **Long Description** are now recognised out of the
-box, ensuring legacy spreadsheets are parsed without manual edits.
+The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column; the preview step inspects the
+headers and sample rows, proposes sensible defaults (label, dimension, description, and attribute candidates), and lets you map
+or ignore each column before creating any records. When the dataset targets a brand-new dimension, you can capture the dimension
+label and optional description inline—the backend will create the dimension and its attribute schema automatically during the
+import.
 
 * Columns can be separated by commas, tabs, or multiple spaces when pasting raw text.
-* Empty dimension cells inherit the "Default dimension" value provided in the modal (useful when supplying single-dimension data).
-* Any attribute columns that match the dimension's schema (for example `code`, `iso_code`, or `unesco_level`) are parsed and
-  stored alongside the canonical value.
+* Empty dimension cells inherit the selected target dimension when no dimension column is mapped—helpful for single-dimension
+  datasets.
+* Attribute columns can be mapped to existing schema keys or defined on the fly for new dimensions. Attribute types default to
+  text but can be adjusted to numeric or boolean as part of the mapping step.
 * Backend logs include the resolved filename, detected columns, and the number of created versus skipped rows. Check the FastAPI
-  container logs for entries such as `Bulk canonical import received` or `Bulk import aborted: missing canonical label column`
-  when diagnosing issues.
+  container logs for entries such as `Bulk canonical import received` or `Generated bulk import preview` when diagnosing issues.
 * Uploading both a file and pasted rows prioritises the file contents; remove the file to import the pasted data instead.
 
 ### Abu Dhabi regional dataset
@@ -58,8 +58,11 @@ To bulk load the dataset:
    cat docs/data/abu_dhabi_canonical.tsv
    ```
 2. Copy all rows starting from the second line (skip the header row).
-3. In the Reviewer UI, select **Bulk import** → either upload the TSV file or paste the copied rows → click **Import rows**.
-4. The importer reports how many records were created, highlights any issues inline, and automatically sorts the additions alongside existing values.
+3. In the Reviewer UI, select **Bulk import**, upload the TSV file (or paste the copied rows), and click **Review mappings**.
+4. Map the detected columns to the canonical label, dimension (or default dimension), and any attributes. Adjust attribute data
+   types if you're creating a new dimension.
+5. Click **Import rows** to create the records. The importer reports how many values were created, highlights any issues inline,
+   and automatically sorts the additions alongside existing values.
 
 ### Tips for custom datasets
 
