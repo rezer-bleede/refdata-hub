@@ -254,6 +254,8 @@ def test_bulk_import_csv_and_excel() -> None:
     assert csv_response.status_code == 201
     payload = csv_response.json()
     assert len(payload["created"]) == 2
+    assert payload["updated"] == []
+    assert payload["duplicates"] == []
     assert not payload["errors"]
 
     dataframe = pd.DataFrame(
@@ -280,6 +282,8 @@ def test_bulk_import_csv_and_excel() -> None:
     assert excel_response.status_code == 201
     excel_payload = excel_response.json()
     assert len(excel_payload["created"]) == 2
+    assert excel_payload["updated"] == []
+    assert excel_payload["duplicates"] == []
     assert not excel_payload["errors"]
 
 
@@ -345,8 +349,62 @@ def test_bulk_import_excel_with_metadata_and_multiple_sheets() -> None:
     assert response.status_code == 201
     payload = response.json()
     assert payload["errors"] == []
+    assert payload["updated"] == []
+    assert payload["duplicates"] == []
     labels = [entry["canonical_label"] for entry in payload["created"]]
     assert {"Excel value one", "Excel value two"} == set(labels)
+
+
+def test_bulk_import_preview_allows_sheet_selection() -> None:
+    client = build_test_client()
+
+    workbook = Workbook()
+    cities = workbook.active
+    cities.title = "Cities"
+    cities.append(["Dimension", "Canonical Label"])
+    cities.append(["region", "City One"])
+
+    regions = workbook.create_sheet("Regions")
+    regions.append(["Dimension", "Canonical Label"])
+    regions.append(["region", "Region One"])
+
+    excel_buffer = io.BytesIO()
+    workbook.save(excel_buffer)
+    excel_bytes = excel_buffer.getvalue()
+
+    preview_response = client.post(
+        "/api/reference/canonical/import/preview",
+        files={
+            "file": (
+                "multi.xlsx",
+                excel_bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+    assert preview_response.status_code == 200
+    preview_payload = preview_response.json()
+    assert set(preview_payload["available_sheets"]) == {"Cities", "Regions"}
+    assert preview_payload["selected_sheet"] in {"Cities", "Regions"}
+
+    preview_regions = client.post(
+        "/api/reference/canonical/import/preview",
+        data={"sheet": "Regions"},
+        files={
+            "file": (
+                "multi.xlsx",
+                excel_bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+    assert preview_regions.status_code == 200
+    preview_regions_payload = preview_regions.json()
+    assert preview_regions_payload["selected_sheet"] == "Regions"
+    assert any(
+        "Region One" in column.get("sample", [])
+        for column in preview_regions_payload["columns"]
+    )
 
 
 def test_bulk_import_csv_with_preface_metadata() -> None:
@@ -388,6 +446,8 @@ def test_bulk_import_csv_with_preface_metadata() -> None:
     assert response.status_code == 201
     payload = response.json()
     assert payload["errors"] == []
+    assert payload["updated"] == []
+    assert payload["duplicates"] == []
     created = {entry["canonical_label"] for entry in payload["created"]}
     assert created == {"CSV value one", "CSV value two"}
 
@@ -432,6 +492,8 @@ def test_bulk_import_accepts_canonical_value_header() -> None:
     assert response.status_code == 201
     payload = response.json()
     assert payload["errors"] == []
+    assert payload["updated"] == []
+    assert payload["duplicates"] == []
     assert len(payload["created"]) == 1
     created_entry = payload["created"][0]
     assert created_entry["canonical_label"] == "Header Label"
@@ -507,6 +569,8 @@ def test_bulk_import_accepts_explicit_mapping() -> None:
     assert response.status_code == 201
     payload = response.json()
     assert len(payload["created"]) == 2
+    assert payload["updated"] == []
+    assert payload["duplicates"] == []
     labels = {item["canonical_label"] for item in payload["created"]}
     assert labels == {"Abu Dhabi", "Dubai"}
 
@@ -541,6 +605,8 @@ def test_bulk_import_creates_dimension_from_mapping_definition() -> None:
     assert response.status_code == 201
     payload = response.json()
     assert payload["errors"] == []
+    assert payload["updated"] == []
+    assert payload["duplicates"] == []
     assert payload["created"][0]["dimension"] == "city"
 
     dimension_response = client.get("/api/reference/dimensions")
@@ -548,6 +614,82 @@ def test_bulk_import_creates_dimension_from_mapping_definition() -> None:
     dimension_payloads = dimension_response.json()
     city_dimension = next(item for item in dimension_payloads if item["code"] == "city")
     assert any(field["key"] == "numeric_code" for field in city_dimension["extra_fields"])
+
+
+def test_bulk_import_duplicate_resolution_strategies() -> None:
+    client = build_test_client()
+
+    client.post(
+        "/api/reference/dimensions",
+        json={
+            "code": "region",
+            "label": "Region",
+            "description": "Region dimension",
+            "extra_fields": [],
+        },
+    )
+
+    client.post(
+        "/api/reference/canonical",
+        json={"dimension": "region", "canonical_label": "Abu Dhabi", "description": "Original"},
+    )
+
+    csv_content = "dimension,label,description\nregion,Abu Dhabi,Revised\nregion,Dubai,New\n"
+
+    dry_run = client.post(
+        "/api/reference/canonical/import",
+        data={"dry_run": "true"},
+        files={"file": ("duplicates.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+    assert dry_run.status_code == 201
+    dry_payload = dry_run.json()
+    assert len(dry_payload["duplicates"]) == 1
+    assert dry_payload["created"] == []
+    assert dry_payload["updated"] == []
+
+    pending = client.post(
+        "/api/reference/canonical/import",
+        files={"file": ("duplicates.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+    assert pending.status_code == 201
+    pending_payload = pending.json()
+    assert len(pending_payload["duplicates"]) == 1
+    assert pending_payload["created"] == []
+    assert pending_payload["updated"] == []
+
+    skip = client.post(
+        "/api/reference/canonical/import",
+        data={"duplicate_strategy": "skip"},
+        files={"file": ("duplicates.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+    assert skip.status_code == 201
+    skip_payload = skip.json()
+    assert len(skip_payload["created"]) == 1
+    assert skip_payload["created"][0]["canonical_label"] == "Dubai"
+    assert skip_payload["updated"] == []
+    assert skip_payload["duplicates"] == []
+    assert any("Skipped" in message for message in skip_payload["errors"])
+
+    canonical_list = client.get("/api/reference/canonical").json()
+    abu_dhabi = next(item for item in canonical_list if item["canonical_label"] == "Abu Dhabi")
+    assert abu_dhabi["description"] == "Original"
+
+    update_csv = "dimension,label,description\nregion,Abu Dhabi,Updated\n"
+    update = client.post(
+        "/api/reference/canonical/import",
+        data={"duplicate_strategy": "update"},
+        files={"file": ("update.csv", update_csv.encode("utf-8"), "text/csv")},
+    )
+    assert update.status_code == 201
+    update_payload = update.json()
+    assert update_payload["created"] == []
+    assert len(update_payload["updated"]) == 1
+    assert update_payload["updated"][0]["description"] == "Updated"
+    assert update_payload["errors"] == []
+
+    final_list = client.get("/api/reference/canonical").json()
+    updated_entry = next(item for item in final_list if item["canonical_label"] == "Abu Dhabi")
+    assert updated_entry["description"] == "Updated"
 
 
 def test_source_mapping_flow() -> None:

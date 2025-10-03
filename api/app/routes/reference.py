@@ -6,6 +6,8 @@ import io
 import json
 import logging
 import re
+from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +40,7 @@ from ..models import (
 )
 from ..schemas import (
     BulkImportColumnMapping,
+    BulkImportDuplicateRecord,
     BulkImportPreview,
     BulkImportPreviewColumn,
     BulkImportResult,
@@ -106,6 +109,33 @@ DESCRIPTION_COLUMN_KEYS = {
 
 def _normalise(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", text.strip().lower()).strip("_")
+
+
+@dataclass(slots=True)
+class LoadedTable:
+    dataframe: pd.DataFrame
+    available_sheets: list[str]
+    selected_sheet: str | None
+
+
+@dataclass(slots=True)
+class ImportPlan:
+    label_column: str
+    dimension_column: str | None
+    description_column: str | None
+    attribute_mapping: dict[str, str]
+    optional_columns: set[str]
+    default_dimension: str | None
+    dimension_definition: DimensionCreate | None
+
+
+@dataclass(slots=True)
+class PreparedRow:
+    row_number: int
+    dimension_code: str
+    canonical_label: str
+    description: str | None
+    attributes: dict[str, Any]
 
 
 def _looks_numeric(value: str | None) -> bool:
@@ -220,7 +250,9 @@ def _score_dataframe(dataframe: pd.DataFrame | None) -> float:
     return row_count * 1000 + column_count * 10 + populated_cells
 
 
-def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
+def _load_dataframe(
+    buffer: bytes, filename: str | None, sheet: str | None = None
+) -> LoadedTable:
     if not buffer:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -233,6 +265,9 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
         extra={"filename": filename, "extension": extension, "size_bytes": len(buffer)},
     )
 
+    selected_sheet: str | None = None
+    available_sheets: list[str] = []
+
     if extension in {".xls", ".xlsx"}:
         try:
             excel_file = pd.ExcelFile(io.BytesIO(buffer))
@@ -243,11 +278,20 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
                 detail="Unable to parse Excel file. Ensure the workbook includes a tabular sheet.",
             ) from exc
 
+        available_sheets = list(excel_file.sheet_names)
+
+        if sheet and sheet not in available_sheets:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Sheet '{sheet}' not found in uploaded workbook.",
+            )
+
         selected_frame: pd.DataFrame | None = None
-        selected_sheet: str | None = None
         best_score = float("-inf")
 
-        for sheet_name in excel_file.sheet_names:
+        target_sheets = [sheet] if sheet else excel_file.sheet_names
+
+        for sheet_name in target_sheets:
             raw_sheet = excel_file.parse(sheet_name, header=None, dtype=object)
             candidate = _extract_tabular_region(raw_sheet)
             score = _score_dataframe(candidate)
@@ -276,7 +320,7 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
         )
         df = selected_frame
     else:
-        selected_frame = None
+        selected_frame: pd.DataFrame | None = None
         selected_separator: str | None = None
         best_score = float("-inf")
 
@@ -334,7 +378,11 @@ def _load_dataframe(buffer: bytes, filename: str | None) -> pd.DataFrame:
         "Parsed uploaded table",
         extra={"row_count": len(df.index), "column_count": len(df.columns)},
     )
-    return df
+    return LoadedTable(
+        dataframe=df,
+        available_sheets=available_sheets,
+        selected_sheet=selected_sheet,
+    )
 
 
 def _identify_columns(columns: list[str]) -> dict[str, str | None]:
@@ -374,6 +422,259 @@ def _collect_samples(dataframe: pd.DataFrame, column: str, limit: int = 5) -> li
     return samples
 
 
+def _parse_bool(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_duplicate_strategy(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalised = value.strip().lower()
+    if normalised in {"skip", "update"}:
+        return normalised
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Duplicate handling must be 'skip' or 'update'.",
+    )
+
+
+def _resolve_import_plan(
+    dataframe: pd.DataFrame,
+    column_map: dict[str, str | None],
+    mapping_payload: BulkImportColumnMapping | None,
+    dimension_hint: str | None,
+) -> ImportPlan:
+    label_column = (
+        mapping_payload.label if mapping_payload and mapping_payload.label else column_map.get("label")
+    )
+    if not label_column:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Select which column represents the canonical label before importing.",
+        )
+
+    dimension_column = (
+        mapping_payload.dimension
+        if mapping_payload and mapping_payload.dimension
+        else column_map.get("dimension")
+    )
+
+    description_column = (
+        mapping_payload.description
+        if mapping_payload and mapping_payload.description
+        else column_map.get("description")
+    )
+
+    referenced_columns = [label_column]
+    if dimension_column:
+        referenced_columns.append(dimension_column)
+    if description_column:
+        referenced_columns.append(description_column)
+
+    attribute_mapping: dict[str, str] = {}
+    if mapping_payload and mapping_payload.attributes:
+        attribute_mapping = dict(mapping_payload.attributes)
+        referenced_columns.extend(attribute_mapping.values())
+
+    missing_columns = {
+        column for column in referenced_columns if column and column not in dataframe.columns
+    }
+    if missing_columns:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Column mapping references unknown headers: "
+                + ", ".join(sorted(missing_columns))
+            ),
+        )
+
+    if attribute_mapping:
+        optional_columns: set[str] = set()
+    else:
+        optional_columns = {
+            column
+            for column in dataframe.columns
+            if column not in {dimension_column, label_column, description_column}
+        }
+
+    default_dimension = None
+    if mapping_payload and mapping_payload.default_dimension:
+        default_dimension = mapping_payload.default_dimension.strip() or None
+    elif dimension_hint:
+        default_dimension = dimension_hint.strip() or None
+
+    return ImportPlan(
+        label_column=label_column,
+        dimension_column=dimension_column,
+        description_column=description_column,
+        attribute_mapping=attribute_mapping,
+        optional_columns=optional_columns,
+        default_dimension=default_dimension,
+        dimension_definition=mapping_payload.dimension_definition if mapping_payload else None,
+    )
+
+
+def _prepare_import_rows(
+    session: Session,
+    dataframe: pd.DataFrame,
+    plan: ImportPlan,
+    persist_new_dimensions: bool,
+) -> tuple[
+    list[PreparedRow],
+    list[str],
+    list[BulkImportDuplicateRecord],
+    dict[str, Dimension | None],
+    dict[tuple[str, str], CanonicalValue],
+    set[str],
+]:
+    errors: list[str] = []
+    prepared_rows: list[PreparedRow] = []
+    dimension_cache: dict[str, Dimension | None] = {}
+    pending_dimension_codes: set[str] = set()
+
+    def resolve_dimension(code: str) -> Dimension | None:
+        if code in dimension_cache:
+            return dimension_cache[code]
+        try:
+            dimension = require_dimension(session, code)
+            dimension_cache[code] = dimension
+            return dimension
+        except HTTPException:
+            definition = plan.dimension_definition
+            if definition and definition.code == code:
+                if persist_new_dimensions:
+                    dimension = _create_dimension_inline(session, definition)
+                else:
+                    extra_schema = validate_extra_fields(definition.extra_fields)
+                    dimension = Dimension(
+                        code=definition.code,
+                        label=definition.label,
+                        description=definition.description,
+                        extra_schema=extra_schema,
+                    )
+                dimension_cache[code] = dimension
+                pending_dimension_codes.add(code)
+                return dimension
+            dimension_cache[code] = None
+            return None
+
+    for row_number, row in enumerate(
+        dataframe.to_dict(orient="records"), start=2
+    ):
+        label_value = _safe_str(row.get(plan.label_column))
+        if not label_value:
+            errors.append(f"Row {row_number}: Missing canonical label; skipping entry.")
+            continue
+
+        if plan.dimension_column:
+            dimension_value = _safe_str(row.get(plan.dimension_column)) or plan.default_dimension
+        else:
+            dimension_value = plan.default_dimension
+
+        if not dimension_value:
+            errors.append(
+                f"Row {row_number}: Missing dimension and no default provided; skipping entry."
+            )
+            continue
+
+        dimension_model = resolve_dimension(dimension_value)
+        if not dimension_model:
+            errors.append(
+                f"Row {row_number}: Dimension '{dimension_value}' does not exist."
+            )
+            continue
+
+        description_value = (
+            _safe_str(row.get(plan.description_column)) if plan.description_column else None
+        )
+
+        if plan.attribute_mapping:
+            attribute_payload = {
+                key: row.get(column)
+                for key, column in plan.attribute_mapping.items()
+            }
+        else:
+            attribute_payload = {column: row.get(column) for column in plan.optional_columns}
+
+        try:
+            attributes = validate_attributes(dimension_model, attribute_payload)
+        except HTTPException as exc:
+            errors.append(f"Row {row_number}: {exc.detail}")
+            continue
+
+        prepared_rows.append(
+            PreparedRow(
+                row_number=row_number,
+                dimension_code=dimension_model.code,
+                canonical_label=label_value,
+                description=description_value,
+                attributes=attributes,
+            )
+        )
+
+    dimension_to_labels: dict[str, set[str]] = defaultdict(set)
+    for row in prepared_rows:
+        dimension_to_labels[row.dimension_code].add(row.canonical_label)
+
+    existing_lookup: dict[tuple[str, str], CanonicalValue] = {}
+    for dimension_code, labels in dimension_to_labels.items():
+        if not labels:
+            continue
+        statement = select(CanonicalValue).where(
+            (CanonicalValue.dimension == dimension_code)
+            & (CanonicalValue.canonical_label.in_(list(labels)))
+        )
+        for canonical in session.exec(statement).all():
+            existing_lookup[(dimension_code, canonical.canonical_label)] = canonical
+
+    duplicates: list[BulkImportDuplicateRecord] = []
+    for row in prepared_rows:
+        key = (row.dimension_code, row.canonical_label)
+        canonical = existing_lookup.get(key)
+        if not canonical:
+            continue
+        duplicates.append(
+            BulkImportDuplicateRecord(
+                row_number=row.row_number,
+                dimension=row.dimension_code,
+                canonical_label=row.canonical_label,
+                existing_value=CanonicalValueRead.model_validate(canonical),
+                incoming_description=row.description,
+                incoming_attributes=row.attributes,
+            )
+        )
+
+    return (
+        prepared_rows,
+        errors,
+        duplicates,
+        dimension_cache,
+        existing_lookup,
+        pending_dimension_codes,
+    )
+
+
+def _ensure_dimensions_persisted(
+    session: Session,
+    plan: ImportPlan,
+    dimension_cache: dict[str, Dimension | None],
+    pending_dimension_codes: set[str],
+) -> None:
+    if not pending_dimension_codes:
+        return
+
+    definition = plan.dimension_definition
+    if not definition:
+        return
+
+    for code in list(pending_dimension_codes):
+        if code != definition.code:
+            continue
+        dimension = _create_dimension_inline(session, definition)
+        dimension_cache[code] = dimension
+        pending_dimension_codes.remove(code)
 def _create_dimension_inline(session: Session, payload: DimensionCreate) -> Dimension:
     extra_schema = validate_extra_fields(payload.extra_fields)
     dimension = Dimension(
@@ -560,6 +861,8 @@ async def preview_canonical_import(
     dimension: str | None = Form(default=None),
     file: UploadFile | None = File(default=None),
     inline_text: str | None = Form(default=None),
+    sheet: str | None = Form(default=None),
+    mapping: str | None = Form(default=None),
 ) -> BulkImportPreview:
     if not file and not inline_text:
         raise HTTPException(
@@ -573,8 +876,39 @@ async def preview_canonical_import(
     else:
         payload_bytes = inline_text.encode("utf-8") if inline_text else b""
 
-    dataframe = _load_dataframe(payload_bytes, filename)
-    preview = _build_preview(dataframe, session, dimension, filename)
+    loaded = _load_dataframe(payload_bytes, filename, sheet)
+
+    mapping_payload: BulkImportColumnMapping | None = None
+    if mapping:
+        try:
+            mapping_payload = BulkImportColumnMapping.model_validate_json(mapping)
+        except ValidationError as exc:
+            logger.warning("Invalid column mapping supplied for preview", exc_info=exc)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid column mapping payload provided.",
+            ) from exc
+
+    column_map = _identify_columns(list(loaded.dataframe.columns))
+    preview = _build_preview(loaded.dataframe, session, dimension, filename)
+
+    duplicates: list[BulkImportDuplicateRecord] = []
+    if mapping_payload:
+        plan = _resolve_import_plan(loaded.dataframe, column_map, mapping_payload, dimension)
+        _, _, duplicates, _, _, _ = _prepare_import_rows(
+            session,
+            loaded.dataframe,
+            plan,
+            persist_new_dimensions=False,
+        )
+
+    preview = preview.model_copy(
+        update={
+            "available_sheets": loaded.available_sheets,
+            "selected_sheet": loaded.selected_sheet,
+            "duplicates": duplicates,
+        }
+    )
     logger.debug(
         "Generated bulk import preview",
         extra={
@@ -1053,6 +1387,9 @@ async def import_canonical_values(
     file: UploadFile | None = File(default=None),
     inline_text: str | None = Form(default=None),
     mapping: str | None = Form(default=None),
+    sheet: str | None = Form(default=None),
+    dry_run: str | None = Form(default=None),
+    duplicate_strategy: str | None = Form(default=None),
 ) -> BulkImportResult:
     if not file and not inline_text:
         raise HTTPException(
@@ -1074,10 +1411,11 @@ async def import_canonical_values(
             "provided_dimension": dimension,
             "has_file": bool(file),
             "has_inline_text": bool(inline_text and inline_text.strip()),
+            "sheet": sheet,
         },
     )
 
-    dataframe = _load_dataframe(payload_bytes, filename)
+    loaded = _load_dataframe(payload_bytes, filename, sheet)
 
     mapping_payload: BulkImportColumnMapping | None = None
     if mapping:
@@ -1090,7 +1428,7 @@ async def import_canonical_values(
                 detail="Invalid column mapping payload provided.",
             ) from exc
 
-    column_map = _identify_columns(list(dataframe.columns))
+    column_map = _identify_columns(list(loaded.dataframe.columns))
     logger.debug(
         "Detected import columns",
         extra={
@@ -1099,131 +1437,97 @@ async def import_canonical_values(
             "description_column": column_map.get("description"),
         },
     )
-    label_column = mapping_payload.label if mapping_payload and mapping_payload.label else column_map.get("label")
-    if not label_column:
-        logger.warning(
-            "Bulk import aborted: missing canonical label column",
-            extra={"available_columns": list(dataframe.columns)},
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Select which column represents the canonical label before importing."
-            ),
-        )
 
-    dimension_column = (
-        mapping_payload.dimension
-        if mapping_payload and mapping_payload.dimension
-        else column_map.get("dimension")
-    )
-    description_column = (
-        mapping_payload.description
-        if mapping_payload and mapping_payload.description
-        else column_map.get("description")
+    plan = _resolve_import_plan(loaded.dataframe, column_map, mapping_payload, dimension)
+    (
+        prepared_rows,
+        validation_errors,
+        duplicates,
+        dimension_cache,
+        existing_lookup,
+        pending_dimension_codes,
+    ) = _prepare_import_rows(
+        session,
+        loaded.dataframe,
+        plan,
+        persist_new_dimensions=False,
     )
 
-    referenced_columns = [label_column]
-    if dimension_column:
-        referenced_columns.append(dimension_column)
-    if description_column:
-        referenced_columns.append(description_column)
-    if mapping_payload:
-        referenced_columns.extend(mapping_payload.attributes.values())
+    dry_run_requested = _parse_bool(dry_run)
+    duplicate_mode = _parse_duplicate_strategy(duplicate_strategy)
 
-    missing_columns = {
-        column for column in referenced_columns if column and column not in dataframe.columns
-    }
-    if missing_columns:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=(
-                "Column mapping references unknown headers: "
-                + ", ".join(sorted(missing_columns))
-            ),
+    if dry_run_requested:
+        logger.info(
+            "Bulk canonical import dry run",
+            extra={
+                "rows": len(prepared_rows),
+                "duplicates": len(duplicates),
+                "errors": len(validation_errors),
+            },
+        )
+        return BulkImportResult(
+            created=[],
+            updated=[],
+            duplicates=duplicates,
+            errors=validation_errors,
         )
 
-    optional_columns: set[str]
-    if mapping_payload and mapping_payload.attributes:
-        optional_columns = set(mapping_payload.attributes.values())
-    else:
-        optional_columns = {
-            column
-            for column in dataframe.columns
-            if column not in {dimension_column, label_column, description_column}
-        }
+    if duplicates and not duplicate_mode:
+        logger.info(
+            "Bulk canonical import awaiting duplicate resolution",
+            extra={"duplicates": len(duplicates)},
+        )
+        return BulkImportResult(
+            created=[],
+            updated=[],
+            duplicates=duplicates,
+            errors=validation_errors,
+        )
 
     created: list[CanonicalValueRead] = []
-    errors: list[str] = []
-    dimension_cache: dict[str, Dimension] = {}
+    updated: list[CanonicalValueRead] = []
+    errors: list[str] = list(validation_errors)
 
-    default_dimension = (
-        mapping_payload.default_dimension if mapping_payload else None
-    ) or dimension
+    _ensure_dimensions_persisted(session, plan, dimension_cache, pending_dimension_codes)
 
-    def get_dimension(code: str) -> Dimension | None:
-        if code not in dimension_cache:
-            try:
-                dimension_cache[code] = require_dimension(session, code)
-            except HTTPException:
-                if (
-                    mapping_payload
-                    and mapping_payload.dimension_definition
-                    and mapping_payload.dimension_definition.code == code
-                ):
-                    dimension_cache[code] = _create_dimension_inline(
-                        session, mapping_payload.dimension_definition
-                    )
-                else:
-                    dimension_cache[code] = None  # type: ignore[assignment]
-        return dimension_cache.get(code)
-
-    for row_number, row in enumerate(
-        dataframe.to_dict(orient="records"), start=2
-    ):
-        label_value = _safe_str(row.get(label_column))
-        if not label_value:
-            errors.append(f"Row {row_number}: Missing canonical label; skipping entry.")
-            continue
-
-        if dimension_column:
-            dimension_value = _safe_str(row.get(dimension_column)) or default_dimension
-        else:
-            dimension_value = default_dimension
-
-        if not dimension_value:
-            errors.append(
-                f"Row {row_number}: Missing dimension and no default provided; skipping entry."
-            )
-            continue
-
-        dimension_model = get_dimension(dimension_value)
+    for row in prepared_rows:
+        dimension_model = dimension_cache.get(row.dimension_code)
         if not dimension_model:
             errors.append(
-                f"Row {row_number}: Dimension '{dimension_value}' does not exist."
+                f"Row {row.row_number}: Dimension '{row.dimension_code}' does not exist."
             )
             continue
 
-        description_value = _safe_str(row.get(description_column)) if description_column else None
-        if mapping_payload and mapping_payload.attributes:
-            attribute_payload = {
-                key: row.get(column)
-                for key, column in mapping_payload.attributes.items()
-            }
-        else:
-            attribute_payload = {column: row.get(column) for column in optional_columns}
+        key = (row.dimension_code, row.canonical_label)
+        existing = existing_lookup.get(key)
 
-        try:
-            attributes = validate_attributes(dimension_model, attribute_payload)
-        except HTTPException as exc:
-            errors.append(f"Row {row_number}: {exc.detail}")
-            continue
+        if existing:
+            if duplicate_mode == "skip":
+                errors.append(
+                    f"Row {row.row_number}: Skipped existing canonical value "
+                    f"'{row.canonical_label}'."
+                )
+                continue
+            if duplicate_mode == "update":
+                if row.description is not None:
+                    existing.description = row.description
+                if row.attributes:
+                    merged = dict(existing.attributes or {})
+                    merged.update(row.attributes)
+                    existing.attributes = merged
+                elif existing.attributes is None:
+                    existing.attributes = {}
+                session.add(existing)
+                session.commit()
+                session.refresh(existing)
+                updated.append(CanonicalValueRead.model_validate(existing))
+                continue
 
         canonical = CanonicalValue(
-            dimension=dimension_model.code,
-            canonical_label=label_value,
-            description=description_value,
-            attributes=attributes,
+            dimension=row.dimension_code,
+            canonical_label=row.canonical_label,
+            description=row.description,
+            attributes=row.attributes,
         )
 
         session.add(canonical)
@@ -1232,7 +1536,7 @@ async def import_canonical_values(
         except IntegrityError as exc:  # pragma: no cover - depends on DB constraints
             session.rollback()
             errors.append(
-                f"Row {row_number}: Unable to persist canonical value ({exc.orig})."
+                f"Row {row.row_number}: Unable to persist canonical value ({exc.orig})."
             )
             continue
 
@@ -1241,6 +1545,15 @@ async def import_canonical_values(
 
     logger.info(
         "Bulk canonical import processed",
-        extra={"created": len(created), "errors": len(errors)},
+        extra={
+            "created": len(created),
+            "updated": len(updated),
+            "errors": len(errors),
+        },
     )
-    return BulkImportResult(created=created, errors=errors)
+    return BulkImportResult(
+        created=created,
+        updated=updated,
+        duplicates=[],
+        errors=errors,
+    )

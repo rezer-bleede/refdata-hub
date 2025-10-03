@@ -23,6 +23,7 @@ import { useAppState } from '../state/AppStateContext';
 import type {
   BulkImportColumnMapping,
   BulkImportPreview,
+  BulkImportDuplicateRecord,
   CanonicalValue,
   CanonicalValueUpdatePayload,
   DimensionDefinition,
@@ -147,6 +148,11 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
   const [createImportDimension, setCreateImportDimension] = useState(false);
   const [newDimensionLabel, setNewDimensionLabel] = useState('');
   const [newDimensionDescription, setNewDimensionDescription] = useState('');
+  const [availableSheets, setAvailableSheets] = useState<string[]>([]);
+  const [selectedSheet, setSelectedSheet] = useState<string | null>(null);
+  const [duplicateReview, setDuplicateReview] = useState<BulkImportDuplicateRecord[] | null>(null);
+  const [pendingImportMapping, setPendingImportMapping] = useState<BulkImportColumnMapping | null>(null);
+  const [duplicateStrategyChoice, setDuplicateStrategyChoice] = useState<'skip' | 'update'>('skip');
 
   const dimensionMap = useMemo(
     () => new Map(dimensions.map((dimension) => [dimension.code, dimension])),
@@ -200,6 +206,14 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
   useEffect(() => {
     if (!bulkPreview) {
       return;
+    }
+
+    setAvailableSheets(bulkPreview.available_sheets ?? []);
+    if (bulkPreview.available_sheets.length > 0) {
+      const nextSheet = bulkPreview.selected_sheet ?? bulkPreview.available_sheets[0];
+      setSelectedSheet(nextSheet);
+    } else {
+      setSelectedSheet(null);
     }
 
     const initialAssignments: Record<string, ColumnAssignment> = {};
@@ -508,9 +522,14 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
     setCreateImportDimension(false);
     setNewDimensionLabel('');
     setNewDimensionDescription('');
+    setAvailableSheets([]);
+    setSelectedSheet(null);
+    setDuplicateReview(null);
+    setPendingImportMapping(null);
+    setDuplicateStrategyChoice('skip');
   };
 
-  const buildBulkFormData = () => {
+  const buildBulkFormData = (sheetOverride?: string | null) => {
     const formData = new FormData();
     if (bulkFile) {
       formData.append('file', bulkFile);
@@ -520,6 +539,10 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
     }
     if (bulkDimension.trim()) {
       formData.append('dimension', bulkDimension.trim());
+    }
+    const sheetName = sheetOverride ?? selectedSheet;
+    if (sheetName) {
+      formData.append('sheet', sheetName);
     }
     return formData;
   };
@@ -532,13 +555,38 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
 
     setIsSubmitting(true);
     try {
-      const preview = await previewBulkImportCanonicalValues(buildBulkFormData());
+      const preview = await previewBulkImportCanonicalValues(buildBulkFormData(selectedSheet));
       setBulkPreview(preview);
+      setDuplicateReview(null);
+      setPendingImportMapping(null);
     } catch (error: unknown) {
       console.error(error);
       onToast({
         type: 'error',
         content: error instanceof Error ? error.message : 'Unable to analyse the uploaded table.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSheetSelection = async (sheetName: string) => {
+    if (!sheetName) {
+      return;
+    }
+
+    setSelectedSheet(sheetName);
+    setIsSubmitting(true);
+    try {
+      const preview = await previewBulkImportCanonicalValues(buildBulkFormData(sheetName));
+      setBulkPreview(preview);
+      setDuplicateReview(null);
+      setPendingImportMapping(null);
+    } catch (error: unknown) {
+      console.error(error);
+      onToast({
+        type: 'error',
+        content: error instanceof Error ? error.message : 'Unable to analyse the selected sheet.',
       });
     } finally {
       setIsSubmitting(false);
@@ -624,6 +672,59 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
     setNewDimensionLabel((prev) => (prev ? prev : labelGuess));
   };
 
+  const performBulkImport = async (mapping: BulkImportColumnMapping, strategy?: 'skip' | 'update') => {
+    const submission = buildBulkFormData(selectedSheet);
+    submission.append('mapping', JSON.stringify(mapping));
+    if (strategy) {
+      submission.append('duplicate_strategy', strategy);
+    }
+
+    const result = await bulkImportCanonicalValues(submission);
+
+    updateCanonicalValues((previous) => {
+      if (result.created.length === 0 && result.updated.length === 0) {
+        return previous;
+      }
+      const next = new Map(previous.map((value) => [value.id, value] as const));
+      result.created.forEach((value) => next.set(value.id, value));
+      result.updated.forEach((value) => next.set(value.id, value));
+      return Array.from(next.values());
+    });
+
+    setBulkErrors(result.errors);
+
+    const createdCount = result.created.length;
+    const updatedCount = result.updated.length;
+    if (result.errors.length) {
+      const summaryParts: string[] = [];
+      if (createdCount) {
+        summaryParts.push(`${createdCount} created`);
+      }
+      if (updatedCount) {
+        summaryParts.push(`${updatedCount} updated`);
+      }
+      const summary = summaryParts.length ? summaryParts.join(', ') : 'No rows';
+      onToast({
+        type: 'error',
+        content: `Imported ${summary} with ${result.errors.length} error(s).`,
+      });
+      return;
+    }
+
+    const successParts: string[] = [];
+    if (createdCount) {
+      successParts.push(`${createdCount} new value${createdCount === 1 ? '' : 's'}`);
+    }
+    if (updatedCount) {
+      successParts.push(`${updatedCount} updated value${updatedCount === 1 ? '' : 's'}`);
+    }
+    const successMessage = successParts.length
+      ? `Imported ${successParts.join(' and ')}.`
+      : 'Import completed with no changes.';
+    onToast({ type: 'success', content: successMessage });
+    closeBulkModal();
+  };
+
   const handleBulkImport = async () => {
     if (!bulkPreview) {
       await handleBulkPreview();
@@ -704,26 +805,50 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
       };
     }
 
-    const formData = buildBulkFormData();
-    formData.append('mapping', JSON.stringify(mapping));
+    const dryRunFormData = buildBulkFormData(selectedSheet);
+    dryRunFormData.append('mapping', JSON.stringify(mapping));
+    dryRunFormData.append('dry_run', 'true');
 
     setIsSubmitting(true);
     try {
-      const result = await bulkImportCanonicalValues(formData);
-      if (result.created.length) {
-        updateCanonicalValues((prev) => [...prev, ...result.created]);
+      const previewResult = await bulkImportCanonicalValues(dryRunFormData);
+      setBulkErrors(previewResult.errors);
+
+      if (previewResult.duplicates.length > 0) {
+        setDuplicateReview(previewResult.duplicates);
+        setPendingImportMapping(mapping);
+        setDuplicateStrategyChoice('skip');
+        return;
       }
 
-      if (result.errors.length) {
-        setBulkErrors(result.errors);
-        onToast({
-          type: 'error',
-          content: `Imported ${result.created.length} value(s) with ${result.errors.length} error(s).`,
-        });
-      } else {
-        onToast({ type: 'success', content: `Imported ${result.created.length} canonical value(s).` });
-        closeBulkModal();
-      }
+      await performBulkImport(mapping);
+    } catch (error: unknown) {
+      console.error(error);
+      onToast({
+        type: 'error',
+        content: error instanceof Error ? error.message : 'Bulk import failed. Try again with a different file.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const cancelDuplicateReview = () => {
+    setDuplicateReview(null);
+    setPendingImportMapping(null);
+    setDuplicateStrategyChoice('skip');
+  };
+
+  const applyDuplicateStrategy = async () => {
+    if (!pendingImportMapping) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await performBulkImport(pendingImportMapping, duplicateStrategyChoice);
+      setDuplicateReview(null);
+      setPendingImportMapping(null);
     } catch (error: unknown) {
       console.error(error);
       onToast({
@@ -1070,6 +1195,25 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                 Confirm how the uploaded columns should map to canonical fields. Assign at least one column to the canonical
                 label and select the target dimension.
               </p>
+              {availableSheets.length > 1 && (
+                <Form.Group controlId="bulk-sheet-selection">
+                  <Form.Label>Workbook sheet</Form.Label>
+                  <Form.Select
+                    value={selectedSheet ?? (availableSheets[0] ?? '')}
+                    onChange={(event) => void handleSheetSelection(event.target.value)}
+                    disabled={isSubmitting}
+                  >
+                    {availableSheets.map((sheetName) => (
+                      <option key={sheetName} value={sheetName}>
+                        {sheetName}
+                      </option>
+                    ))}
+                  </Form.Select>
+                  <Form.Text className="text-body-secondary">
+                    Choose which sheet to analyse. Imports process one sheet at a time.
+                  </Form.Text>
+                </Form.Group>
+              )}
               <Form.Group controlId="bulk-dimension-selection">
                 <Form.Label>Target dimension</Form.Label>
                 <Form.Control
@@ -1294,6 +1438,117 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
               )}
             </Button>
           )}
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={duplicateReview !== null} onHide={cancelDuplicateReview} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Resolve duplicate canonical values</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="d-flex flex-column gap-3">
+          <p className="mb-0 text-body-secondary">
+            {duplicateReview ? `${duplicateReview.length} record${duplicateReview.length === 1 ? '' : 's'}` : 'Records'}
+            {' '}already exist in the selected dimension. Choose how the importer should handle them before continuing.
+          </p>
+          <div className="d-flex flex-column gap-2">
+            <Form.Check
+              type="radio"
+              id="duplicate-strategy-skip"
+              name="duplicate-strategy"
+              label="Skip duplicates and keep the existing canonical values."
+              value="skip"
+              checked={duplicateStrategyChoice === 'skip'}
+              onChange={() => setDuplicateStrategyChoice('skip')}
+              disabled={isSubmitting}
+            />
+            <Form.Check
+              type="radio"
+              id="duplicate-strategy-update"
+              name="duplicate-strategy"
+              label="Update existing canonical values with the data from this import."
+              value="update"
+              checked={duplicateStrategyChoice === 'update'}
+              onChange={() => setDuplicateStrategyChoice('update')}
+              disabled={isSubmitting}
+            />
+          </div>
+          {duplicateReview && duplicateReview.length > 0 && (
+            <div className="table-responsive">
+              <Table bordered size="sm" className="align-middle">
+                <thead>
+                  <tr>
+                    <th>Row</th>
+                    <th>Dimension</th>
+                    <th>Label</th>
+                    <th>Existing description</th>
+                    <th>Incoming description</th>
+                    <th>Existing attributes</th>
+                    <th>Incoming attributes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {duplicateReview.map((duplicate) => {
+                    const existingAttributes = Object.entries(duplicate.existing_value.attributes ?? {});
+                    const incomingAttributes = Object.entries(duplicate.incoming_attributes ?? {});
+                    return (
+                      <tr key={`${duplicate.dimension}-${duplicate.canonical_label}-${duplicate.row_number}`}>
+                        <td>{duplicate.row_number}</td>
+                        <td>{duplicate.dimension}</td>
+                        <td>{duplicate.canonical_label}</td>
+                        <td>{duplicate.existing_value.description ?? '—'}</td>
+                        <td>{duplicate.incoming_description ?? '—'}</td>
+                        <td>
+                          {existingAttributes.length === 0 ? (
+                            '—'
+                          ) : (
+                            <div className="d-flex flex-column gap-1">
+                              {existingAttributes.map(([key, value]) => (
+                                <span key={key} className="small text-body-secondary">
+                                  <strong>{key}:</strong> {formatAttributeValue(value)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          {incomingAttributes.length === 0 ? (
+                            '—'
+                          ) : (
+                            <div className="d-flex flex-column gap-1">
+                              {incomingAttributes.map(([key, value]) => (
+                                <span key={key} className="small text-body-secondary">
+                                  <strong>{key}:</strong> {formatAttributeValue(value)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="outline-secondary" onClick={cancelDuplicateReview} disabled={isSubmitting}>
+            Back
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => void applyDuplicateStrategy()}
+            disabled={isSubmitting || !duplicateReview?.length}
+          >
+            {isSubmitting ? (
+              <span className="d-inline-flex align-items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Resolving…
+              </span>
+            ) : (
+              'Apply and continue'
+            )}
+          </Button>
         </Modal.Footer>
       </Modal>
     </div>

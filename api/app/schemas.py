@@ -326,10 +326,22 @@ class BulkImportPreviewColumn(BaseModel):
     suggested_dimension: Optional[str] = None
 
 
+class BulkImportDuplicateRecord(BaseModel):
+    row_number: int
+    dimension: str
+    canonical_label: str
+    existing_value: CanonicalValueRead
+    incoming_description: Optional[str] = None
+    incoming_attributes: Dict[str, Any] = Field(default_factory=dict)
+
+
 class BulkImportPreview(BaseModel):
     columns: List[BulkImportPreviewColumn]
     suggested_dimension: Optional[str] = None
     proposed_dimension: Optional[ProposedDimension] = None
+    available_sheets: List[str] = Field(default_factory=list)
+    selected_sheet: Optional[str] = None
+    duplicates: List[BulkImportDuplicateRecord] = Field(default_factory=list)
 
 
 class BulkImportColumnMapping(BaseModel):
@@ -343,4 +355,6 @@ class BulkImportColumnMapping(BaseModel):
 
 class BulkImportResult(BaseModel):
     created: List[CanonicalValueRead]
+    updated: List[CanonicalValueRead] = Field(default_factory=list)
+    duplicates: List[BulkImportDuplicateRecord] = Field(default_factory=list)
     errors: List[str]
