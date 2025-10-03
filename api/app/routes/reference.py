@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import json
 import logging
 import re
 from pathlib import Path
@@ -19,6 +20,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import func
@@ -35,6 +37,9 @@ from ..models import (
     SystemConfig,
 )
 from ..schemas import (
+    BulkImportColumnMapping,
+    BulkImportPreview,
+    BulkImportPreviewColumn,
     BulkImportResult,
     CanonicalValueCreate,
     CanonicalValueRead,
@@ -49,8 +54,10 @@ from ..schemas import (
     DimensionUpdate,
     MatchRequest,
     MatchResponse,
+    ProposedDimension,
 )
 from ..services.dimensions import (
+    build_schema_lookup,
     dimension_to_read_model,
     ensure_dimension_can_be_removed,
     relation_to_read_model,
@@ -185,6 +192,170 @@ def _identify_columns(columns: list[str]) -> dict[str, str | None]:
     }
 
 
+def _collect_samples(dataframe: pd.DataFrame, column: str, limit: int = 5) -> list[str]:
+    samples: list[str] = []
+    for value in dataframe[column].tolist():
+        text = _safe_str(value)
+        if not text:
+            continue
+        samples.append(text)
+        if len(samples) >= limit:
+            break
+    return samples
+
+
+def _create_dimension_inline(session: Session, payload: DimensionCreate) -> Dimension:
+    extra_schema = validate_extra_fields(payload.extra_fields)
+    dimension = Dimension(
+        code=payload.code,
+        label=payload.label,
+        description=payload.description,
+        extra_schema=extra_schema,
+    )
+
+    session.add(dimension)
+    try:
+        session.commit()
+    except IntegrityError as exc:  # pragma: no cover - defensive guard
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Dimension '{payload.code}' already exists.",
+        ) from exc
+
+    session.refresh(dimension)
+    logger.info(
+        "Created dimension during bulk import",
+        extra={"dimension": dimension.code},
+    )
+    return dimension
+
+
+def _suggest_dimension(
+    dataframe: pd.DataFrame,
+    column_map: dict[str, str | None],
+    dimensions: dict[str, Dimension],
+    dimension_hint: str | None,
+) -> str | None:
+    if dimension_hint:
+        return dimension_hint
+
+    if len(dimensions) == 1 and not column_map.get("dimension"):
+        return next(iter(dimensions.keys()))
+
+    dimension_column = column_map.get("dimension")
+    if dimension_column:
+        values = {
+            value
+            for value in (
+                _safe_str(item) for item in dataframe[dimension_column].tolist()
+            )
+            if value
+        }
+        if len(values) == 1:
+            candidate = next(iter(values))
+            if candidate in dimensions:
+                return candidate
+    return None
+
+
+def _propose_dimension(
+    dataframe: pd.DataFrame,
+    column_map: dict[str, str | None],
+    dimensions: dict[str, Dimension],
+    filename: str,
+) -> ProposedDimension | None:
+    if not dataframe.columns.tolist():
+        return None
+
+    base = Path(filename or "new_dimension").stem or "new_dimension"
+    label_column = column_map.get("label") or dataframe.columns.tolist()[0]
+    if label_column:
+        base = _normalise(label_column) or base
+
+    candidate = base or "new_dimension"
+    candidate = re.sub(r"[^a-z0-9]+", "_", candidate.lower()).strip("_") or "new_dimension"
+
+    unique_candidate = candidate
+    suffix = 2
+    while unique_candidate in dimensions:
+        unique_candidate = f"{candidate}_{suffix}"
+        suffix += 1
+
+    label_guess = label_column.title() if label_column else "New Dimension"
+    return ProposedDimension(code=unique_candidate, label=label_guess)
+
+
+def _build_preview(
+    dataframe: pd.DataFrame,
+    session: Session,
+    dimension_hint: str | None,
+    filename: str,
+) -> BulkImportPreview:
+    column_map = _identify_columns(list(dataframe.columns))
+    dimension_records = session.exec(select(Dimension)).all()
+    dimension_lookup = {dimension.code: dimension for dimension in dimension_records}
+    attribute_lookups = {
+        dimension.code: build_schema_lookup(dimension.extra_schema)
+        for dimension in dimension_records
+    }
+
+    preview_columns: list[BulkImportPreviewColumn] = []
+    for column in dataframe.columns:
+        normalised = _normalise(column)
+        suggested_role: str | None = None
+        suggested_attribute_key: str | None = None
+        suggested_dimension: str | None = None
+
+        if column_map.get("label") == column:
+            suggested_role = "label"
+        elif column_map.get("dimension") == column:
+            suggested_role = "dimension"
+        elif column_map.get("description") == column:
+            suggested_role = "description"
+        else:
+            for dimension_code, lookup in attribute_lookups.items():
+                schema = lookup.get(normalised)
+                if schema:
+                    suggested_role = "attribute"
+                    suggested_attribute_key = schema.get("key")
+                    suggested_dimension = dimension_code
+                    break
+
+        if not suggested_role:
+            if "name" in normalised or "label" in normalised:
+                suggested_role = "label"
+            elif "description" in normalised or "note" in normalised:
+                suggested_role = "description"
+            elif "dimension" in normalised or "domain" in normalised:
+                suggested_role = "dimension"
+
+        preview_columns.append(
+            BulkImportPreviewColumn(
+                name=column,
+                sample=_collect_samples(dataframe, column),
+                suggested_role=suggested_role,
+                suggested_attribute_key=suggested_attribute_key,
+                suggested_dimension=suggested_dimension,
+            )
+        )
+
+    suggested_dimension = _suggest_dimension(
+        dataframe, column_map, dimension_lookup, dimension_hint
+    )
+    proposed_dimension = None
+    if not suggested_dimension:
+        proposed_dimension = _propose_dimension(
+            dataframe, column_map, dimension_lookup, filename
+        )
+
+    return BulkImportPreview(
+        columns=preview_columns,
+        suggested_dimension=suggested_dimension,
+        proposed_dimension=proposed_dimension,
+    )
+
+
 def _safe_str(value: Any) -> str | None:
     if value is None:
         return None
@@ -207,6 +378,42 @@ def list_canonical_values(session: Session = Depends(get_session)) -> list[Canon
     results = session.exec(statement).all()
     logger.debug("Canonical values requested", extra={"count": len(results)})
     return results
+
+
+@router.post(
+    "/canonical/import/preview",
+    response_model=BulkImportPreview,
+    status_code=status.HTTP_200_OK,
+)
+async def preview_canonical_import(
+    session: Session = Depends(get_session),
+    dimension: str | None = Form(default=None),
+    file: UploadFile | None = File(default=None),
+    inline_text: str | None = Form(default=None),
+) -> BulkImportPreview:
+    if not file and not inline_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Provide a CSV/Excel file or paste tabular text to preview.",
+        )
+
+    filename = file.filename if file else "pasted.csv"
+    if file:
+        payload_bytes = await file.read()
+    else:
+        payload_bytes = inline_text.encode("utf-8") if inline_text else b""
+
+    dataframe = _load_dataframe(payload_bytes, filename)
+    preview = _build_preview(dataframe, session, dimension, filename)
+    logger.debug(
+        "Generated bulk import preview",
+        extra={
+            "filename": filename,
+            "columns": [column.name for column in preview.columns],
+            "suggested_dimension": preview.suggested_dimension,
+        },
+    )
+    return preview
 
 
 @router.post(
@@ -675,6 +882,7 @@ async def import_canonical_values(
     dimension: str | None = Form(default=None),
     file: UploadFile | None = File(default=None),
     inline_text: str | None = Form(default=None),
+    mapping: str | None = Form(default=None),
 ) -> BulkImportResult:
     if not file and not inline_text:
         raise HTTPException(
@@ -700,6 +908,18 @@ async def import_canonical_values(
     )
 
     dataframe = _load_dataframe(payload_bytes, filename)
+
+    mapping_payload: BulkImportColumnMapping | None = None
+    if mapping:
+        try:
+            mapping_payload = BulkImportColumnMapping.model_validate_json(mapping)
+        except ValidationError as exc:
+            logger.warning("Invalid column mapping supplied", exc_info=exc)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid column mapping payload provided.",
+            ) from exc
+
     column_map = _identify_columns(list(dataframe.columns))
     logger.debug(
         "Detected import columns",
@@ -709,7 +929,7 @@ async def import_canonical_values(
             "description_column": column_map.get("description"),
         },
     )
-    label_column = column_map.get("label")
+    label_column = mapping_payload.label if mapping_payload and mapping_payload.label else column_map.get("label")
     if not label_column:
         logger.warning(
             "Bulk import aborted: missing canonical label column",
@@ -718,29 +938,74 @@ async def import_canonical_values(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
-                "Unable to identify the canonical label column. Add a header such as "
-                "'label' or 'canonical_label'."
+                "Select which column represents the canonical label before importing."
             ),
         )
 
-    dimension_column = column_map.get("dimension")
-    description_column = column_map.get("description")
-    optional_columns = {
-        column
-        for column in dataframe.columns
-        if column not in {dimension_column, label_column, description_column}
+    dimension_column = (
+        mapping_payload.dimension
+        if mapping_payload and mapping_payload.dimension
+        else column_map.get("dimension")
+    )
+    description_column = (
+        mapping_payload.description
+        if mapping_payload and mapping_payload.description
+        else column_map.get("description")
+    )
+
+    referenced_columns = [label_column]
+    if dimension_column:
+        referenced_columns.append(dimension_column)
+    if description_column:
+        referenced_columns.append(description_column)
+    if mapping_payload:
+        referenced_columns.extend(mapping_payload.attributes.values())
+
+    missing_columns = {
+        column for column in referenced_columns if column and column not in dataframe.columns
     }
+    if missing_columns:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Column mapping references unknown headers: "
+                + ", ".join(sorted(missing_columns))
+            ),
+        )
+
+    optional_columns: set[str]
+    if mapping_payload and mapping_payload.attributes:
+        optional_columns = set(mapping_payload.attributes.values())
+    else:
+        optional_columns = {
+            column
+            for column in dataframe.columns
+            if column not in {dimension_column, label_column, description_column}
+        }
 
     created: list[CanonicalValueRead] = []
     errors: list[str] = []
     dimension_cache: dict[str, Dimension] = {}
+
+    default_dimension = (
+        mapping_payload.default_dimension if mapping_payload else None
+    ) or dimension
 
     def get_dimension(code: str) -> Dimension | None:
         if code not in dimension_cache:
             try:
                 dimension_cache[code] = require_dimension(session, code)
             except HTTPException:
-                dimension_cache[code] = None  # type: ignore[assignment]
+                if (
+                    mapping_payload
+                    and mapping_payload.dimension_definition
+                    and mapping_payload.dimension_definition.code == code
+                ):
+                    dimension_cache[code] = _create_dimension_inline(
+                        session, mapping_payload.dimension_definition
+                    )
+                else:
+                    dimension_cache[code] = None  # type: ignore[assignment]
         return dimension_cache.get(code)
 
     for row_number, row in enumerate(
@@ -752,9 +1017,9 @@ async def import_canonical_values(
             continue
 
         if dimension_column:
-            dimension_value = _safe_str(row.get(dimension_column)) or dimension
+            dimension_value = _safe_str(row.get(dimension_column)) or default_dimension
         else:
-            dimension_value = dimension
+            dimension_value = default_dimension
 
         if not dimension_value:
             errors.append(
@@ -770,7 +1035,13 @@ async def import_canonical_values(
             continue
 
         description_value = _safe_str(row.get(description_column)) if description_column else None
-        attribute_payload = {column: row.get(column) for column in optional_columns}
+        if mapping_payload and mapping_payload.attributes:
+            attribute_payload = {
+                key: row.get(column)
+                for key, column in mapping_payload.attributes.items()
+            }
+        else:
+            attribute_payload = {column: row.get(column) for column in optional_columns}
 
         try:
             attributes = validate_attributes(dimension_model, attribute_payload)

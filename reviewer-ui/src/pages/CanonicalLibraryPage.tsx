@@ -14,15 +14,20 @@ import {
 
 import {
   bulkImportCanonicalValues,
+  previewBulkImportCanonicalValues,
   createCanonicalValue,
   deleteCanonicalValue,
   updateCanonicalValue,
 } from '../api';
 import { useAppState } from '../state/AppStateContext';
 import type {
+  BulkImportColumnMapping,
+  BulkImportPreview,
   CanonicalValue,
   CanonicalValueUpdatePayload,
   DimensionDefinition,
+  DimensionExtraFieldDefinition,
+  ProposedDimensionSuggestion,
   ToastMessage,
 } from '../types';
 
@@ -37,6 +42,17 @@ interface DimensionOption {
 
 interface AttributeDraft {
   [key: string]: string;
+}
+
+type ColumnRole = 'ignore' | 'label' | 'dimension' | 'description' | 'attribute';
+
+type AttributeDataType = 'string' | 'number' | 'boolean';
+
+interface ColumnAssignment {
+  role: ColumnRole;
+  attributeKey?: string;
+  attributeLabel?: string;
+  attributeType?: AttributeDataType;
 }
 
 const formatAttributeValue = (value: unknown): string => {
@@ -90,6 +106,20 @@ const buildCsv = (
     .join('\n');
 };
 
+const humaniseDimensionCode = (code: string): string =>
+  code
+    .split(/[_\-\s]+/)
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
+
+const normaliseAttributeKey = (value: string): string =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '') || value.toLowerCase();
+
 const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
   const { canonicalValues, dimensions, updateCanonicalValues } = useAppState();
   const [searchTerm, setSearchTerm] = useState('');
@@ -109,6 +139,14 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
   const [bulkText, setBulkText] = useState('');
   const [bulkFile, setBulkFile] = useState<File | null>(null);
   const [bulkErrors, setBulkErrors] = useState<string[]>([]);
+  const [bulkStep, setBulkStep] = useState<'upload' | 'map'>('upload');
+  const [bulkPreview, setBulkPreview] = useState<BulkImportPreview | null>(null);
+  const [columnAssignments, setColumnAssignments] = useState<Record<string, ColumnAssignment>>({});
+  const [selectedImportDimension, setSelectedImportDimension] = useState('');
+  const [proposedDimension, setProposedDimension] = useState<ProposedDimensionSuggestion | null>(null);
+  const [createImportDimension, setCreateImportDimension] = useState(false);
+  const [newDimensionLabel, setNewDimensionLabel] = useState('');
+  const [newDimensionDescription, setNewDimensionDescription] = useState('');
 
   const dimensionMap = useMemo(
     () => new Map(dimensions.map((dimension) => [dimension.code, dimension])),
@@ -158,6 +196,113 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
   }, [canonicalValues, dimensionFilter, dimensionMap, searchTerm]);
 
   const selectedDimension = editorDraft.dimension ? dimensionMap.get(editorDraft.dimension) : undefined;
+
+  useEffect(() => {
+    if (!bulkPreview) {
+      return;
+    }
+
+    const initialAssignments: Record<string, ColumnAssignment> = {};
+    bulkPreview.columns.forEach((column) => {
+      const assignment: ColumnAssignment = {
+        role: 'ignore',
+        attributeLabel: column.name,
+      };
+
+      switch (column.suggested_role) {
+        case 'label':
+          assignment.role = 'label';
+          break;
+        case 'dimension':
+          assignment.role = 'dimension';
+          break;
+        case 'description':
+          assignment.role = 'description';
+          break;
+        case 'attribute':
+          assignment.role = 'attribute';
+          assignment.attributeKey = column.suggested_attribute_key ?? normaliseAttributeKey(column.name);
+          assignment.attributeType = 'string';
+          break;
+        default:
+          break;
+      }
+
+      if (assignment.role === 'attribute' && !assignment.attributeKey) {
+        assignment.attributeKey = normaliseAttributeKey(column.name);
+      }
+
+      initialAssignments[column.name] = assignment;
+    });
+
+    setColumnAssignments(initialAssignments);
+
+    const suggestedDimensionCode = bulkPreview.suggested_dimension ?? bulkDimension.trim();
+    const proposed = bulkPreview.proposed_dimension ?? null;
+
+    let dimensionCode = suggestedDimensionCode || '';
+    if (!dimensionCode && proposed) {
+      dimensionCode = proposed.code;
+    }
+
+    const existingDefinition = dimensionCode ? dimensionMap.get(dimensionCode) : undefined;
+
+    if (existingDefinition) {
+      setSelectedImportDimension(existingDefinition.code);
+      setCreateImportDimension(false);
+      setNewDimensionLabel(existingDefinition.label);
+      setNewDimensionDescription(existingDefinition.description ?? '');
+    } else {
+      setSelectedImportDimension(dimensionCode || (proposed ? proposed.code : ''));
+      const shouldCreate = Boolean((dimensionCode && !dimensionMap.has(dimensionCode)) || (!dimensionCode && proposed));
+      setCreateImportDimension(shouldCreate);
+      const labelGuess = proposed?.label ?? (dimensionCode ? humaniseDimensionCode(dimensionCode) : '');
+      setNewDimensionLabel(labelGuess);
+      setNewDimensionDescription('');
+    }
+
+    setProposedDimension(proposed);
+    setBulkStep('map');
+    setBulkErrors([]);
+  }, [bulkPreview]);
+
+  useEffect(() => {
+    if (!selectedImportDimension) {
+      return;
+    }
+
+    const definition = dimensionMap.get(selectedImportDimension);
+    if (!definition) {
+      return;
+    }
+
+    setColumnAssignments((previous) => {
+      let mutated = false;
+      const next: Record<string, ColumnAssignment> = { ...previous };
+
+      Object.entries(previous).forEach(([columnName, assignment]) => {
+        if (assignment.role !== 'attribute' || !assignment.attributeKey) {
+          return;
+        }
+
+        const schema = definition.extra_fields.find((field) => field.key === assignment.attributeKey);
+        if (schema) {
+          const desiredType = schema.data_type as AttributeDataType;
+          const desiredLabel = schema.label ?? assignment.attributeLabel;
+          if (assignment.attributeType !== desiredType || assignment.attributeLabel !== desiredLabel) {
+            mutated = true;
+            next[columnName] = {
+              ...assignment,
+              attributeType: desiredType,
+              attributeLabel: desiredLabel ?? assignment.attributeLabel,
+            };
+          }
+        }
+      });
+
+      return mutated ? next : previous;
+    });
+  }, [dimensionMap, selectedImportDimension]);
 
   useEffect(() => {
     if (!showEditor) {
@@ -355,14 +500,17 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
     setBulkText('');
     setBulkFile(null);
     setBulkErrors([]);
+    setBulkPreview(null);
+    setBulkStep('upload');
+    setColumnAssignments({});
+    setSelectedImportDimension('');
+    setProposedDimension(null);
+    setCreateImportDimension(false);
+    setNewDimensionLabel('');
+    setNewDimensionDescription('');
   };
 
-  const handleBulkImport = async () => {
-    if (!bulkFile && !bulkText.trim()) {
-      onToast({ type: 'error', content: 'Select a file or paste rows to import.' });
-      return;
-    }
-
+  const buildBulkFormData = () => {
     const formData = new FormData();
     if (bulkFile) {
       formData.append('file', bulkFile);
@@ -373,6 +521,191 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
     if (bulkDimension.trim()) {
       formData.append('dimension', bulkDimension.trim());
     }
+    return formData;
+  };
+
+  const handleBulkPreview = async () => {
+    if (!bulkFile && !bulkText.trim()) {
+      onToast({ type: 'error', content: 'Select a file or paste rows to import.' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const preview = await previewBulkImportCanonicalValues(buildBulkFormData());
+      setBulkPreview(preview);
+    } catch (error: unknown) {
+      console.error(error);
+      onToast({
+        type: 'error',
+        content: error instanceof Error ? error.message : 'Unable to analyse the uploaded table.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateColumnRole = (columnName: string, role: ColumnRole) => {
+    setColumnAssignments((previous) => {
+      const current = previous[columnName] ?? { role: 'ignore', attributeLabel: columnName };
+      const assignment: ColumnAssignment = { ...current, role };
+
+      if (role !== 'attribute') {
+        assignment.attributeKey = undefined;
+        assignment.attributeType = undefined;
+        assignment.attributeLabel = current.attributeLabel;
+      } else {
+        assignment.attributeKey = current.attributeKey ?? normaliseAttributeKey(columnName);
+        assignment.attributeLabel = current.attributeLabel ?? columnName;
+        assignment.attributeType = current.attributeType ?? 'string';
+      }
+
+      const next: Record<string, ColumnAssignment> = { ...previous, [columnName]: assignment };
+      if (role === 'label') {
+        Object.entries(next).forEach(([key, value]) => {
+          if (key !== columnName && value.role === 'label') {
+            next[key] = { ...value, role: 'ignore' };
+          }
+        });
+      }
+      if (role === 'dimension') {
+        Object.entries(next).forEach(([key, value]) => {
+          if (key !== columnName && value.role === 'dimension') {
+            next[key] = { ...value, role: 'ignore' };
+          }
+        });
+      }
+      if (role === 'description') {
+        Object.entries(next).forEach(([key, value]) => {
+          if (key !== columnName && value.role === 'description') {
+            next[key] = { ...value, role: 'ignore' };
+          }
+        });
+      }
+      return next;
+    });
+  };
+
+  const updateAttributeDetails = (
+    columnName: string,
+    updates: Partial<Pick<ColumnAssignment, 'attributeKey' | 'attributeLabel' | 'attributeType'>>,
+  ) => {
+    setColumnAssignments((previous) => {
+      const current = previous[columnName];
+      if (!current || current.role !== 'attribute') {
+        return previous;
+      }
+      return { ...previous, [columnName]: { ...current, ...updates } };
+    });
+  };
+
+  const handleImportDimensionChange = (value: string) => {
+    const trimmed = value.trim();
+    setSelectedImportDimension(trimmed);
+
+    if (!trimmed) {
+      setCreateImportDimension(false);
+      setNewDimensionLabel('');
+      setNewDimensionDescription('');
+      return;
+    }
+
+    const existing = dimensionMap.get(trimmed);
+    if (existing) {
+      setCreateImportDimension(false);
+      setNewDimensionLabel(existing.label);
+      setNewDimensionDescription(existing.description ?? '');
+      return;
+    }
+
+    setCreateImportDimension(true);
+    const proposed = proposedDimension && proposedDimension.code === trimmed ? proposedDimension : null;
+    const labelGuess = proposed?.label ?? humaniseDimensionCode(trimmed);
+    setNewDimensionLabel((prev) => (prev ? prev : labelGuess));
+  };
+
+  const handleBulkImport = async () => {
+    if (!bulkPreview) {
+      await handleBulkPreview();
+      return;
+    }
+
+    const assignments = Object.entries(columnAssignments);
+    const labelColumn = assignments.find(([, assignment]) => assignment.role === 'label')?.[0];
+    if (!labelColumn) {
+      setBulkErrors(['Select which column represents the canonical label.']);
+      return;
+    }
+
+    const dimensionColumn = assignments.find(([, assignment]) => assignment.role === 'dimension')?.[0];
+    const descriptionColumn = assignments.find(([, assignment]) => assignment.role === 'description')?.[0];
+    const attributeAssignments = assignments.filter(([, assignment]) => assignment.role === 'attribute');
+    const missingAttributeKeys = attributeAssignments
+      .filter(([, assignment]) => !assignment.attributeKey?.trim())
+      .map(([column]) => column);
+    if (missingAttributeKeys.length) {
+      setBulkErrors([
+        `Provide attribute keys for: ${missingAttributeKeys.map((column) => `“${column}”`).join(', ')}.`,
+      ]);
+      return;
+    }
+
+    const dimensionCode = selectedImportDimension.trim();
+    if (!dimensionColumn && !dimensionCode) {
+      setBulkErrors(['Select a default dimension or map a column that contains the dimension.']);
+      return;
+    }
+
+    const mapping: BulkImportColumnMapping = {
+      label: labelColumn,
+      attributes: {},
+    };
+
+    if (dimensionColumn) {
+      mapping.dimension = dimensionColumn;
+    }
+    if (descriptionColumn) {
+      mapping.description = descriptionColumn;
+    }
+    if (dimensionCode) {
+      mapping.default_dimension = dimensionCode;
+    }
+
+    attributeAssignments.forEach(([columnName, assignment]) => {
+      if (!assignment.attributeKey) {
+        return;
+      }
+      mapping.attributes[assignment.attributeKey] = columnName;
+    });
+
+    const dimensionExists = dimensionCode ? dimensionMap.has(dimensionCode) : false;
+    if (!dimensionExists && createImportDimension && dimensionCode) {
+      const extraFields: DimensionExtraFieldDefinition[] = [];
+      const seenKeys = new Set<string>();
+      attributeAssignments.forEach(([, assignment]) => {
+        const key = assignment.attributeKey?.trim();
+        if (!key || seenKeys.has(key)) {
+          return;
+        }
+        seenKeys.add(key);
+        extraFields.push({
+          key,
+          label: assignment.attributeLabel?.trim() || humaniseDimensionCode(key),
+          data_type: assignment.attributeType ?? 'string',
+          required: false,
+        });
+      });
+
+      mapping.dimension_definition = {
+        code: dimensionCode,
+        label: newDimensionLabel.trim() || humaniseDimensionCode(dimensionCode),
+        description: newDimensionDescription.trim() || undefined,
+        extra_fields: extraFields,
+      };
+    }
+
+    const formData = buildBulkFormData();
+    formData.append('mapping', JSON.stringify(mapping));
 
     setIsSubmitting(true);
     try {
@@ -393,11 +726,21 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
       }
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to import canonical values.' });
+      onToast({
+        type: 'error',
+        content: error instanceof Error ? error.message : 'Bulk import failed. Try again with a different file.',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const assignmentEntries = Object.entries(columnAssignments);
+  const labelSelected = assignmentEntries.some(([, assignment]) => assignment.role === 'label');
+  const dimensionColumnSelected = assignmentEntries.some(([, assignment]) => assignment.role === 'dimension');
+  const attributeKeyMissing = assignmentEntries
+    .filter(([, assignment]) => assignment.role === 'attribute')
+    .some(([, assignment]) => !assignment.attributeKey?.trim());
 
   return (
     <div className="d-flex flex-column gap-4" aria-label="Canonical library">
@@ -669,69 +1012,288 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
           <Modal.Title>Bulk import canonical values</Modal.Title>
         </Modal.Header>
         <Modal.Body className="d-flex flex-column gap-3">
-          <p className="mb-0 text-body-secondary">
-            Upload a CSV or Excel file, or paste tabular rows. Columns are detected automatically—include headers for
-            <code>dimension</code>, <code>label</code>, descriptions, and any additional dimension attributes.
-          </p>
-          <Form.Group controlId="bulk-file">
-            <Form.Label>Upload file</Form.Label>
-            <Form.Control
-              type="file"
-              accept=".csv,.tsv,.txt,.xls,.xlsx"
-              onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                const file = event.target.files?.[0] ?? null;
-                setBulkFile(file);
-              }}
-            />
-            <Form.Text className="text-body-secondary">
-              Provide CSV, TSV, or Excel documents. When both a file and pasted rows are supplied, the file takes
-              precedence.
-            </Form.Text>
-          </Form.Group>
-          <Form.Group controlId="bulk-dimension">
-            <Form.Label>Default dimension (optional)</Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Used when rows omit the dimension column"
-              value={bulkDimension}
-              onChange={(event) => setBulkDimension(event.target.value)}
-            />
-          </Form.Group>
-          <Form.Group controlId="bulk-rows">
-            <Form.Label>Rows to import</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={8}
-              placeholder={`Example:\ndimension,label,code\nregion,Abu Dhabi Emirate,01\n,Al Ain Region,01-1`}
-              value={bulkText}
-              onChange={(event) => setBulkText(event.target.value)}
-            />
-          </Form.Group>
-          {bulkErrors.length > 0 && (
-            <div className="alert alert-warning mb-0" role="alert">
-              <h2 className="h6">Import issues</h2>
-              <ul className="mb-0">
-                {bulkErrors.map((error, index) => (
-                  <li key={`${error}-${index}`}>{error}</li>
-                ))}
-              </ul>
-            </div>
+          {bulkStep === 'upload' && (
+            <>
+              <p className="mb-0 text-body-secondary">
+                Upload a CSV or Excel file, or paste tabular rows. After analysing the headers you can map each column to the
+                canonical fields used by Reviewer.
+              </p>
+              <Form.Group controlId="bulk-file">
+                <Form.Label>Upload file</Form.Label>
+                <Form.Control
+                  type="file"
+                  accept=".csv,.tsv,.txt,.xls,.xlsx"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setBulkFile(file);
+                  }}
+                />
+                <Form.Text className="text-body-secondary">
+                  Provide CSV, TSV, or Excel documents. When both a file and pasted rows are supplied, the file takes
+                  precedence.
+                </Form.Text>
+              </Form.Group>
+              <Form.Group controlId="bulk-dimension">
+                <Form.Label>Preferred dimension (optional)</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Hint used when rows omit a dimension column"
+                  value={bulkDimension}
+                  onChange={(event) => setBulkDimension(event.target.value)}
+                />
+              </Form.Group>
+              <Form.Group controlId="bulk-rows">
+                <Form.Label>Rows to import</Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={8}
+                  placeholder={`Example:\ndimension,label,code\nregion,Abu Dhabi Emirate,01\n,Al Ain Region,01-1`}
+                  value={bulkText}
+                  onChange={(event) => setBulkText(event.target.value)}
+                />
+              </Form.Group>
+              {bulkErrors.length > 0 && (
+                <div className="alert alert-warning mb-0" role="alert">
+                  <h2 className="h6">Import issues</h2>
+                  <ul className="mb-0">
+                    {bulkErrors.map((error, index) => (
+                      <li key={`${error}-${index}`}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+          {bulkStep === 'map' && bulkPreview && (
+            <>
+              <p className="mb-0 text-body-secondary">
+                Confirm how the uploaded columns should map to canonical fields. Assign at least one column to the canonical
+                label and select the target dimension.
+              </p>
+              <Form.Group controlId="bulk-dimension-selection">
+                <Form.Label>Target dimension</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={selectedImportDimension}
+                  placeholder="e.g. region"
+                  list="existing-dimensions"
+                  onChange={(event) => handleImportDimensionChange(event.target.value)}
+                />
+                <datalist id="existing-dimensions">
+                  {dimensions.map((dimension) => (
+                    <option key={dimension.code} value={dimension.code}>
+                      {dimension.label}
+                    </option>
+                  ))}
+                </datalist>
+                <Form.Text className="text-body-secondary">
+                  Choose an existing dimension or enter a new code to create one during import.
+                </Form.Text>
+              </Form.Group>
+              {createImportDimension && selectedImportDimension && !dimensionMap.has(selectedImportDimension) && (
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group controlId="bulk-new-dimension-label">
+                      <Form.Label>New dimension label</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={newDimensionLabel}
+                        onChange={(event) => setNewDimensionLabel(event.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group controlId="bulk-new-dimension-description">
+                      <Form.Label>Description (optional)</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={newDimensionDescription}
+                        onChange={(event) => setNewDimensionDescription(event.target.value)}
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              )}
+              <div className="table-responsive">
+                <Table bordered size="sm" className="align-middle">
+                  <thead>
+                    <tr>
+                      <th className="w-25">Column</th>
+                      <th className="w-25">Sample</th>
+                      <th className="w-25">Role</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bulkPreview.columns.map((column) => {
+                      const assignment = columnAssignments[column.name] ?? {
+                        role: 'ignore' as ColumnRole,
+                        attributeLabel: column.name,
+                      };
+                      const attributeSchema =
+                        assignment.role === 'attribute' && assignment.attributeKey
+                          ? dimensionMap.get(selectedImportDimension ?? '')?.extra_fields.find(
+                              (field) => field.key === assignment.attributeKey,
+                            )
+                          : undefined;
+                      return (
+                        <tr key={column.name}>
+                          <td>
+                            <strong>{column.name}</strong>
+                          </td>
+                          <td>
+                            {column.sample.length === 0
+                              ? '—'
+                              : column.sample
+                                  .slice(0, 3)
+                                  .map((value) => `“${value}”`)
+                                  .join(', ')}
+                            {column.sample.length > 3 && '…'}
+                          </td>
+                          <td>
+                            <Form.Select
+                              aria-label={`Mapping for ${column.name}`}
+                              value={assignment.role}
+                              onChange={(event) => updateColumnRole(column.name, event.target.value as ColumnRole)}
+                            >
+                              <option value="ignore">Ignore column</option>
+                              <option value="label">Canonical label</option>
+                              <option value="dimension">Dimension code</option>
+                              <option value="description">Description</option>
+                              <option value="attribute">Attribute</option>
+                            </Form.Select>
+                          </td>
+                          <td>
+                            {assignment.role === 'attribute' ? (
+                              <div className="d-flex flex-column gap-2">
+                                <Form.Group controlId={`attribute-key-${column.name}`}>
+                                  <Form.Label className="mb-1">Attribute key</Form.Label>
+                                  <Form.Control
+                                    type="text"
+                                    value={assignment.attributeKey ?? ''}
+                                    placeholder="e.g. numeric_code"
+                                    onChange={(event) =>
+                                      updateAttributeDetails(column.name, {
+                                        attributeKey: event.target.value,
+                                      })
+                                    }
+                                  />
+                                  <Form.Text className="text-body-secondary">
+                                    Keys should match the dimension schema. New dimensions will create attributes using these keys.
+                                  </Form.Text>
+                                </Form.Group>
+                                {createImportDimension && selectedImportDimension && !dimensionMap.has(selectedImportDimension) ? (
+                                  <Row className="g-2">
+                                    <Col md={6}>
+                                      <Form.Group controlId={`attribute-label-${column.name}`}>
+                                        <Form.Label className="mb-1">Display label</Form.Label>
+                                        <Form.Control
+                                          type="text"
+                                          value={assignment.attributeLabel ?? column.name}
+                                          onChange={(event) =>
+                                            updateAttributeDetails(column.name, {
+                                              attributeLabel: event.target.value,
+                                            })
+                                          }
+                                        />
+                                      </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                      <Form.Group controlId={`attribute-type-${column.name}`}>
+                                        <Form.Label className="mb-1">Data type</Form.Label>
+                                        <Form.Select
+                                          value={assignment.attributeType ?? 'string'}
+                                          onChange={(event) =>
+                                            updateAttributeDetails(column.name, {
+                                              attributeType: event.target.value as AttributeDataType,
+                                            })
+                                          }
+                                        >
+                                          <option value="string">Text</option>
+                                          <option value="number">Number</option>
+                                          <option value="boolean">True / False</option>
+                                        </Form.Select>
+                                      </Form.Group>
+                                    </Col>
+                                  </Row>
+                                ) : attributeSchema ? (
+                                  <div className="text-body-secondary small">
+                                    Maps to <strong>{attributeSchema.label}</strong> ({attributeSchema.key})
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className="text-body-secondary">{column.suggested_role ? `Suggested: ${column.suggested_role}` : '—'}</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+              {bulkErrors.length > 0 && (
+                <div className="alert alert-warning mb-0" role="alert">
+                  <h2 className="h6">Import issues</h2>
+                  <ul className="mb-0">
+                    {bulkErrors.map((error, index) => (
+                      <li key={`${error}-${index}`}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={closeBulkModal}>
+          <Button variant="outline-secondary" onClick={closeBulkModal} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={() => void handleBulkImport()} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                Importing…
-              </span>
-            ) : (
-              'Import rows'
-            )}
-          </Button>
+          {bulkStep === 'map' ? (
+            <>
+              <Button
+                variant="outline-secondary"
+                onClick={() => {
+                  setBulkPreview(null);
+                  setBulkStep('upload');
+                  setBulkErrors([]);
+                }}
+                disabled={isSubmitting}
+              >
+                Back
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => void handleBulkImport()}
+                disabled={
+                  isSubmitting ||
+                  !labelSelected ||
+                  (!dimensionColumnSelected && !selectedImportDimension.trim()) ||
+                  attributeKeyMissing
+                }
+              >
+                {isSubmitting ? (
+                  <span className="d-inline-flex align-items-center gap-2">
+                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                    Importing…
+                  </span>
+                ) : (
+                  'Import rows'
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button variant="primary" onClick={() => void handleBulkPreview()} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <span className="d-inline-flex align-items-center gap-2">
+                  <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                  Analysing…
+                </span>
+              ) : (
+                'Review mappings'
+              )}
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </div>

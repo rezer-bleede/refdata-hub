@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Iterator
 
+import json
 import os
 import sys
 import io
@@ -326,6 +327,117 @@ def test_bulk_import_accepts_canonical_value_header() -> None:
     assert created_entry["canonical_label"] == "Header Label"
     assert created_entry["description"] == "Additional context"
     assert created_entry["attributes"]["numeric_code"] == 7
+
+
+def test_bulk_import_preview_suggests_mapping() -> None:
+    client = build_test_client()
+
+    client.post(
+        "/api/reference/dimensions",
+        json={
+            "code": "region",
+            "label": "Region",
+            "extra_fields": [
+                {
+                    "key": "numeric_code",
+                    "label": "Numeric Code",
+                    "data_type": "number",
+                }
+            ],
+        },
+    )
+
+    csv_content = "Region Label,Numeric Code\nAbu Dhabi,01\nDubai,02\n"
+    response = client.post(
+        "/api/reference/canonical/import/preview",
+        files={"file": ("regions.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["columns"][0]["suggested_role"] in {"label", "dimension"}
+    assert any(
+        column.get("suggested_attribute_key") == "numeric_code"
+        for column in payload["columns"]
+    )
+    assert payload["proposed_dimension"] is not None
+
+
+def test_bulk_import_accepts_explicit_mapping() -> None:
+    client = build_test_client()
+
+    client.post(
+        "/api/reference/dimensions",
+        json={
+            "code": "region",
+            "label": "Region",
+            "extra_fields": [
+                {
+                    "key": "numeric_code",
+                    "label": "Numeric Code",
+                    "data_type": "number",
+                }
+            ],
+        },
+    )
+
+    csv_content = "Region Name,Code\nAbu Dhabi,01\nDubai,02\n"
+    mapping_payload = {
+        "label": "Region Name",
+        "default_dimension": "region",
+        "attributes": {"numeric_code": "Code"},
+    }
+
+    response = client.post(
+        "/api/reference/canonical/import",
+        data={"mapping": json.dumps(mapping_payload)},
+        files={"file": ("regions.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert len(payload["created"]) == 2
+    labels = {item["canonical_label"] for item in payload["created"]}
+    assert labels == {"Abu Dhabi", "Dubai"}
+
+
+def test_bulk_import_creates_dimension_from_mapping_definition() -> None:
+    client = build_test_client()
+
+    csv_content = "City,Code\nSharjah,03\n"
+    mapping_payload = {
+        "label": "City",
+        "default_dimension": "city",
+        "attributes": {"numeric_code": "Code"},
+        "dimension_definition": {
+            "code": "city",
+            "label": "City",
+            "extra_fields": [
+                {
+                    "key": "numeric_code",
+                    "label": "Numeric Code",
+                    "data_type": "string",
+                }
+            ],
+        },
+    }
+
+    response = client.post(
+        "/api/reference/canonical/import",
+        data={"mapping": json.dumps(mapping_payload)},
+        files={"file": ("cities.csv", csv_content.encode("utf-8"), "text/csv")},
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["errors"] == []
+    assert payload["created"][0]["dimension"] == "city"
+
+    dimension_response = client.get("/api/reference/dimensions")
+    assert dimension_response.status_code == 200
+    dimension_payloads = dimension_response.json()
+    city_dimension = next(item for item in dimension_payloads if item["code"] == "city")
+    assert any(field["key"] == "numeric_code" for field in city_dimension["extra_fields"])
 
 
 def test_source_mapping_flow() -> None:

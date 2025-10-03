@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -311,6 +311,34 @@ class DimensionRelationLinkRead(DimensionRelationLinkBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ProposedDimension(BaseModel):
+    code: str
+    label: str
+
+
+class BulkImportPreviewColumn(BaseModel):
+    name: str
+    sample: List[str]
+    suggested_role: Optional[str] = None
+    suggested_attribute_key: Optional[str] = None
+    suggested_dimension: Optional[str] = None
+
+
+class BulkImportPreview(BaseModel):
+    columns: List[BulkImportPreviewColumn]
+    suggested_dimension: Optional[str] = None
+    proposed_dimension: Optional[ProposedDimension] = None
+
+
+class BulkImportColumnMapping(BaseModel):
+    label: Optional[str] = None
+    dimension: Optional[str] = None
+    description: Optional[str] = None
+    attributes: Dict[str, str] = Field(default_factory=dict)
+    default_dimension: Optional[str] = None
+    dimension_definition: Optional[DimensionCreate] = None
 
 
 class BulkImportResult(BaseModel):
