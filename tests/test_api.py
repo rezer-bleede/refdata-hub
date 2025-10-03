@@ -10,6 +10,7 @@ import sys
 import io
 
 import pandas as pd
+from openpyxl import Workbook
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session, delete, select
@@ -280,6 +281,115 @@ def test_bulk_import_csv_and_excel() -> None:
     excel_payload = excel_response.json()
     assert len(excel_payload["created"]) == 2
     assert not excel_payload["errors"]
+
+
+def test_bulk_import_excel_with_metadata_and_multiple_sheets() -> None:
+    client = build_test_client()
+
+    client.post(
+        "/api/reference/dimensions",
+        json={
+            "code": "bulk_multi",
+            "label": "Bulk multi-sheet dimension",
+            "description": "Dimension used for Excel metadata parsing",
+            "extra_fields": [
+                {
+                    "key": "code",
+                    "label": "Code",
+                    "data_type": "string",
+                    "required": False,
+                }
+            ],
+        },
+    )
+
+    workbook = Workbook()
+    metadata = workbook.active
+    metadata.title = "Metadata"
+    metadata["A1"] = "Dataset"
+    metadata["B1"] = "Canonical values"
+
+    sheet = workbook.create_sheet("2024 Data")
+    sheet.merge_cells("A1:C1")
+    sheet["A1"] = "Reference data extract"
+    sheet["A3"] = "Dimension"
+    sheet["B3"] = "Canonical Label"
+    sheet["C3"] = "Code"
+    sheet["A4"] = "bulk_multi"
+    sheet["B4"] = "Excel value one"
+    sheet["C4"] = "EX-1"
+    sheet["A5"] = "bulk_multi"
+    sheet["B5"] = "Excel value two"
+    sheet["C5"] = "EX-2"
+
+    notes = workbook.create_sheet("Notes")
+    notes["A1"] = "Generated"
+    notes["B1"] = "2024"
+
+    excel_buffer = io.BytesIO()
+    workbook.save(excel_buffer)
+    excel_buffer.seek(0)
+
+    response = client.post(
+        "/api/reference/canonical/import",
+        data={"dimension": "bulk_multi"},
+        files={
+            "file": (
+                "bulk_multi.xlsx",
+                excel_buffer.getvalue(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["errors"] == []
+    labels = [entry["canonical_label"] for entry in payload["created"]]
+    assert {"Excel value one", "Excel value two"} == set(labels)
+
+
+def test_bulk_import_csv_with_preface_metadata() -> None:
+    client = build_test_client()
+
+    client.post(
+        "/api/reference/dimensions",
+        json={
+            "code": "bulk_preface",
+            "label": "Bulk metadata dimension",
+            "description": "Dimension used for CSV metadata parsing",
+            "extra_fields": [
+                {
+                    "key": "code",
+                    "label": "Code",
+                    "data_type": "string",
+                    "required": False,
+                }
+            ],
+        },
+    )
+
+    csv_content = (
+        "Report generated,2024-05-11,\n"
+        "Owner,Data Steward,\n"
+        "Canonical Label,Description,Code\n"
+        "CSV value one,Imported from CSV,CS-1\n"
+        "CSV value two,Imported from CSV,CS-2\n"
+    )
+
+    response = client.post(
+        "/api/reference/canonical/import",
+        data={"dimension": "bulk_preface"},
+        files={
+            "file": ("bulk_preface.csv", csv_content.encode("utf-8"), "text/csv")
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["errors"] == []
+    created = {entry["canonical_label"] for entry in payload["created"]}
+    assert created == {"CSV value one", "CSV value two"}
 
 
 def test_bulk_import_accepts_canonical_value_header() -> None:

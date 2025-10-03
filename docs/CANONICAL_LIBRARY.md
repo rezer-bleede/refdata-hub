@@ -32,9 +32,10 @@ All changes are persisted via the `/api/reference/canonical` endpoints exposed b
 
 The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column; the preview step inspects the
 headers and sample rows, proposes sensible defaults (label, dimension, description, and attribute candidates), and lets you map
-or ignore each column before creating any records. When the dataset targets a brand-new dimension, you can capture the dimension
-label and optional description inline—the backend will create the dimension and its attribute schema automatically during the
-import.
+or ignore each column before creating any records. Excel uploads no longer need to strip out metadata tabs or title banners—the
+backend now scans every worksheet, discards prefatory rows until it finds the first genuine header, and keeps the data immediately
+below it even when earlier cells are merged. When the dataset targets a brand-new dimension, you can capture the dimension label
+and optional description inline—the backend will create the dimension and its attribute schema automatically during the import.
 
 * Columns can be separated by commas, tabs, or multiple spaces when pasting raw text.
 * Empty dimension cells inherit the selected target dimension when no dimension column is mapped—helpful for single-dimension
@@ -70,8 +71,8 @@ To bulk load the dataset:
 - Use consistent dimensions (e.g., `region`, `district`, `currency`) to keep filtering predictable.
 - When storing multilingual labels, concatenate translations with clear separators, for example: `English | Arabic`.
 - The importer ignores blank lines and lines prefixed with `#`, enabling lightweight in-line commentary.
-- For spreadsheet imports, multiple worksheets are supported—only the first sheet is read by default. Save each dataset as a
-  separate file for clarity.
+- For spreadsheet imports, multiple worksheets are supported. The loader inspects every sheet and selects the first region that
+  looks like a tabular dataset, so workbooks with cover sheets or audit notes continue to import without manual editing.
 
 ## Troubleshooting
 
