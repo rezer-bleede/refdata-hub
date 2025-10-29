@@ -919,8 +919,19 @@ def test_config_endpoint_auto_seeds_when_missing(tmp_path) -> None:
         payload = response.json()
         assert payload["default_dimension"] == settings.default_dimension
         assert payload["match_threshold"] == settings.match_threshold
+        assert payload["llm_mode"] == settings.llm_mode
 
         with Session(engine) as session:
             config = session.exec(select(SystemConfig)).first()
             assert config is not None
             assert config.default_dimension == settings.default_dimension
+            assert config.llm_mode == settings.llm_mode
+
+
+def test_seeded_source_connection_available() -> None:
+    client = build_test_client()
+    response = client.get("/api/source/connections")
+    assert response.status_code == 200
+    payload = response.json()
+    assert any(connection["name"] == "Target Demo Warehouse" for connection in payload)
+

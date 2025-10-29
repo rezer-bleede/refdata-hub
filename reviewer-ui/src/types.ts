@@ -32,6 +32,7 @@ export interface SystemConfig {
   match_threshold: number;
   matcher_backend: 'embedding' | 'llm';
   embedding_model: string;
+  llm_mode: 'online' | 'offline';
   llm_model?: string | null;
   llm_api_base?: string | null;
   top_k: number;
@@ -43,6 +44,7 @@ export interface SystemConfigUpdate {
   match_threshold?: number;
   matcher_backend?: 'embedding' | 'llm';
   embedding_model?: string;
+  llm_mode?: 'online' | 'offline';
   llm_model?: string | null;
   llm_api_base?: string | null;
   top_k?: number;

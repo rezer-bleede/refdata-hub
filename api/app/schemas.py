@@ -66,6 +66,7 @@ class SystemConfigRead(BaseModel):
     match_threshold: float
     matcher_backend: str
     embedding_model: str
+    llm_mode: Literal["online", "offline"]
     llm_model: Optional[str]
     llm_api_base: Optional[str]
     top_k: int
@@ -77,6 +78,7 @@ class SystemConfigUpdate(BaseModel):
     match_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     matcher_backend: Optional[str] = None
     embedding_model: Optional[str] = None
+    llm_mode: Optional[Literal["online", "offline"]] = None
     llm_model: Optional[str] = None
     llm_api_base: Optional[str] = None
     top_k: Optional[int] = Field(default=None, ge=1, le=20)

@@ -17,15 +17,49 @@ services:
     ports:
       - '5432:5432'
 
+  targetdb:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: target_demo
+      POSTGRES_USER: target_demo
+      POSTGRES_PASSWORD: target_demo
+    volumes:
+      - targetdb_data:/var/lib/postgresql/data
+      - ./db/targetdb-init.sql:/docker-entrypoint-initdb.d/targetdb-init.sql:ro
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U target_demo']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  ollama:
+    image: rezerbleede/ollama-preloaded:llama3
+    ports:
+      - '11434:11434'
+    healthcheck:
+      test: ['CMD', 'ollama', 'list']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   api:
     build:
       context: ./api
     environment:
       REFDATA_DATABASE_URL: postgresql+psycopg://refdata:refdata@db:5432/refdata
       REFDATA_CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      REFDATA_LLM_MODE: offline
+      REFDATA_LLM_MODEL: llama3
+      REFDATA_LLM_API_BASE: http://ollama:11434
     depends_on:
       db:
         condition: service_healthy
+      targetdb:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     ports:
       - '8000:8000'
 
@@ -42,3 +76,4 @@ services:
 
 volumes:
   db_data:
+  targetdb_data:
