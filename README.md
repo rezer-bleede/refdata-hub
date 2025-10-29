@@ -13,14 +13,16 @@ docker compose up --build
 This command starts:
 
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
+- **Target Demo Postgres** (`targetdb`) populated with customer records for mapping demos and tests.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
-- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support. The
-  container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
-  `http://localhost:5173/dashboard` or browser refreshes on nested routes resolve correctly without returning a 404.
-  The image also bakes in a browser-friendly `VITE_API_BASE_URL` pointing at `http://localhost:8000`, so the dashboard can reach the
-  FastAPI backend without extra host aliases.
+- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support.
+- **Ollama llama3 runtime** (`ollama`) delivering an offline LLM endpoint for semantic matching experiments.
 
-The first boot performs all schema creation and seeding automatically. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`. If you ever wipe the database manually, simply refresh the UI—the backend now recreates the default configuration record on demand so the dashboard no longer stalls with "Unable to load configuration" toasts. Legacy deployments that predate the JSON `canonicalvalue.attributes` column are also remediated at startup, preventing the `UndefinedColumn` errors that previously surfaced in the API logs. For connectivity troubleshooting tips and a breakdown of the new debug logging surfaced in both the UI console and backend logs, see [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
+The reviewer UI container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
+`http://localhost:5173/dashboard` or browser refreshes on nested routes resolve correctly without returning a 404. The image also
+bakes in a browser-friendly `VITE_API_BASE_URL` pointing at `http://localhost:8000`, so the dashboard can reach the FastAPI backend
+without extra host aliases.
+The first boot performs all schema creation and seeding automatically. The Docker Compose profile defaults to the offline Ollama matcher so you can experiment with semantic ranking without external credentials. Switch to the hosted API mode from the dashboard when you want to provide your own OpenAI-compatible endpoint. All runtime changes (matching thresholds, preferred matcher backend, API keys, additional canonical values, etc.) should be made through the Reviewer UI. No extra scripts are required after `docker compose up`. If you ever wipe the database manually, simply refresh the UI—the backend now recreates the default configuration record on demand so the dashboard no longer stalls with "Unable to load configuration" toasts. Legacy deployments that predate the JSON `canonicalvalue.attributes` column are also remediated at startup, preventing the `UndefinedColumn` errors that previously surfaced in the API logs. For connectivity troubleshooting tips and a breakdown of the new debug logging surfaced in both the UI console and backend logs, see [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md).
 
 ### Reviewer UI at a glance
 
@@ -34,7 +36,7 @@ The interface is organised into task-focused pages that surface the entire curat
 - **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema.
 - **Dimension Relations** – model parent/child hierarchies such as regions to districts and manage canonical value pairings.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems and verify credentials with the new
-  **Test connection** action before persisting changes.
+  **Test connection** action before persisting changes. A demo connection targeting the bundled `targetdb` Postgres instance is seeded automatically for tutorials and integration tests.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
   Available tables and columns are now surfaced directly from the connected database so analysts can choose valid metadata from
   dropdowns instead of typing freeform text.
@@ -139,7 +141,7 @@ See [`docs/FEATURES.md`](docs/FEATURES.md) for a detailed description of the pla
 
 ### Semantic Matching
 
-The backend uses a pluggable `SemanticMatcher` abstraction. By default it applies TF-IDF embeddings for lightweight similarity search and gracefully falls back to lexical overlap if vectorization fails. Switch the matcher backend to `llm` in the Reviewer UI configuration panel to orchestrate a hosted large language model (OpenAI-compatible) for semantic ranking. Provide the API base URL, model identifier, and API key directly through the UI to route matches through your chosen LLM.
+The backend uses a pluggable `SemanticMatcher` abstraction. In Docker Compose deployments the matcher starts in offline mode, issuing ranking prompts to the bundled Ollama llama3 container. Provide the API base URL, model identifier, and optional API key in the Reviewer UI to switch `llm_mode` between offline and online providers. When `llm_mode` is set to `online`, the matcher routes requests to an OpenAI-compatible endpoint and falls back to TF-IDF embeddings if the provider is unreachable.
 
 ## License
 

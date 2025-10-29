@@ -63,6 +63,7 @@ describe('AppScaffold layout', () => {
       match_threshold: 0.65,
       matcher_backend: 'embedding',
       embedding_model: 'tfidf',
+      llm_mode: 'online',
       llm_model: null,
       llm_api_base: null,
       top_k: 5,

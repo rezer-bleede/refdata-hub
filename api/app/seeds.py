@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any, Sequence
 
 from sqlmodel import Session, select
 
 from .config import Settings, load_settings
-from .models import CanonicalValue, Dimension
+from .models import CanonicalValue, Dimension, SourceConnection
 from .services.config import ensure_system_config
 
 logger = logging.getLogger(__name__)
@@ -94,6 +95,19 @@ DEFAULT_CANONICAL_VALUES: Sequence[dict[str, Any]] = (
     },
 )
 
+DEFAULT_SOURCE_CONNECTIONS: Sequence[dict[str, Any]] = (
+    {
+        "name": "Target Demo Warehouse",
+        "db_type": "postgres",
+        "host": "targetdb",
+        "port": 5432,
+        "database": "target_demo",
+        "username": "target_demo",
+        "password": "target_demo",
+        "options": json.dumps({"schema": "public"}),
+    },
+)
+
 
 def seed_database(engine, settings: Settings | None = None) -> None:
     """Populate the database with configuration defaults and seed data."""
@@ -127,6 +141,20 @@ def seed_database(engine, settings: Settings | None = None) -> None:
         else:
             logger.debug(
                 "Canonical library already seeded", extra={"count": len(existing_canonical)}
+            )
+
+        existing_connections = session.exec(select(SourceConnection)).all()
+        if not existing_connections:
+            logger.info(
+                "Seeding default source connections",
+                extra={"count": len(DEFAULT_SOURCE_CONNECTIONS)},
+            )
+            for payload in DEFAULT_SOURCE_CONNECTIONS:
+                session.add(SourceConnection(**payload))
+            session.commit()
+        else:
+            logger.debug(
+                "Source connections already seeded", extra={"count": len(existing_connections)}
             )
 
         logger.debug("Database seed process complete")

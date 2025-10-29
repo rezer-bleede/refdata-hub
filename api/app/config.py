@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any, List, Literal
 
 import json
 
@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     embedding_model: str = Field(
         default="tfidf",
         description="Identifier for the embedding backend (tfidf or external model path).",
+    )
+    llm_mode: Literal["online", "offline"] = Field(
+        default="online",
+        description="Controls whether the semantic matcher uses an online or offline LLM.",
     )
     llm_model: str | None = Field(
         default="gpt-3.5-turbo", description="LLM model identifier when matcher_backend is 'llm'."

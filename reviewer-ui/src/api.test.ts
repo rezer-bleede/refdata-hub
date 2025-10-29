@@ -7,6 +7,7 @@ const buildConfigPayload = () => ({
   match_threshold: 0.6,
   matcher_backend: 'embedding',
   embedding_model: 'tfidf',
+  llm_mode: 'online',
   llm_model: null,
   llm_api_base: null,
   top_k: 5,

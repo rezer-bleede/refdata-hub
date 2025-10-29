@@ -207,6 +207,19 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
                   onChange={(event) => handleConfigChange('embedding_model', event.target.value)}
                 />
               </Form.Group>
+              <Form.Group as={Col} md={6} controlId="config-llm-mode">
+                <Form.Label>LLM mode</Form.Label>
+                <Form.Select
+                  defaultValue={config.llm_mode}
+                  onChange={(event) => handleConfigChange('llm_mode', event.target.value)}
+                >
+                  <option value="online">Online API (OpenAI compatible)</option>
+                  <option value="offline">Offline Ollama (llama3)</option>
+                </Form.Select>
+                <Form.Text className="text-body-secondary">
+                  Choose between the hosted API endpoint and the bundled Ollama service.
+                </Form.Text>
+              </Form.Group>
               <Form.Group as={Col} md={6} controlId="config-llm-model">
                 <Form.Label>LLM model</Form.Label>
                 <Form.Control

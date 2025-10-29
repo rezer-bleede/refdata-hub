@@ -13,6 +13,7 @@
 - Use NLP and embedding models to suggest standardized values for new raw inputs.
 - Allow configurable confidence thresholds that determine when to auto-apply suggestions.
 - Route low-confidence matches for manual review to ensure data quality.
+- Operate in offline mode via the bundled Ollama llama3 runtime or switch to a hosted OpenAI-compatible endpoint directly from the reviewer dashboard.
 
 ## 3. Review & Approval Workflow
 - Offer UI and API pathways for reviewers to approve or reject suggestions.
@@ -25,6 +26,7 @@
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.
 - Ship SDK clients (Python, Java, JavaScript) for streamlined integration into applications and pipelines.
 - Emit webhooks when mappings change to keep dependent systems synchronized automatically.
+- Bundle a seeded Postgres `targetdb` with customer demo data so analysts can rehearse field mappings and semantic match flows without external dependencies.
 
 ## 5. Admin & Governance
 - Support role-based access control profiles for reviewers, administrators, and consumers.

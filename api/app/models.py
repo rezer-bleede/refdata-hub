@@ -52,6 +52,10 @@ class SystemConfig(SQLModel, table=True):
     match_threshold: float = Field(default=0.6)
     matcher_backend: str = Field(default="embedding")
     embedding_model: str = Field(default="tfidf")
+    llm_mode: str = Field(
+        default="online",
+        description="Controls whether the LLM matcher talks to an online or offline provider.",
+    )
     llm_model: Optional[str] = Field(default="gpt-3.5-turbo")
     llm_api_base: Optional[str] = None
     llm_api_key: Optional[str] = Field(default=None, description="Stored securely in the database.")
