@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS departments (
     id SERIAL PRIMARY KEY,
-    code TEXT NOT NULL,
+    code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL
 );
 
