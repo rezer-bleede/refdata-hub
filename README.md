@@ -13,7 +13,9 @@ docker compose up --build
 This command starts:
 
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
-- **Target Demo Postgres** (`targetdb`) populated with customer records for mapping demos and tests.
+- **Target Demo Postgres** (`targetdb`) populated with customer records for mapping demos and tests. The
+  departments seed now enforces unique department codes so the `ON CONFLICT (code)` inserts stay
+  idempotent across container restarts.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
 - **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support.
 - **Ollama llama3 runtime** (`ollama`) delivering an offline LLM endpoint for semantic matching experiments.
