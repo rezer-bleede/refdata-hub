@@ -13,9 +13,11 @@ docker compose up --build
 This command starts:
 
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
-- **Target Demo Postgres** (`targetdb`) populated with customer records for mapping demos and tests. The
-  departments seed now enforces unique department codes so the `ON CONFLICT (code)` inserts stay
-  idempotent across container restarts.
+- **Target Demo Postgres** (`targetdb`) populated with a realistic customer, order, and product
+  warehouse for mapping demos and tests. The dataset now spans departments, employees,
+  globally-distributed customers with demographic attributes, detailed addresses, orders,
+  and catalog items. Upserts keep every insert idempotent so the data set stays consistent
+  across container restarts while still reflecting the richer schema.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
 - **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support.
 - **Ollama llama3 runtime** (`ollama`) delivering an offline LLM endpoint for semantic matching experiments.
@@ -49,6 +51,25 @@ The interface is organised into task-focused pages that surface the entire curat
 
 Detailed curation guidance, including an import-ready Abu Dhabi region dataset for the canonical library, lives in
 [`docs/CANONICAL_LIBRARY.md`](docs/CANONICAL_LIBRARY.md).
+
+### Target demo warehouse data model
+
+The bundled `targetdb` database is now representative of a modern B2B warehouse. It includes:
+
+- **Departments & employees** with cost centres, regional coverage, and seeded staff across finance,
+  engineering, HR, marketing, and operations.
+- **Customers** enriched with loyalty tiers, income bands, marital status, globally formatted phone
+  numbers, and an owning department to mirror account executive coverage.
+- **Addresses** with a unique `(customer_id, address_type)` constraint so billing, shipping, and home
+  locations can be tracked independently without creating duplicates.
+- **Products and services** spanning accessories, enterprise software, hardware, and marketing
+  packages—ideal for field mapping walkthroughs.
+- **Orders and order items** linked to both customers and employees, with totals that align with the
+  seeded line items and a spread of workflow statuses (`Completed`, `Processing`, `Shipped`, and
+  `Pending Payment`).
+
+Use the reviewer UI's Source Connections workspace to explore the schema and practice aligning
+fields to the canonical library using the richer, globally diverse sample values.
 
 For a visual tour of the refreshed reviewer workspace, see [`docs/FEATURES.md`](docs/FEATURES.md) which now calls out the
 OpenMetadata-inspired experience and design principles.
