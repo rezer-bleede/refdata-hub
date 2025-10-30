@@ -263,6 +263,10 @@ export async function fetchSourceConnections(): Promise<SourceConnection[]> {
   return apiFetchJson<SourceConnection[]>('/api/source/connections');
 }
 
+export async function fetchSourceConnection(connectionId: number): Promise<SourceConnection> {
+  return apiFetchJson<SourceConnection>(`/api/source/connections/${connectionId}`);
+}
+
 export async function createSourceConnection(
   payload: SourceConnectionCreatePayload,
 ): Promise<SourceConnection> {
@@ -406,6 +410,22 @@ export async function ingestSamples(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ source_table, source_field, values }),
   });
+}
+
+export async function fetchSourceSamples(
+  connectionId: number,
+  options?: { source_table?: string; source_field?: string },
+): Promise<SourceSample[]> {
+  const params = new URLSearchParams();
+  if (options?.source_table) {
+    params.set('source_table', options.source_table);
+  }
+  if (options?.source_field) {
+    params.set('source_field', options.source_field);
+  }
+  const query = params.toString();
+  const suffix = query ? `?${query}` : '';
+  return apiFetchJson<SourceSample[]>(`/api/source/connections/${connectionId}/samples${suffix}`);
 }
 
 export async function fetchMatchStatistics(connectionId: number): Promise<FieldMatchStats[]> {

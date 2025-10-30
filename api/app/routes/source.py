@@ -99,6 +99,15 @@ def list_connections(session: Session = Depends(get_session)) -> List[SourceConn
     return session.exec(statement).all()
 
 
+@router.get("/connections/{connection_id}", response_model=SourceConnectionRead)
+def get_connection(
+    connection_id: int, session: Session = Depends(get_session)
+) -> SourceConnection:
+    """Return a single source connection."""
+
+    return _require_connection(session, connection_id)
+
+
 @router.post(
     "/connections",
     response_model=SourceConnectionRead,
