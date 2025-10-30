@@ -105,10 +105,11 @@ describe('SourceConnectionDetailPage', () => {
     expect(screen.getByRole('heading', { name: 'warehouse' })).toBeInTheDocument();
     expect(screen.getAllByText('customers')[0]).toBeInTheDocument();
 
-    const fieldRow = screen.getByText('email').closest('tr');
-    expect(fieldRow).not.toBeNull();
-    if (!fieldRow) return;
-    fireEvent.click(fieldRow);
+    const fieldRow = await screen.findByText('email');
+    const rowElement = fieldRow.closest('tr');
+    expect(rowElement).not.toBeNull();
+    if (!rowElement) return;
+    fireEvent.click(rowElement);
 
     await waitFor(() => expect(apiMocks.fetchSourceSamples).toHaveBeenCalledWith(1, {
       source_table: 'customers',

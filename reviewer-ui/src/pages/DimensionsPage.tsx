@@ -1,15 +1,4 @@
-import { useMemo, useState } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  Form,
-  Modal,
-  Row,
-  Spinner,
-  Table,
-} from 'react-bootstrap';
+import { Fragment, useMemo, useState } from 'react';
 
 import {
   createDimension,
@@ -42,6 +31,17 @@ const createEmptyExtraField = (id: string): ExtraFieldDraft => ({
   data_type: 'string',
   required: false,
 });
+
+const renderFieldTypeLabel = (type: DimensionExtraFieldType) => {
+  switch (type) {
+    case 'number':
+      return 'Number';
+    case 'boolean':
+      return 'Yes/No';
+    default:
+      return 'Text';
+  }
+};
 
 const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
   const { dimensions, updateDimensions } = useAppState();
@@ -119,49 +119,28 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
       required: field.required,
     }));
 
-    for (const field of normalisedFields) {
-      if (!field.key || !field.label) {
-        onToast({ type: 'error', content: 'Attribute keys and labels cannot be empty.' });
-        return null;
-      }
-    }
-
-    const payload: DimensionCreatePayload = {
+    return {
       code: draft.code.trim(),
       label: draft.label.trim(),
       description: draft.description?.trim() || undefined,
       extra_fields: normalisedFields,
     };
-
-    if (editing) {
-      const updatePayload: DimensionUpdatePayload = {
-        label: payload.label,
-        description: payload.description,
-        extra_fields: payload.extra_fields,
-      };
-      return updatePayload;
-    }
-
-    return payload;
   };
 
   const handleSave = async () => {
     const payload = buildPayload();
-    if (!payload) {
-      return;
-    }
+    if (!payload) return;
 
     setIsSubmitting(true);
     try {
       if (editing) {
-        const updated = await updateDimension(editing.code, payload as DimensionUpdatePayload);
-        updateDimensions((prev) => prev.map((dimension) => (dimension.code === updated.code ? updated : dimension)));
+        await updateDimension(editing.code, payload as DimensionUpdatePayload);
         onToast({ type: 'success', content: 'Dimension updated.' });
       } else {
-        const created = await createDimension(payload as DimensionCreatePayload);
-        updateDimensions((prev) => [...prev, created]);
+        await createDimension(payload as DimensionCreatePayload);
         onToast({ type: 'success', content: 'Dimension created.' });
       }
+      await updateDimensions();
       resetEditor();
     } catch (error: unknown) {
       console.error(error);
@@ -172,290 +151,309 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) {
-      return;
-    }
+    if (!deleteTarget) return;
     setIsSubmitting(true);
     try {
       await deleteDimension(deleteTarget.code);
-      updateDimensions((prev) => prev.filter((dimension) => dimension.code !== deleteTarget.code));
-      onToast({ type: 'success', content: 'Dimension deleted.' });
+      await updateDimensions();
       setDeleteTarget(null);
+      onToast({ type: 'success', content: 'Dimension deleted.' });
     } catch (error: unknown) {
       console.error(error);
-      onToast({ type: 'error', content: 'Unable to delete dimension. Remove related canonical values first.' });
+      onToast({ type: 'error', content: 'Unable to delete dimension.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const renderFieldTypeLabel = (type: DimensionExtraFieldType) => {
-    switch (type) {
-      case 'number':
-        return 'Number';
-      case 'boolean':
-        return 'Yes/No';
-      default:
-        return 'Text';
-    }
-  };
-
   return (
-    <div className="d-flex flex-column gap-4" aria-label="Dimension registry">
-      <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-4">
-          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
-            <div>
-              <Card.Title as="h1" className="section-heading h4 mb-1">
-                Dimension registry
-              </Card.Title>
-              <Card.Text className="text-body-secondary mb-0">
-                Define the label, description, and custom attributes available for each canonical dimension. Attributes
-                surface in the canonical library for every value assigned to the dimension.
-              </Card.Text>
+    <Fragment>
+      <div className="flex flex-col gap-8">
+        <section className="surface-card flex flex-col gap-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <h1 className="section-heading text-2xl">Semantic dimensions</h1>
+              <p className="text-sm text-slate-400">
+                Curate reusable data domains with consistent canonical attributes and governance metadata.
+              </p>
             </div>
-            <Button variant="primary" onClick={openCreateModal}>
+            <button type="button" className="btn-primary" onClick={openCreateModal}>
               New dimension
-            </Button>
+            </button>
           </div>
-
-          <div className="table-responsive">
-            <Table striped hover className="align-middle table-nowrap">
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Label</th>
-                  <th>Description</th>
-                  <th>Attributes</th>
-                  <th className="text-end">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedDimensions.length === 0 && (
+          <div className="overflow-hidden rounded-3xl border border-slate-800/70">
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} className="text-center text-body-secondary py-4">
-                      No dimensions defined yet. Create one to begin collecting canonical values.
-                    </td>
+                    <th className="px-4 py-3 text-left">Code</th>
+                    <th className="px-4 py-3 text-left">Label</th>
+                    <th className="px-4 py-3 text-left">Description</th>
+                    <th className="px-4 py-3 text-left">Attributes</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
-                )}
-                {sortedDimensions.map((dimension) => (
-                  <tr key={dimension.code}>
-                    <td className="fw-semibold text-monospace">{dimension.code}</td>
-                    <td>{dimension.label}</td>
-                    <td>{dimension.description || '—'}</td>
-                    <td>
-                      {dimension.extra_fields.length === 0 ? (
-                        '—'
-                      ) : (
-                        <div className="d-flex flex-wrap gap-2">
-                          {dimension.extra_fields.map((field) => (
-                            <Badge key={field.key} bg="info" text="dark">
-                              {field.label} · {renderFieldTypeLabel(field.data_type)}
-                              {field.required ? ' · required' : ''}
-                            </Badge>
-                          ))}
+                </thead>
+                <tbody>
+                  {sortedDimensions.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                        No dimensions defined yet.
+                      </td>
+                    </tr>
+                  )}
+                  {sortedDimensions.map((dimension) => (
+                    <tr key={dimension.code} className="bg-slate-900/40">
+                      <td className="px-4 py-3 font-mono text-sm text-aurora">{dimension.code}</td>
+                      <td className="px-4 py-3 text-slate-100">{dimension.label}</td>
+                      <td className="px-4 py-3 text-sm text-slate-400">{dimension.description || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-slate-300">
+                        {dimension.extra_fields.length === 0 ? (
+                          <span className="text-slate-500">—</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {dimension.extra_fields.map((field) => (
+                              <span key={field.key} className="badge-pill text-xs">
+                                {field.label} · {renderFieldTypeLabel(field.data_type)}
+                                {field.required ? ' · required' : ''}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className="btn-secondary text-xs"
+                            onClick={() => openEditModal(dimension)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-danger text-xs"
+                            onClick={() => setDeleteTarget(dimension)}
+                          >
+                            Delete
+                          </button>
                         </div>
-                      )}
-                    </td>
-                    <td className="text-end">
-                      <div className="d-inline-flex gap-2">
-                        <Button size="sm" variant="outline-primary" onClick={() => openEditModal(dimension)}>
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="outline-danger" onClick={() => setDeleteTarget(dimension)}>
-                          Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
-        </Card.Body>
-      </Card>
-
-      <Modal show={showEditor} onHide={resetEditor} size="lg" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>{editing ? 'Edit dimension' : 'New dimension'}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="d-flex flex-column gap-4">
-          <Row className="g-3">
-            <Col md={4}>
-              <Form.Group controlId="dimension-code">
-                <Form.Label>Code</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={draft.code}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, code: event.target.value }))}
-                  placeholder="e.g. region"
-                  disabled={Boolean(editing)}
-                />
-                <Form.Text className="text-body-secondary">
-                  Immutable identifier used by canonical values and mappings.
-                </Form.Text>
-              </Form.Group>
-            </Col>
-            <Col md={8}>
-              <Form.Group controlId="dimension-label">
-                <Form.Label>Label</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={draft.label}
-                  onChange={(event) => setDraft((prev) => ({ ...prev, label: event.target.value }))}
-                  placeholder="Human-friendly dimension name"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-          <Form.Group controlId="dimension-description">
-            <Form.Label>Description</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={3}
-              value={draft.description ?? ''}
-              onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
-              placeholder="Optional description for reviewers"
-            />
-          </Form.Group>
-
-          <div className="d-flex flex-column gap-3">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h2 className="h6 mb-1">Additional attributes</h2>
-                <p className="text-body-secondary mb-0">
-                  Define custom fields captured for canonical values in this dimension. They will appear in the canonical
-                  library editor.
-                </p>
-              </div>
-              <Button variant="outline-primary" size="sm" onClick={addExtraField}>
-                Add attribute
-              </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-
-            {draftFields.length === 0 && (
-              <p className="text-body-secondary mb-0">No attributes defined. Canonical values will only collect label and description.</p>
-            )}
-
-            {draftFields.map((field) => (
-              <Card key={field.id} className="border-0 shadow-sm">
-                <Card.Body className="d-flex flex-column gap-3">
-                  <Row className="g-3 align-items-end">
-                    <Col md={4}>
-                      <Form.Group controlId={`field-key-${field.id}`}>
-                        <Form.Label>Key</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={field.key}
-                          onChange={(event) => handleFieldChange(field.id, 'key', event.target.value)}
-                          placeholder="e.g. iso_code"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={4}>
-                      <Form.Group controlId={`field-label-${field.id}`}>
-                        <Form.Label>Label</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={field.label}
-                          onChange={(event) => handleFieldChange(field.id, 'label', event.target.value)}
-                          placeholder="Display name"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group controlId={`field-type-${field.id}`}>
-                        <Form.Label>Type</Form.Label>
-                        <Form.Select
-                          value={field.data_type}
-                          onChange={(event) => handleFieldChange(field.id, 'data_type', event.target.value as DimensionExtraFieldType)}
-                        >
-                          <option value="string">Text</option>
-                          <option value="number">Number</option>
-                          <option value="boolean">Yes/No</option>
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                    <Col md={1} className="text-end">
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={() => removeExtraField(field.id)}
-                        aria-label={`Remove attribute ${field.label || field.key || field.id}`}
-                      >
-                        Remove
-                      </Button>
-                    </Col>
-                  </Row>
-                  <Row className="g-3">
-                    <Col md={9}>
-                      <Form.Group controlId={`field-description-${field.id}`}>
-                        <Form.Label>Description</Form.Label>
-                        <Form.Control
-                          type="text"
-                          value={field.description ?? ''}
-                          onChange={(event) => handleFieldChange(field.id, 'description', event.target.value)}
-                          placeholder="Optional guidance for reviewers"
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3} className="d-flex align-items-center">
-                      <Form.Check
-                        type="switch"
-                        id={`field-required-${field.id}`}
-                        label="Required"
-                        checked={field.required}
-                        onChange={(event) => handleFieldChange(field.id, 'required', event.target.checked)}
-                      />
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            ))}
           </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={resetEditor}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={() => void handleSave()} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                Saving…
-              </span>
-            ) : (
-              'Save'
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        </section>
+      </div>
 
-      <Modal show={Boolean(deleteTarget)} onHide={() => setDeleteTarget(null)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete dimension</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete the dimension <strong>{deleteTarget?.label}</strong> ({deleteTarget?.code})?
-          Canonical values linked to this dimension must be removed first.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setDeleteTarget(null)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={() => void handleDelete()} disabled={isSubmitting}>
-            {isSubmitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                Deleting…
-              </span>
-            ) : (
-              'Delete'
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+      {showEditor && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="dimension-editor-title">
+          <div className="modal-panel relative max-w-3xl">
+            <h3 id="dimension-editor-title" className="modal-title">
+              {editing ? 'Edit dimension' : 'New dimension'}
+            </h3>
+            <button type="button" className="modal-close" onClick={resetEditor} aria-label="Close dialog">
+              ×
+            </button>
+            <div className="mt-4 flex flex-col gap-6">
+              <div className="grid gap-4 lg:grid-cols-3">
+                <label htmlFor="dimension-code" className="flex flex-col gap-2">
+                  <span className="form-label">Code</span>
+                  <input
+                    id="dimension-code"
+                    type="text"
+                    value={draft.code}
+                    onChange={(event) => setDraft((prev) => ({ ...prev, code: event.target.value }))}
+                    placeholder="e.g. region"
+                    disabled={Boolean(editing)}
+                  />
+                  <span className="text-xs text-slate-500">
+                    Immutable identifier used by canonical values and mappings.
+                  </span>
+                </label>
+                <label htmlFor="dimension-label" className="flex flex-col gap-2 lg:col-span-2">
+                  <span className="form-label">Label</span>
+                  <input
+                    id="dimension-label"
+                    type="text"
+                    value={draft.label}
+                    onChange={(event) => setDraft((prev) => ({ ...prev, label: event.target.value }))}
+                    placeholder="Human-friendly dimension name"
+                  />
+                </label>
+              </div>
+              <label htmlFor="dimension-description" className="flex flex-col gap-2">
+                <span className="form-label">Description</span>
+                <textarea
+                  id="dimension-description"
+                  rows={3}
+                  value={draft.description ?? ''}
+                  onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
+                  placeholder="Optional description for reviewers"
+                />
+              </label>
+
+              <div className="space-y-4">
+                <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                  <div>
+                    <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+                      Additional attributes
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Define custom fields captured for canonical values in this dimension.
+                    </p>
+                  </div>
+                  <button type="button" className="btn-secondary" onClick={addExtraField}>
+                    Add attribute
+                  </button>
+                </div>
+
+                {draftFields.length === 0 && (
+                  <p className="empty-state">No attributes defined. Canonical values will only collect label and description.</p>
+                )}
+
+                <div className="flex flex-col gap-4">
+                  {draftFields.map((field) => (
+                    <div key={field.id} className="surface-card surface-card--accent flex flex-col gap-4">
+                      <div className="grid gap-4 lg:grid-cols-4">
+                        <label htmlFor={`field-key-${field.id}`} className="flex flex-col gap-2">
+                          <span className="form-label">Key</span>
+                          <input
+                            id={`field-key-${field.id}`}
+                            type="text"
+                            value={field.key}
+                            onChange={(event) => handleFieldChange(field.id, 'key', event.target.value)}
+                            placeholder="e.g. iso_code"
+                          />
+                        </label>
+                        <label htmlFor={`field-label-${field.id}`} className="flex flex-col gap-2">
+                          <span className="form-label">Label</span>
+                          <input
+                            id={`field-label-${field.id}`}
+                            type="text"
+                            value={field.label}
+                            onChange={(event) => handleFieldChange(field.id, 'label', event.target.value)}
+                            placeholder="Display name"
+                          />
+                        </label>
+                        <label htmlFor={`field-type-${field.id}`} className="flex flex-col gap-2">
+                          <span className="form-label">Type</span>
+                          <select
+                            id={`field-type-${field.id}`}
+                            value={field.data_type}
+                            onChange={(event) =>
+                              handleFieldChange(field.id, 'data_type', event.target.value as DimensionExtraFieldType)
+                            }
+                          >
+                            <option value="string">Text</option>
+                            <option value="number">Number</option>
+                            <option value="boolean">Yes/No</option>
+                          </select>
+                        </label>
+                        <div className="flex items-end justify-end">
+                          <button
+                            type="button"
+                            className="btn-danger text-xs"
+                            onClick={() => removeExtraField(field.id)}
+                            aria-label={`Remove attribute ${field.label || field.key || field.id}`}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid gap-4 lg:grid-cols-4">
+                        <label htmlFor={`field-description-${field.id}`} className="flex flex-col gap-2 lg:col-span-3">
+                          <span className="form-label">Description</span>
+                          <input
+                            id={`field-description-${field.id}`}
+                            type="text"
+                            value={field.description ?? ''}
+                            onChange={(event) => handleFieldChange(field.id, 'description', event.target.value)}
+                            placeholder="Optional guidance for reviewers"
+                          />
+                        </label>
+                        <label className="flex items-center gap-3 text-sm text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={field.required}
+                            onChange={(event) => handleFieldChange(field.id, 'required', event.target.checked)}
+                          />
+                          Required
+                        </label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={resetEditor}>
+                Cancel
+              </button>
+              <button type="button" className="btn-primary" onClick={() => void handleSave()} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      aria-hidden="true"
+                    />
+                    Saving…
+                  </span>
+                ) : (
+                  'Save'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-dimension-title">
+          <div className="modal-panel relative">
+            <h3 id="delete-dimension-title" className="modal-title">
+              Delete dimension
+            </h3>
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setDeleteTarget(null)}
+              aria-label="Close dialog"
+            >
+              ×
+            </button>
+            <p className="mt-4 text-sm text-slate-300">
+              Are you sure you want to delete the dimension <strong className="text-white">{deleteTarget.label}</strong> (
+              {deleteTarget.code})? Canonical values linked to this dimension must be removed first.
+            </p>
+            <div className="modal-actions">
+              <button type="button" className="btn-secondary" onClick={() => setDeleteTarget(null)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => void handleDelete()}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/50 border-t-red-300"
+                      aria-hidden="true"
+                    />
+                    Deleting…
+                  </span>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Fragment>
   );
 };
 

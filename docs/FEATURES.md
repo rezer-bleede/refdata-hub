@@ -23,7 +23,8 @@
 - Enable reviewers to add new mappings, merge duplicates, and maintain a clean catalog.
 - Track an auditable history recording who approved each change and when it happened.
 - Provide an OpenMetadata-inspired reviewer console with a persistent navigation rail, glassmorphism cards, and multiple
-  responsive themes for comfortable accessibility in varied environments.
+  responsive themes for comfortable accessibility in varied environments, now implemented with a Tailwind CSS design system
+  behind a React-Bootstrap-compatible component shim so existing screens retain their ergonomic JSX structure.
   The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
   widescreen monitors.
 

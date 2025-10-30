@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Col, Form, Modal, Row, Spinner, Table } from 'react-bootstrap';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
@@ -229,337 +228,395 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
   );
 
   return (
-    <div className="d-flex flex-column gap-4">
-      <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-4">
-          <div>
-            <Card.Title as="h1" className="section-heading h4 mb-1">
-              Register a source connection
-            </Card.Title>
-            <Card.Text className="text-body-secondary mb-0">
+    <Fragment>
+      <div className="flex flex-col gap-8">
+        <section className="surface-card flex flex-col gap-6">
+          <div className="space-y-2">
+            <h1 className="section-heading text-2xl">Register a source connection</h1>
+            <p className="text-sm text-slate-400">
               Store connection metadata for sampling, mapping, and reconciliation workflows.
-            </Card.Text>
+            </p>
           </div>
 
-          <Form
+          <form
             onSubmit={(event) => {
               event.preventDefault();
               void handleCreate();
             }}
+            className="grid gap-4 lg:grid-cols-4"
           >
-            <Row className="g-3">
-              <Col md={4}>
-                <Form.Group controlId="connection-name">
-                  <Form.Label>Connection name</Form.Label>
-                  <Form.Control
-                    value={form.name}
-                    onChange={(event) => handleFormChange('name', event.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group controlId="connection-type">
-                  <Form.Label>Database type</Form.Label>
-                  <Form.Control
-                    value={form.db_type}
-                    onChange={(event) => handleFormChange('db_type', event.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group controlId="connection-host">
-                  <Form.Label>Host</Form.Label>
-                  <Form.Control
-                    value={form.host}
-                    onChange={(event) => handleFormChange('host', event.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group controlId="connection-port">
-                  <Form.Label>Port</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={form.port}
-                    onChange={(event) => handleFormChange('port', event.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group controlId="connection-database">
-                  <Form.Label>Database</Form.Label>
-                  <Form.Control
-                    value={form.database}
-                    onChange={(event) => handleFormChange('database', event.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group controlId="connection-username">
-                  <Form.Label>Username</Form.Label>
-                  <Form.Control
-                    value={form.username}
-                    onChange={(event) => handleFormChange('username', event.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={3}>
-                <Form.Group controlId="connection-password">
-                  <Form.Label>Password</Form.Label>
-                  <Form.Control
-                    type="password"
-                    value={form.password ?? ''}
-                    onChange={(event) => handleFormChange('password', event.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group controlId="connection-options">
-                  <Form.Label>Options (JSON)</Form.Label>
-                  <Form.Control
-                    placeholder='{"sslmode":"require"}'
-                    value={form.options ?? ''}
-                    onChange={(event) => handleFormChange('options', event.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <div className="d-flex justify-content-end mt-4 gap-2">
-              <Button
+            <label htmlFor="connection-name" className="flex flex-col gap-2">
+              <span className="form-label">Connection name</span>
+              <input
+                id="connection-name"
+                value={form.name}
+                onChange={(event) => handleFormChange('name', event.target.value)}
+                required
+              />
+            </label>
+            <label htmlFor="connection-type" className="flex flex-col gap-2">
+              <span className="form-label">Database type</span>
+              <input
+                id="connection-type"
+                value={form.db_type}
+                onChange={(event) => handleFormChange('db_type', event.target.value)}
+              />
+            </label>
+            <label htmlFor="connection-host" className="flex flex-col gap-2">
+              <span className="form-label">Host</span>
+              <input
+                id="connection-host"
+                value={form.host}
+                onChange={(event) => handleFormChange('host', event.target.value)}
+                required
+              />
+            </label>
+            <label htmlFor="connection-port" className="flex flex-col gap-2">
+              <span className="form-label">Port</span>
+              <input
+                id="connection-port"
+                type="number"
+                value={form.port}
+                onChange={(event) => handleFormChange('port', event.target.value)}
+              />
+            </label>
+            <label htmlFor="connection-database" className="flex flex-col gap-2">
+              <span className="form-label">Database</span>
+              <input
+                id="connection-database"
+                value={form.database}
+                onChange={(event) => handleFormChange('database', event.target.value)}
+                required
+              />
+            </label>
+            <label htmlFor="connection-username" className="flex flex-col gap-2">
+              <span className="form-label">Username</span>
+              <input
+                id="connection-username"
+                value={form.username}
+                onChange={(event) => handleFormChange('username', event.target.value)}
+                required
+              />
+            </label>
+            <label htmlFor="connection-password" className="flex flex-col gap-2">
+              <span className="form-label">Password</span>
+              <input
+                id="connection-password"
+                type="password"
+                value={form.password ?? ''}
+                onChange={(event) => handleFormChange('password', event.target.value)}
+              />
+            </label>
+            <label htmlFor="connection-options" className="flex flex-col gap-2 lg:col-span-4">
+              <span className="form-label">Options (JSON)</span>
+              <input
+                id="connection-options"
+                placeholder='{"sslmode":"require"}'
+                value={form.options ?? ''}
+                onChange={(event) => handleFormChange('options', event.target.value)}
+              />
+            </label>
+            <div className="flex flex-col gap-2 lg:col-span-4 lg:flex-row lg:justify-end">
+              <button
                 type="button"
-                variant="outline-secondary"
+                className="btn-secondary"
                 onClick={() => void handleTestNewConnection()}
                 disabled={testingNewConnection || submitting}
               >
                 {testingNewConnection ? (
-                  <span className="d-inline-flex align-items-center gap-2">
-                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      aria-hidden="true"
+                    />
                     Testing…
                   </span>
                 ) : (
                   'Test connection'
                 )}
-              </Button>
-              <Button type="submit" variant="primary" disabled={submitting || testingNewConnection}>
+              </button>
+              <button type="submit" className="btn-primary" disabled={submitting || testingNewConnection}>
                 {submitting ? (
-                  <span className="d-inline-flex align-items-center gap-2">
-                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      aria-hidden="true"
+                    />
                     Adding…
                   </span>
                 ) : (
                   'Add connection'
                 )}
-              </Button>
+              </button>
             </div>
-          </Form>
-        </Card.Body>
-      </Card>
+          </form>
+        </section>
 
-      <Card className="card-section">
-        <Card.Body>
-          <Card.Title as="h2" className="section-heading h4 mb-2">
-            Source connections
-          </Card.Title>
-          <Card.Text className="text-body-secondary">
-            Edit or remove existing integrations. Deleting a connection removes associated mappings and samples.
-          </Card.Text>
-          <div className="table-responsive">
-            <Table striped hover className="align-middle">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Database</th>
-                  <th>Host</th>
-                  <th className="text-nowrap">Updated</th>
-                  <th className="text-end">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && (
+        <section className="surface-card flex flex-col gap-4">
+          <div className="space-y-2">
+            <h2 className="section-heading text-xl">Source connections</h2>
+            <p className="text-sm text-slate-400">
+              Edit or remove existing integrations. Deleting a connection removes associated mappings and samples.
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-slate-800/70">
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <td colSpan={5} className="text-center py-4">
-                      Loading connections…
-                    </td>
+                    <th className="px-4 py-3 text-left">Name</th>
+                    <th className="px-4 py-3 text-left">Database</th>
+                    <th className="px-4 py-3 text-left">Host</th>
+                    <th className="px-4 py-3 text-left">Updated</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
-                )}
-                {!loading && sortedConnections.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="text-center text-body-secondary py-4">
-                      No connections registered yet.
-                    </td>
-                  </tr>
-                )}
-                {!loading &&
-                  sortedConnections.map((connection) => (
-                    <tr key={connection.id}>
-                      <td className="fw-semibold">{connection.name}</td>
-                      <td>{connection.database}</td>
-                      <td>{connection.host}</td>
-                      <td className="text-monospaced">{new Date(connection.updated_at).toLocaleString()}</td>
-                      <td className="text-end">
-                        <div className="d-inline-flex gap-2">
-                          <Link
-                            to={`/connections/${connection.id}`}
-                            className="btn btn-sm btn-primary"
-                          >
-                            View
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant="outline-secondary"
-                            onClick={() => void handleTestExistingConnection(connection.id)}
-                            disabled={testingExistingId === connection.id}
-                          >
-                            {testingExistingId === connection.id ? (
-                              <span className="d-inline-flex align-items-center gap-2">
-                                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                                Testing…
-                              </span>
-                            ) : (
-                              'Test'
-                            )}
-                          </Button>
-                          <Button size="sm" variant="outline-primary" onClick={() => openEdit(connection)}>
-                            Edit
-                          </Button>
-                          <Button size="sm" variant="outline-danger" onClick={() => setDeleteTarget(connection)}>
-                            Delete
-                          </Button>
-                        </div>
+                </thead>
+                <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                        Loading connections…
                       </td>
                     </tr>
-                  ))}
-              </tbody>
-            </Table>
+                  )}
+                  {!loading && sortedConnections.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                        No connections registered yet.
+                      </td>
+                    </tr>
+                  )}
+                  {!loading &&
+                    sortedConnections.map((connection) => (
+                      <tr key={connection.id} className="bg-slate-900/40">
+                        <td className="px-4 py-3 font-semibold text-slate-100">{connection.name}</td>
+                        <td className="px-4 py-3 text-slate-300">{connection.database}</td>
+                        <td className="px-4 py-3 text-slate-300">{connection.host}</td>
+                        <td className="px-4 py-3 text-sm text-slate-400">
+                          {new Date(connection.updated_at).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <Link to={`/connections/${connection.id}`} className="btn-primary text-xs">
+                              View
+                            </Link>
+                            <button
+                              type="button"
+                              className="btn-secondary text-xs"
+                              onClick={() => void handleTestExistingConnection(connection.id)}
+                              disabled={testingExistingId === connection.id}
+                            >
+                              {testingExistingId === connection.id ? (
+                                <span className="flex items-center gap-2">
+                                  <span
+                                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                                    aria-hidden="true"
+                                  />
+                                  Testing…
+                                </span>
+                              ) : (
+                                'Test'
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-secondary text-xs"
+                              onClick={() => openEdit(connection)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-danger text-xs"
+                              onClick={() => setDeleteTarget(connection)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </Card.Body>
-      </Card>
+        </section>
+      </div>
 
-      <Modal show={Boolean(editing)} onHide={() => setEditing(null)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Edit connection</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form className="d-flex flex-column gap-3">
-            <Form.Group controlId="edit-name">
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                value={editForm.name ?? ''}
-                onChange={(event) => handleEditChange('name', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-db-type">
-              <Form.Label>Database type</Form.Label>
-              <Form.Control
-                value={editForm.db_type ?? ''}
-                onChange={(event) => handleEditChange('db_type', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-host">
-              <Form.Label>Host</Form.Label>
-              <Form.Control
-                value={editForm.host ?? ''}
-                onChange={(event) => handleEditChange('host', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-port">
-              <Form.Label>Port</Form.Label>
-              <Form.Control
-                type="number"
-                value={editForm.port ?? 0}
-                onChange={(event) => handleEditChange('port', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-database">
-              <Form.Label>Database</Form.Label>
-              <Form.Control
-                value={editForm.database ?? ''}
-                onChange={(event) => handleEditChange('database', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-username">
-              <Form.Label>Username</Form.Label>
-              <Form.Control
-                value={editForm.username ?? ''}
-                onChange={(event) => handleEditChange('username', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-password">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                value={editForm.password ?? ''}
-                onChange={(event) => handleEditChange('password', event.target.value)}
-              />
-            </Form.Group>
-            <Form.Group controlId="edit-options">
-              <Form.Label>Options</Form.Label>
-              <Form.Control
-                value={editForm.options ?? ''}
-                onChange={(event) => handleEditChange('options', event.target.value)}
-              />
-            </Form.Group>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setEditing(null)}>
-            Cancel
-          </Button>
-          <Button
-            variant="outline-secondary"
-            onClick={() => editing && void handleTestExistingConnection(editing.id, editForm)}
-            disabled={!editing || testingExistingId === editing.id}
-          >
-            {editing && testingExistingId === editing.id ? (
-              <span className="d-inline-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                Testing…
-              </span>
-            ) : (
-              'Test connection'
-            )}
-          </Button>
-          <Button variant="primary" onClick={() => void handleUpdate()} disabled={submitting}>
-            {submitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                Saving…
-              </span>
-            ) : (
-              'Save changes'
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {editing && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-connection-title">
+          <div className="modal-panel relative">
+            <h3 id="edit-connection-title" className="modal-title">
+              Edit connection
+            </h3>
+            <button type="button" className="modal-close" onClick={() => setEditing(null)} aria-label="Close dialog">
+              ×
+            </button>
+            <form className="mt-4 grid gap-4 lg:grid-cols-2">
+              <label htmlFor="edit-name" className="flex flex-col gap-2">
+                <span className="form-label">Name</span>
+                <input
+                  id="edit-name"
+                  value={editForm.name ?? ''}
+                  onChange={(event) => handleEditChange('name', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-db-type" className="flex flex-col gap-2">
+                <span className="form-label">Database type</span>
+                <input
+                  id="edit-db-type"
+                  value={editForm.db_type ?? ''}
+                  onChange={(event) => handleEditChange('db_type', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-host" className="flex flex-col gap-2">
+                <span className="form-label">Host</span>
+                <input
+                  id="edit-host"
+                  value={editForm.host ?? ''}
+                  onChange={(event) => handleEditChange('host', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-port" className="flex flex-col gap-2">
+                <span className="form-label">Port</span>
+                <input
+                  id="edit-port"
+                  type="number"
+                  value={editForm.port ?? 0}
+                  onChange={(event) => handleEditChange('port', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-database" className="flex flex-col gap-2">
+                <span className="form-label">Database</span>
+                <input
+                  id="edit-database"
+                  value={editForm.database ?? ''}
+                  onChange={(event) => handleEditChange('database', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-username" className="flex flex-col gap-2">
+                <span className="form-label">Username</span>
+                <input
+                  id="edit-username"
+                  value={editForm.username ?? ''}
+                  onChange={(event) => handleEditChange('username', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-password" className="flex flex-col gap-2">
+                <span className="form-label">Password</span>
+                <input
+                  id="edit-password"
+                  type="password"
+                  value={editForm.password ?? ''}
+                  onChange={(event) => handleEditChange('password', event.target.value)}
+                />
+              </label>
+              <label htmlFor="edit-options" className="flex flex-col gap-2 lg:col-span-2">
+                <span className="form-label">Options</span>
+                <input
+                  id="edit-options"
+                  value={editForm.options ?? ''}
+                  onChange={(event) => handleEditChange('options', event.target.value)}
+                />
+              </label>
+            </form>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setEditing(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => editing && void handleTestExistingConnection(editing.id, editForm)}
+                disabled={!editing || testingExistingId === editing.id}
+              >
+                {editing && testingExistingId === editing.id ? (
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      aria-hidden="true"
+                    />
+                    Testing…
+                  </span>
+                ) : (
+                  'Test connection'
+                )}
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => void handleUpdate()}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      aria-hidden="true"
+                    />
+                    Saving…
+                  </span>
+                ) : (
+                  'Save changes'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <Modal show={Boolean(deleteTarget)} onHide={() => setDeleteTarget(null)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete connection</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Delete “{deleteTarget?.name}”? Associated mappings, samples, and value mappings will also be removed.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setDeleteTarget(null)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={() => void handleDelete()} disabled={submitting}>
-            {submitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
-                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                Deleting…
-              </span>
-            ) : (
-              'Delete'
-            )}
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+      {deleteTarget && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-connection-title">
+          <div className="modal-panel relative">
+            <h3 id="delete-connection-title" className="modal-title">
+              Delete connection
+            </h3>
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setDeleteTarget(null)}
+              aria-label="Close dialog"
+            >
+              ×
+            </button>
+            <p className="mt-4 text-sm text-slate-300">
+              Delete “{deleteTarget.name}”? Associated mappings, samples, and value mappings will also be removed.
+            </p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={() => void handleDelete()}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/50 border-t-red-300"
+                      aria-hidden="true"
+                    />
+                    Deleting…
+                  </span>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Fragment>
   );
 };
 

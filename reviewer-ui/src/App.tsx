@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import { Badge, Button, Container, Form, Spinner, Toast, ToastContainer } from 'react-bootstrap';
 
 import ConnectionsPage from './pages/ConnectionsPage';
 import DashboardPage from './pages/DashboardPage';
@@ -76,7 +75,9 @@ const AppScaffold = ({
     return navItems.find((item) => location.pathname.startsWith(item.path)) ?? navItems[0];
   }, [location.pathname]);
 
-  const toastVariant = toast?.type === 'error' ? 'danger' : 'success';
+  const toastAccentClass = toast?.type === 'error'
+    ? 'border-red-500/50 bg-red-500/10 text-red-100'
+    : 'border-emerald-400/50 bg-emerald-400/10 text-emerald-100';
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -102,10 +103,9 @@ const AppScaffold = ({
             <span className="app-sidebar__brand-subtitle">Metadata stewardship workspace</span>
           </span>
         </Link>
-        <Button
-          variant="outline-light"
-          size="sm"
-          className="app-sidebar__collapse-toggle d-none d-lg-inline-flex"
+        <button
+          type="button"
+          className="app-sidebar__collapse-toggle"
           onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
           aria-controls={sidebarId}
           aria-expanded={!isSidebarCollapsed}
@@ -115,7 +115,7 @@ const AppScaffold = ({
           <span className="visually-hidden">
             {isSidebarCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
           </span>
-        </Button>
+        </button>
         <nav className="app-sidebar__nav">
           {navItems.map((item) => (
             <NavLink
@@ -146,15 +146,14 @@ const AppScaffold = ({
       <div className="app-main">
         <header className="app-header">
           <div className="app-header__titles">
-            <Button
-              variant="outline-light"
-              size="sm"
-              className="app-sidebar-toggle d-lg-none"
+            <button
+              type="button"
+              className="app-sidebar-toggle lg:hidden"
               onClick={() => setIsSidebarOpen((open) => !open)}
               aria-label={isSidebarOpen ? 'Hide navigation menu' : 'Show navigation menu'}
             >
               Menu
-            </Button>
+            </button>
             <p className="app-header__eyebrow">RefData Hub</p>
             <h1 className="app-header__title">{activeItem.label}</h1>
             <p className="app-header__subtitle">
@@ -163,12 +162,11 @@ const AppScaffold = ({
           </div>
           <div className="app-header__actions">
             {config && (
-              <Badge bg="dark" className="text-uppercase app-header__badge">
+              <span className="app-header__badge">
                 Matcher: {config.matcher_backend}
-              </Badge>
+              </span>
             )}
-            <Form.Select
-              size="sm"
+            <select
               value={themeChoice}
               aria-label="Select UI theme"
               className="app-header__select"
@@ -179,26 +177,30 @@ const AppScaffold = ({
                   {themeDefinitions[choice].label}
                 </option>
               ))}
-            </Form.Select>
-            <Button
-              variant="primary"
+            </select>
+            <button
+              type="button"
               className="app-header__button"
               onClick={() => void handleRefresh()}
               disabled={isLoading}
             >
               {isLoading ? (
-                <span className="d-inline-flex align-items-center gap-2">
-                  <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                    role="status"
+                    aria-hidden="true"
+                  />
                   Syncing…
                 </span>
               ) : (
                 'Sync data'
               )}
-            </Button>
+            </button>
           </div>
         </header>
         <main className="app-content">
-          <Container fluid="lg" className="app-content__inner">
+          <div className="app-content__inner">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage onToast={onToast} />} />
@@ -217,25 +219,30 @@ const AppScaffold = ({
               <Route path="/settings" element={<SettingsPage onToast={onToast} />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
-          </Container>
+          </div>
         </main>
-        <ToastContainer position="bottom-end" className="p-3 app-toast-container">
+        <div className="app-toast-container">
           {toast && (
-            <Toast
-              bg={toastVariant}
+            <div
               key={toastKey}
-              show
-              onClose={onCloseToast}
-              delay={6000}
-              autohide
+              role="status"
+              className={`surface-card surface-card--accent border ${toastAccentClass} backdrop-blur`}
             >
-              <Toast.Header closeButton closeLabel="Dismiss notification">
-                <strong className="me-auto">Notification</strong>
-              </Toast.Header>
-              <Toast.Body className="text-white">{toast.content}</Toast.Body>
-            </Toast>
+              <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+                <span>Notification</span>
+                <button
+                  type="button"
+                  className="text-slate-400 transition hover:text-white"
+                  onClick={onCloseToast}
+                  aria-label="Dismiss notification"
+                >
+                  ×
+                </button>
+              </div>
+              <p className="text-sm text-slate-100">{toast.content}</p>
+            </div>
           )}
-        </ToastContainer>
+        </div>
       </div>
     </div>
   );
