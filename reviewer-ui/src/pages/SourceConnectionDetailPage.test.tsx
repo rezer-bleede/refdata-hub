@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
@@ -63,8 +63,28 @@ describe('SourceConnectionDetailPage', () => {
         source_field: 'email',
         dimension: null,
         raw_value: 'alice@example.com',
-        occurrence_count: 5,
+        occurrence_count: 4,
         last_seen_at: '2024-01-02T12:00:00Z',
+      },
+      {
+        id: 2,
+        source_connection_id: 1,
+        source_table: 'customers',
+        source_field: 'email',
+        dimension: 'contact',
+        raw_value: 'alice@example.com',
+        occurrence_count: 3,
+        last_seen_at: '2024-02-15T08:00:00Z',
+      },
+      {
+        id: 3,
+        source_connection_id: 1,
+        source_table: 'customers',
+        source_field: 'email',
+        dimension: null,
+        raw_value: 'bob@example.com',
+        occurrence_count: 2,
+        last_seen_at: '2024-01-20T10:30:00Z',
       },
     ]);
   });
@@ -95,6 +115,10 @@ describe('SourceConnectionDetailPage', () => {
       source_field: 'email',
     }));
 
-    expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+    const tables = screen.getAllByRole('table');
+    const sampleTable = tables[tables.length - 1];
+    expect(within(sampleTable).getAllByRole('row')).toHaveLength(3);
+    expect(screen.getAllByText('alice@example.com')).toHaveLength(1);
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument();
   });
 });

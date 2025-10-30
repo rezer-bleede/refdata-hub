@@ -9,6 +9,8 @@
 - Inspect connected source systems in real time—connection records can be tested inline and their available tables/columns are
   introspected to drive the mapping workflows without manual lookups. Analysts can now open a detailed explorer per connection
   to review schemas, objects, column profiles, match statistics, and captured sample values before curating mappings.
+  Sample previews collapse duplicate raw values captured during multiple ingestion runs so reviewers always focus on distinct
+  content with accurate occurrence totals.
 
 ## 2. Semantic Matching
 - Use NLP and embedding models to suggest standardized values for new raw inputs.
@@ -22,6 +24,8 @@
 - Track an auditable history recording who approved each change and when it happened.
 - Provide an OpenMetadata-inspired reviewer console with a persistent navigation rail, glassmorphism cards, and multiple
   responsive themes for comfortable accessibility in varied environments.
+  The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
+  widescreen monitors.
 
 ## 4. Integration & Access
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.

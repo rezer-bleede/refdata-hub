@@ -172,4 +172,25 @@ describe('AppScaffold layout', () => {
 
     expect(mocks.onThemeChange).toHaveBeenCalledWith('light');
   });
+
+  it('supports collapsing and expanding the primary navigation', () => {
+    const { props } = createProps();
+    render(
+      <MemoryRouter>
+        <AppScaffold {...props} />
+      </MemoryRouter>,
+    );
+
+    const sidebar = screen.getByLabelText('Primary navigation');
+    const collapseToggle = screen.getByLabelText('Collapse navigation menu');
+
+    expect(sidebar).not.toHaveClass('is-collapsed');
+    fireEvent.click(collapseToggle);
+    expect(sidebar).toHaveClass('is-collapsed');
+    expect(collapseToggle).toHaveAttribute('aria-expanded', 'false');
+
+    const expandToggle = screen.getByLabelText('Expand navigation menu');
+    fireEvent.click(expandToggle);
+    expect(sidebar).not.toHaveClass('is-collapsed');
+  });
 });

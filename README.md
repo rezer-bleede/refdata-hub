@@ -34,14 +34,18 @@ The interface is organised into task-focused pages that surface the entire curat
 
 - A persistent navigation rail, global action header, and glassmorphism-inspired surfaces echo the ergonomics of
   [OpenMetadata](https://open-metadata.org/), giving analysts a familiar observability workspace with responsive theme
-  switching and mobile-friendly navigation.
+  switching and mobile-friendly navigation. The rail now remains pinned while scrolling long datasets and can collapse on
+  large displays so reviewers can reclaim horizontal space without losing orientation.
 - **Dashboard** – monitor canonical coverage and experiment with semantic suggestions in a live playground.
 - **Settings** – manage matcher thresholds, embedding defaults, and LLM connectivity in a dedicated workspace.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
 - **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema.
 - **Dimension Relations** – model parent/child hierarchies such as regions to districts and manage canonical value pairings.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems, verify credentials with the
-  built-in **Test connection** action, and deep-dive into each source to inspect schemas, tables, fields, match statistics, and profiled sample values. A demo connection targeting the bundled `targetdb` Postgres instance is seeded automatically for tutorials and integration tests.
+  built-in **Test connection** action, and deep-dive into each source to inspect schemas, tables, fields, match statistics, and
+  profiled sample values. Distinct sample previews now consolidate duplicate raw values captured across ingestion runs and roll
+  their counts together so analysts always review truly unique source content. A demo connection targeting the bundled
+  `targetdb` Postgres instance is seeded automatically for tutorials and integration tests.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
   Available tables and columns are now surfaced directly from the connected database so analysts can choose valid metadata from
   dropdowns instead of typing freeform text.

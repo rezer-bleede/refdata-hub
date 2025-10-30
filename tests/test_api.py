@@ -10,6 +10,7 @@ import sys
 import io
 import sqlite3
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -27,7 +28,7 @@ os.environ.setdefault("REFDATA_DATABASE_URL", "sqlite:///:memory:")
 from api.app.main import create_app
 from api.app.config import Settings
 from api.app.database import create_db_engine, init_db, get_session
-from api.app.models import SystemConfig
+from api.app.models import SourceSample, SystemConfig
 
 
 def build_test_client() -> TestClient:
@@ -807,6 +808,77 @@ def test_source_mapping_flow() -> None:
     assert all_mappings.json()
 
 
+def test_source_sample_endpoint_returns_distinct_values() -> None:
+    client = build_test_client()
+
+    connection_response = client.post(
+        "/api/source/connections",
+        json={
+            "name": "analytics",
+            "db_type": "postgres",
+            "host": "localhost",
+            "port": 5432,
+            "database": "analytics",
+            "username": "svc",
+        },
+    )
+    assert connection_response.status_code == 201
+    connection_id = connection_response.json()["id"]
+
+    engine = client.app.state.engine
+    assert engine is not None
+
+    with Session(engine) as session:
+        session.add_all(
+            [
+                SourceSample(
+                    source_connection_id=connection_id,
+                    source_table="customers",
+                    source_field="email",
+                    dimension=None,
+                    raw_value="alice@example.com",
+                    occurrence_count=4,
+                    last_seen_at=datetime(2024, 1, 5, 12, 0, tzinfo=timezone.utc),
+                ),
+                SourceSample(
+                    source_connection_id=connection_id,
+                    source_table="customers",
+                    source_field="email",
+                    dimension="contact",
+                    raw_value="alice@example.com",
+                    occurrence_count=3,
+                    last_seen_at=datetime(2024, 2, 15, 8, 0, tzinfo=timezone.utc),
+                ),
+                SourceSample(
+                    source_connection_id=connection_id,
+                    source_table="customers",
+                    source_field="email",
+                    dimension=None,
+                    raw_value="bob@example.com",
+                    occurrence_count=2,
+                    last_seen_at=datetime(2024, 1, 20, 10, 30, tzinfo=timezone.utc),
+                ),
+            ]
+        )
+        session.commit()
+
+    response = client.get(
+        f"/api/source/connections/{connection_id}/samples",
+        params={"source_table": "customers", "source_field": "email"},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert len(payload) == 2
+    alice = next(item for item in payload if item["raw_value"] == "alice@example.com")
+    bob = next(item for item in payload if item["raw_value"] == "bob@example.com")
+
+    assert alice["occurrence_count"] == 7
+    assert alice["dimension"] == "contact"
+    assert alice["last_seen_at"].startswith("2024-02-15T08:00:00")
+
+    assert bob["occurrence_count"] == 2
+    assert bob["dimension"] is None
 def test_source_connection_test_endpoint_success() -> None:
     client = build_test_client()
     db_path, temp_dir = create_sqlite_source()

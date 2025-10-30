@@ -154,6 +154,35 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
   };
 
   const selectedSamples = selectedFieldKey ? samplesByField[selectedFieldKey] ?? [] : [];
+  const distinctSamples = useMemo(() => {
+    if (selectedSamples.length === 0) {
+      return [] as SourceSample[];
+    }
+    const grouped = new Map<string, SourceSample>();
+    selectedSamples.forEach((sample) => {
+      const existing = grouped.get(sample.raw_value);
+      if (!existing) {
+        grouped.set(sample.raw_value, { ...sample });
+        return;
+      }
+      const latestSeen =
+        new Date(sample.last_seen_at).getTime() > new Date(existing.last_seen_at).getTime()
+          ? sample.last_seen_at
+          : existing.last_seen_at;
+      grouped.set(sample.raw_value, {
+        ...existing,
+        occurrence_count: existing.occurrence_count + sample.occurrence_count,
+        last_seen_at: latestSeen,
+        dimension: existing.dimension ?? sample.dimension ?? null,
+      });
+    });
+    return Array.from(grouped.values()).sort((a, b) => {
+      if (b.occurrence_count !== a.occurrence_count) {
+        return b.occurrence_count - a.occurrence_count;
+      }
+      return a.raw_value.localeCompare(b.raw_value);
+    });
+  }, [selectedSamples]);
 
   const schemaSummary = useMemo(() => {
     const schemas = new Set<string>();
@@ -365,7 +394,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Loading samples…
               </div>
-            ) : selectedSamples.length > 0 ? (
+            ) : distinctSamples.length > 0 ? (
               <Table bordered hover responsive size="sm">
                 <thead>
                   <tr>
@@ -375,8 +404,8 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedSamples.map((sample) => (
-                    <tr key={`${sample.id}-${sample.raw_value}`}>
+                  {distinctSamples.map((sample) => (
+                    <tr key={`${sample.source_field}-${sample.raw_value}`}>
                       <td>{sample.raw_value}</td>
                       <td className="text-end text-monospaced">{sample.occurrence_count.toLocaleString()}</td>
                       <td className="text-end">{new Date(sample.last_seen_at).toLocaleString()}</td>
