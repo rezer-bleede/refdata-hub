@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { Badge, Button, Card, Col, Form, Row, Spinner, Table } from 'react-bootstrap';
 
 import { proposeMatch } from '../api';
 import { useAppState } from '../state/AppStateContext';
@@ -58,127 +57,123 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
 
   const renderMatches = (matches: MatchCandidate[]) => {
     if (!matches.length) {
-      return <p className="text-body-secondary mb-0">No matches returned for the supplied value.</p>;
+      return <p className="text-sm text-slate-400">No matches returned for the supplied value.</p>;
     }
 
     return (
-      <Table striped bordered hover responsive size="sm" className="mt-3">
-        <thead>
-          <tr>
-            <th>Canonical Label</th>
-            <th>Dimension</th>
-            <th>Description</th>
-            <th className="text-end">Confidence</th>
-          </tr>
-        </thead>
-        <tbody>
-          {matches.map((match) => (
-            <tr key={`${match.canonical_id}-${match.score}`}> 
-              <td>{match.canonical_label}</td>
-              <td>
-                <Badge bg="info" text="dark">{match.dimension}</Badge>
-              </td>
-              <td>{match.description || '—'}</td>
-              <td className="text-end text-monospaced">{(match.score * 100).toFixed(1)}%</td>
+      <div className="mt-4 overflow-x-auto">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th className="px-4 py-3 text-left">Canonical Label</th>
+              <th className="px-4 py-3 text-left">Dimension</th>
+              <th className="px-4 py-3 text-left">Description</th>
+              <th className="px-4 py-3 text-right">Confidence</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {matches.map((match) => (
+              <tr key={`${match.canonical_id}-${match.score}`} className="bg-slate-900/40">
+                <td className="px-4 py-3 font-medium text-slate-100">{match.canonical_label}</td>
+                <td className="px-4 py-3">
+                  <span className="badge-pill">{match.dimension}</span>
+                </td>
+                <td className="px-4 py-3 text-slate-300">{match.description || '—'}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-slate-200">
+                  {(match.score * 100).toFixed(1)}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
   return (
-    <div className="d-flex flex-column gap-4" aria-busy={isLoading}>
-      <Row xs={1} md={3} className="g-3">
-        <Col>
-          <Card className="card-section h-100">
-            <Card.Body>
-              <Card.Title className="section-heading">Canonical values</Card.Title>
-              <Card.Text className="display-6 fw-semibold mb-0">{insights.canonicalCount}</Card.Text>
-              <Card.Text className="text-body-secondary">Managed reference records</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          <Card className="card-section h-100">
-            <Card.Body>
-              <Card.Title className="section-heading">Dimensions</Card.Title>
-              <Card.Text className="display-6 fw-semibold mb-0">{insights.uniqueDimensions}</Card.Text>
-              <Card.Text className="text-body-secondary">Distinct semantic domains</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col>
-          <Card className="card-section h-100">
-            <Card.Body>
-              <Card.Title className="section-heading">Matcher backend</Card.Title>
-              <Card.Text className="display-6 fw-semibold mb-0 text-uppercase">{insights.matcher}</Card.Text>
-              <Card.Text className="text-body-secondary">Active configuration</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+    <div className="flex flex-col gap-8" aria-busy={isLoading}>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="panel-card">
+          <p className="panel-heading">Canonical values</p>
+          <p className="metric-value">{insights.canonicalCount}</p>
+          <p className="metric-subtitle">Managed reference records</p>
+        </div>
+        <div className="panel-card">
+          <p className="panel-heading">Dimensions</p>
+          <p className="metric-value">{insights.uniqueDimensions}</p>
+          <p className="metric-subtitle">Distinct semantic domains</p>
+        </div>
+        <div className="panel-card">
+          <p className="panel-heading">Matcher backend</p>
+          <p className="metric-value uppercase">{insights.matcher}</p>
+          <p className="metric-subtitle">Active configuration</p>
+        </div>
+      </div>
 
-      <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-4">
+      <section className="surface-card flex flex-col gap-6">
+        <div className="space-y-2">
+          <h2 className="section-heading">Semantic match playground</h2>
+          <p className="text-sm text-slate-400">
+            Experiment with raw inputs to validate canonical coverage and scoring across dimensions.
+          </p>
+        </div>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleRunMatch();
+          }}
+          className="flex flex-col gap-4"
+        >
+          <label htmlFor="match-raw-value" className="flex flex-col gap-2">
+            <span className="form-label">Raw value</span>
+            <textarea
+              id="match-raw-value"
+              rows={3}
+              placeholder="Enter a raw data value to match"
+              value={matchInput}
+              onChange={(event) => setMatchInput(event.target.value)}
+              required
+            />
+          </label>
+          <label htmlFor="match-dimension" className="flex flex-col gap-2">
+            <span className="form-label">Dimension (optional)</span>
+            <select
+              id="match-dimension"
+              value={matchDimension}
+              onChange={(event) => setMatchDimension(event.target.value)}
+            >
+              <option value="">Use default</option>
+              {availableDimensions.map((dimension) => (
+                <option key={dimension} value={dimension}>
+                  {dimension}
+                </option>
+              ))}
+            </select>
+          </label>
           <div>
-            <Card.Title as="h2" className="section-heading h4 mb-2">
-              Semantic match playground
-            </Card.Title>
-            <Card.Text className="text-body-secondary">
-              Experiment with raw inputs to validate canonical coverage and scoring across dimensions.
-            </Card.Text>
+            <button type="submit" className="neon-button" disabled={runningMatch}>
+              {runningMatch ? (
+                <span className="flex items-center gap-2">
+                  <span
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                    role="status"
+                    aria-hidden="true"
+                  />
+                  Matching…
+                </span>
+              ) : (
+                'Run match'
+              )}
+            </button>
           </div>
-          <Form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleRunMatch();
-            }}
-            className="d-flex flex-column gap-3"
-          >
-            <Form.Group controlId="match-raw-value">
-              <Form.Label>Raw value</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={3}
-                placeholder="Enter a raw data value to match"
-                value={matchInput}
-                onChange={(event) => setMatchInput(event.target.value)}
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="match-dimension">
-              <Form.Label>Dimension (optional)</Form.Label>
-              <Form.Select value={matchDimension} onChange={(event) => setMatchDimension(event.target.value)}>
-                <option value="">Use default</option>
-                {availableDimensions.map((dimension) => (
-                  <option key={dimension} value={dimension}>
-                    {dimension}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-            <div>
-              <Button type="submit" variant="success" disabled={runningMatch}>
-                {runningMatch ? (
-                  <span className="d-inline-flex align-items-center gap-2">
-                    <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                    Matching…
-                  </span>
-                ) : (
-                  'Run match'
-                )}
-              </Button>
-            </div>
-          </Form>
-          {matchResults && (
-            <div>
-              <h3 className="h5">Matches for “{matchResults.raw_text}”</h3>
-              {renderMatches(matchResults.matches)}
-            </div>
-          )}
-        </Card.Body>
-      </Card>
+        </form>
+        {matchResults && (
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-white">Matches for “{matchResults.raw_text}”</h3>
+            {renderMatches(matchResults.matches)}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

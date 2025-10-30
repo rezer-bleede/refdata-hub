@@ -19,7 +19,7 @@ This command starts:
   and catalog items. Upserts keep every insert idempotent so the data set stays consistent
   across container restarts while still reflecting the richer schema.
 - **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`.
-- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Bootstrap 5 design system and multi-theme support.
+- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Tailwind-powered design system, custom-react-bootstrap shim, and multi-theme support.
 - **Ollama llama3 runtime** (`ollama`) delivering an offline LLM endpoint for semantic matching experiments.
 
 The reviewer UI container now ships a custom Nginx configuration that falls back to `index.html`, so deep links such as
@@ -36,6 +36,8 @@ The interface is organised into task-focused pages that surface the entire curat
   [OpenMetadata](https://open-metadata.org/), giving analysts a familiar observability workspace with responsive theme
   switching and mobile-friendly navigation. The rail now remains pinned while scrolling long datasets and can collapse on
   large displays so reviewers can reclaim horizontal space without losing orientation.
+  The redesign now leans on Tailwind CSS utility tokens rendered through a custom `react-bootstrap` compatibility layer,
+  enabling a futuristic, neon-accented experience without rewriting legacy JSX imports.
 - **Dashboard** – monitor canonical coverage and experiment with semantic suggestions in a live playground.
 - **Settings** – manage matcher thresholds, embedding defaults, and LLM connectivity in a dedicated workspace.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
