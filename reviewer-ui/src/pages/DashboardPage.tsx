@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, Col, Form, Row, Spinner, Table } from 'react-bootstrap';
 
-import { proposeMatch, updateConfig } from '../api';
+import { proposeMatch } from '../api';
 import { useAppState } from '../state/AppStateContext';
 import type {
   MatchCandidate,
@@ -14,9 +14,7 @@ interface DashboardPageProps {
 }
 
 const DashboardPage = ({ onToast }: DashboardPageProps) => {
-  const { config, setConfig, canonicalValues, isLoading } = useAppState();
-  const [configDraft, setConfigDraft] = useState<Record<string, string>>({});
-  const [savingConfig, setSavingConfig] = useState(false);
+  const { config, canonicalValues, isLoading } = useAppState();
   const [matchInput, setMatchInput] = useState('');
   const [matchDimension, setMatchDimension] = useState('');
   const [matchResults, setMatchResults] = useState<MatchResponse | null>(null);
@@ -40,36 +38,6 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
       matcher: config?.matcher_backend ?? '—',
     };
   }, [availableDimensions, canonicalValues.length, config?.matcher_backend]);
-
-  const handleConfigChange = (key: string, value: string) => {
-    setConfigDraft((draft) => ({ ...draft, [key]: value }));
-  };
-
-  const handleSaveConfig = async () => {
-    if (!config) return;
-    setSavingConfig(true);
-    try {
-      const payload: Record<string, string | number> = {};
-      Object.entries(configDraft).forEach(([key, value]) => {
-        if (value !== '') {
-          if (key === 'match_threshold' || key === 'top_k') {
-            payload[key] = Number(value);
-          } else {
-            payload[key] = value;
-          }
-        }
-      });
-      const updated = await updateConfig(payload);
-      setConfig(() => updated);
-      setConfigDraft({});
-      onToast({ type: 'success', content: 'Configuration updated.' });
-    } catch (error: unknown) {
-      console.error(error);
-      onToast({ type: 'error', content: 'Unable to update configuration.' });
-    } finally {
-      setSavingConfig(false);
-    }
-  };
 
   const handleRunMatch = async () => {
     if (!matchInput.trim()) {
@@ -150,110 +118,6 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
           </Card>
         </Col>
       </Row>
-
-      <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-4">
-          <div>
-            <Card.Title as="h2" className="section-heading h4 mb-2">
-              System configuration
-            </Card.Title>
-            <Card.Text className="text-body-secondary">
-              Fine-tune the matcher and default behaviours. Changes take effect immediately after saving.
-            </Card.Text>
-          </div>
-          {config && (
-            <Form
-              onSubmit={(event) => {
-                event.preventDefault();
-                void handleSaveConfig();
-              }}
-              className="row g-3"
-            >
-              <Form.Group as={Col} md={6} controlId="config-default-dimension">
-                <Form.Label>Default dimension</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="e.g. region"
-                  defaultValue={config.default_dimension}
-                  onChange={(event) => handleConfigChange('default_dimension', event.target.value)}
-                />
-              </Form.Group>
-              <Form.Group as={Col} md={3} controlId="config-match-threshold">
-                <Form.Label>Match threshold</Form.Label>
-                <Form.Control
-                  type="number"
-                  min={0}
-                  max={1}
-                  step="0.05"
-                  defaultValue={config.match_threshold}
-                  onChange={(event) => handleConfigChange('match_threshold', event.target.value)}
-                />
-              </Form.Group>
-              <Form.Group as={Col} md={3} controlId="config-top-k">
-                <Form.Label>Top K results</Form.Label>
-                <Form.Control
-                  type="number"
-                  min={1}
-                  max={20}
-                  defaultValue={config.top_k}
-                  onChange={(event) => handleConfigChange('top_k', event.target.value)}
-                />
-              </Form.Group>
-              <Form.Group as={Col} md={6} controlId="config-embedding-model">
-                <Form.Label>Embedding model</Form.Label>
-                <Form.Control
-                  type="text"
-                  defaultValue={config.embedding_model}
-                  onChange={(event) => handleConfigChange('embedding_model', event.target.value)}
-                />
-              </Form.Group>
-              <Form.Group as={Col} md={6} controlId="config-llm-mode">
-                <Form.Label>LLM mode</Form.Label>
-                <Form.Select
-                  defaultValue={config.llm_mode}
-                  onChange={(event) => handleConfigChange('llm_mode', event.target.value)}
-                >
-                  <option value="online">Online API (OpenAI compatible)</option>
-                  <option value="offline">Offline Ollama (llama3)</option>
-                </Form.Select>
-                <Form.Text className="text-body-secondary">
-                  Choose between the hosted API endpoint and the bundled Ollama service.
-                </Form.Text>
-              </Form.Group>
-              <Form.Group as={Col} md={6} controlId="config-llm-model">
-                <Form.Label>LLM model</Form.Label>
-                <Form.Control
-                  type="text"
-                  placeholder="gpt-4o-mini"
-                  defaultValue={config.llm_model ?? ''}
-                  onChange={(event) => handleConfigChange('llm_model', event.target.value)}
-                />
-              </Form.Group>
-              <Form.Group as={Col} md={6} controlId="config-llm-api-base">
-                <Form.Label>LLM API base URL</Form.Label>
-                <Form.Control
-                  type="url"
-                  placeholder="https://api.openai.com/v1"
-                  defaultValue={config.llm_api_base ?? ''}
-                  onChange={(event) => handleConfigChange('llm_api_base', event.target.value)}
-                />
-              </Form.Group>
-              <Col xs={12} className="d-flex justify-content-end">
-                <Button type="submit" variant="primary" disabled={savingConfig}>
-                  {savingConfig ? (
-                    <span className="d-inline-flex align-items-center gap-2">
-                      <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
-                      Saving…
-                    </span>
-                  ) : (
-                    'Save configuration'
-                  )}
-                </Button>
-              </Col>
-            </Form>
-          )}
-        </Card.Body>
-      </Card>
 
       <Card className="card-section">
         <Card.Body className="d-flex flex-column gap-4">

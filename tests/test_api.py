@@ -863,6 +863,12 @@ def test_source_connection_metadata_and_existing_test() -> None:
         assert create_response.status_code == 201
         connection_id = create_response.json()["id"]
 
+        detail_response = client.get(f"/api/source/connections/{connection_id}")
+        assert detail_response.status_code == 200
+        detail = detail_response.json()
+        assert detail["name"] == "warehouse-sqlite"
+        assert detail["database"].endswith("source.db")
+
         tables_response = client.get(f"/api/source/connections/{connection_id}/tables")
         assert tables_response.status_code == 200
         tables = tables_response.json()

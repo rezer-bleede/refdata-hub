@@ -7,13 +7,14 @@
 - Provide multilingual metadata to support future international roll-outs.
 - Model parent/child relationships between dimensions (e.g., region → district) and capture the canonical value pairings needed for drill-down analytics.
 - Inspect connected source systems in real time—connection records can be tested inline and their available tables/columns are
-  introspected to drive the mapping workflows without manual lookups.
+  introspected to drive the mapping workflows without manual lookups. Analysts can now open a detailed explorer per connection
+  to review schemas, objects, column profiles, match statistics, and captured sample values before curating mappings.
 
 ## 2. Semantic Matching
 - Use NLP and embedding models to suggest standardized values for new raw inputs.
 - Allow configurable confidence thresholds that determine when to auto-apply suggestions.
 - Route low-confidence matches for manual review to ensure data quality.
-- Operate in offline mode via the bundled Ollama llama3 runtime or switch to a hosted OpenAI-compatible endpoint directly from the reviewer dashboard.
+- Operate in offline mode via the bundled Ollama llama3 runtime or switch to a hosted OpenAI-compatible endpoint from the dedicated settings workspace, which centralises matcher thresholds, embedding defaults, and credential inputs.
 
 ## 3. Review & Approval Workflow
 - Offer UI and API pathways for reviewers to approve or reject suggestions.

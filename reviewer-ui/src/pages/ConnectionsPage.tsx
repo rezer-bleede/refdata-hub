@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Card, Col, Form, Modal, Row, Spinner, Table } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 import {
   createSourceConnection,
@@ -401,6 +402,12 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                       <td className="text-monospaced">{new Date(connection.updated_at).toLocaleString()}</td>
                       <td className="text-end">
                         <div className="d-inline-flex gap-2">
+                          <Link
+                            to={`/connections/${connection.id}`}
+                            className="btn btn-sm btn-primary"
+                          >
+                            View
+                          </Link>
                           <Button
                             size="sm"
                             variant="outline-secondary"
