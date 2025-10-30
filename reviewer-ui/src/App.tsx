@@ -55,6 +55,8 @@ const AppScaffold = ({
   const { config, isLoading, loadError, refresh } = useAppState();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const sidebarId = 'app-primary-navigation';
 
   const handleRefresh = useCallback(async () => {
     const ok = await refresh();
@@ -80,9 +82,19 @@ const AppScaffold = ({
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    if (isSidebarOpen) {
+      setIsSidebarCollapsed(false);
+    }
+  }, [isSidebarOpen]);
+
   return (
     <div className={`app-shell theme-${themeChoice}`}>
-      <aside className={`app-sidebar ${isSidebarOpen ? 'is-open' : ''}`} aria-label="Primary navigation">
+      <aside
+        id={sidebarId}
+        className={`app-sidebar${isSidebarOpen ? ' is-open' : ''}${isSidebarCollapsed ? ' is-collapsed' : ''}`}
+        aria-label="Primary navigation"
+      >
         <Link to="/dashboard" className="app-sidebar__brand" onClick={() => setIsSidebarOpen(false)}>
           <span className="app-sidebar__brand-mark" aria-hidden />
           <span className="app-sidebar__brand-text">
@@ -90,6 +102,20 @@ const AppScaffold = ({
             <span className="app-sidebar__brand-subtitle">Metadata stewardship workspace</span>
           </span>
         </Link>
+        <Button
+          variant="outline-light"
+          size="sm"
+          className="app-sidebar__collapse-toggle d-none d-lg-inline-flex"
+          onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+          aria-controls={sidebarId}
+          aria-expanded={!isSidebarCollapsed}
+          aria-label={isSidebarCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
+        >
+          <span aria-hidden="true">{isSidebarCollapsed ? '»' : '«'}</span>
+          <span className="visually-hidden">
+            {isSidebarCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
+          </span>
+        </Button>
         <nav className="app-sidebar__nav">
           {navItems.map((item) => (
             <NavLink
@@ -97,9 +123,11 @@ const AppScaffold = ({
               to={item.path}
               className={({ isActive }) => `app-nav-link${isActive ? ' active' : ''}`}
               onClick={() => setIsSidebarOpen(false)}
+              aria-label={item.label}
+              title={item.label}
             >
               <span className="app-nav-indicator" aria-hidden />
-              <span>{item.label}</span>
+              <span className="app-nav-label">{item.label}</span>
             </NavLink>
           ))}
         </nav>

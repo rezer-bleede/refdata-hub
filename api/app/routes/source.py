@@ -359,7 +359,7 @@ def list_samples(
     source_table: str | None = Query(default=None),
     source_field: str | None = Query(default=None),
     session: Session = Depends(get_session),
-) -> List[SourceSample]:
+) -> List[SourceSampleRead]:
     _require_connection(session, connection_id)
     statement = select(SourceSample).where(
         SourceSample.source_connection_id == connection_id
@@ -372,7 +372,27 @@ def list_samples(
     statement = statement.order_by(
         SourceSample.source_table, SourceSample.source_field, SourceSample.raw_value
     )
-    return session.exec(statement).all()
+
+    samples = session.exec(statement).all()
+
+    aggregated: dict[tuple[str, str, str], SourceSampleRead] = {}
+    for sample in samples:
+        key = (sample.source_table, sample.source_field, sample.raw_value)
+        existing = aggregated.get(key)
+        if existing is None:
+            aggregated[key] = SourceSampleRead.model_validate(sample)
+            continue
+
+        existing.occurrence_count += sample.occurrence_count
+        if sample.dimension and not existing.dimension:
+            existing.dimension = sample.dimension
+        if sample.last_seen_at > existing.last_seen_at:
+            existing.last_seen_at = sample.last_seen_at
+
+    return sorted(
+        aggregated.values(),
+        key=lambda item: (-item.occurrence_count, item.raw_value.lower()),
+    )
 
 
 @router.post(
