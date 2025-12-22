@@ -79,3 +79,16 @@ expect(onThemeChange).toHaveBeenCalledWith('light');
 ```
 
 This preserves full access to Vitest's assertion helpers while ensuring the JSX props satisfy the strict component typings.
+
+## 8. Resolve TypeScript textarea typing errors in the Reviewer UI
+
+If `npm run build` fails with errors like:
+
+```
+Type 'ChangeEventHandler<HTMLInputElement>' is not assignable to type 'ChangeEventHandler<HTMLTextAreaElement>'
+```
+
+ensure that multiline fields are rendered through the custom `Form.Control` shim using `as="textarea"` and that the shim
+accepts textarea-specific props. The current implementation in `reviewer-ui/src/react-bootstrap.tsx` narrows props based on the
+`as` value, so `onChange`, `rows`, and related attributes are correctly typed. After updating, rerun `npm run build` to confirm
+the frontend bundle succeeds.
