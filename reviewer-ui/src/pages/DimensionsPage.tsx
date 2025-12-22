@@ -3,6 +3,7 @@ import { Fragment, useMemo, useState } from 'react';
 import {
   createDimension,
   deleteDimension,
+  fetchDimensions,
   updateDimension,
 } from '../api';
 import { useAppState } from '../state/AppStateContext';
@@ -60,6 +61,11 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
   const sortedDimensions = useMemo(() => {
     return [...dimensions].sort((a, b) => a.label.localeCompare(b.label));
   }, [dimensions]);
+
+  const refreshDimensions = async () => {
+    const next = await fetchDimensions();
+    updateDimensions(next);
+  };
 
   const openCreateModal = () => {
     setEditing(null);
@@ -140,7 +146,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
         await createDimension(payload as DimensionCreatePayload);
         onToast({ type: 'success', content: 'Dimension created.' });
       }
-      await updateDimensions();
+      await refreshDimensions();
       resetEditor();
     } catch (error: unknown) {
       console.error(error);
@@ -155,7 +161,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
     setIsSubmitting(true);
     try {
       await deleteDimension(deleteTarget.code);
-      await updateDimensions();
+      await refreshDimensions();
       setDeleteTarget(null);
       onToast({ type: 'success', content: 'Dimension deleted.' });
     } catch (error: unknown) {

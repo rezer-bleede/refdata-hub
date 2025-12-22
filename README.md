@@ -155,6 +155,10 @@ accepts them as valid `AppScaffold` props while still exposing rich assertion he
 covers the new dimension governance and relation workspaces, ensuring the shared toast and routing scaffolding continue to
 operate as the UI grows.
 
+The `reviewer-ui/src/react-bootstrap.tsx` shim now models both input and textarea props explicitly. When you need a multiline
+field, pass `as="textarea"` plus an optional `rows` count so TypeScript can validate the component and the runtime renders the
+expected `<textarea>` element.
+
 The new Reviewer UI deployment checks verify that the custom Nginx configuration is copied into the container image and that it
 rewrites unknown application routes back to `index.html`. This prevents regressions where client-side routes return HTTP 404s
 after a page refresh.

@@ -8,6 +8,7 @@ type Variant =
   | 'outline-light'
   | 'outline-secondary'
   | 'outline-primary'
+  | 'outline-success'
   | 'outline-danger'
   | 'success'
   | 'danger';
@@ -19,7 +20,11 @@ type ButtonProps = Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'size'> &
   size?: ButtonSize;
 };
 
-type BadgeVariant = 'info' | 'secondary' | 'dark' | 'success' | 'warning';
+type CardProps = React.HTMLAttributes<HTMLDivElement> & {
+  body?: boolean;
+};
+
+type BadgeVariant = 'info' | 'primary' | 'secondary' | 'dark' | 'success' | 'warning';
 
 type RowProps = React.HTMLAttributes<HTMLDivElement> & {
   xs?: number;
@@ -39,13 +44,13 @@ type ColProps = React.HTMLAttributes<HTMLDivElement> & {
 
 type FormGroupProps = React.HTMLAttributes<HTMLDivElement> & {
   controlId?: string;
-  as?: any;
+  as?: React.ElementType;
+  [key: string]: unknown;
 };
 
-type FormControlProps = React.InputHTMLAttributes<HTMLInputElement> & {
-  as?: 'textarea';
-  rows?: number;
-};
+type FormControlProps =
+  | ({ as?: undefined } & React.InputHTMLAttributes<HTMLInputElement>)
+  | ({ as: 'textarea'; rows?: number } & React.TextareaHTMLAttributes<HTMLTextAreaElement>);
 
 type FormSelectProps = React.SelectHTMLAttributes<HTMLSelectElement>;
 
@@ -64,6 +69,7 @@ const buttonVariantClass: Record<Variant, string> = {
   'outline-primary': 'btn-secondary',
   'outline-light': 'btn-secondary',
   'outline-secondary': 'btn-secondary',
+  'outline-success': 'btn-secondary',
   'outline-danger': 'btn-danger',
   danger: 'btn-danger',
 };
@@ -104,22 +110,25 @@ export const Spinner = ({ className, size = 'md', ...props }: SpinnerProps) => {
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   bg?: BadgeVariant;
   text?: 'dark' | 'light';
+  pill?: boolean;
 }
 
 const badgeVariantClass: Record<BadgeVariant, string> = {
   info: 'bg-aurora/10 border border-aurora/40 text-aurora',
+  primary: 'bg-aurora/10 border border-aurora/40 text-aurora',
   secondary: 'bg-slate-800/70 border border-slate-700/60 text-slate-200',
   dark: 'bg-slate-950/80 border border-slate-700/60 text-slate-200',
   success: 'bg-emerald-500/10 border border-emerald-400/40 text-emerald-200',
   warning: 'bg-amber-500/10 border border-amber-400/40 text-amber-200',
 };
 
-export const Badge = ({ bg = 'info', text, className, children, ...props }: BadgeProps) => (
+export const Badge = ({ bg = 'info', text, pill, className, children, ...props }: BadgeProps) => (
   <span
     className={cx(
       'inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.3em]',
       badgeVariantClass[bg],
       text === 'dark' && 'text-slate-900',
+      pill && 'rounded-full',
       className,
     )}
     {...props}
@@ -129,9 +138,7 @@ export const Badge = ({ bg = 'info', text, className, children, ...props }: Badg
 );
 
 export const Card = Object.assign(
-  ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-    <div className={cx('surface-card', className)} {...props} />
-  ),
+  ({ className, body: _body, ...props }: CardProps) => <div className={cx('surface-card', className)} {...props} />,
   {
     Body: ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
       <div className={cx('flex flex-col gap-4', className)} {...props} />
@@ -151,9 +158,20 @@ export const Card = Object.assign(
   },
 );
 
-export const InputGroup = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cx('flex items-stretch gap-2', className)} {...props} />
-);
+type InputGroupComponent = ((props: React.HTMLAttributes<HTMLDivElement>) => JSX.Element) & {
+  Text: (props: React.HTMLAttributes<HTMLSpanElement>) => JSX.Element;
+};
+
+export const InputGroup = Object.assign(
+  ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+    <div className={cx('flex items-stretch gap-2', className)} {...props} />
+  ),
+  {
+    Text: ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
+      <span className={cx('inline-flex items-center px-3 text-sm text-slate-400', className)} {...props} />
+    ),
+  },
+) as InputGroupComponent;
 
 const columnClassMap: Record<number, string> = {
   1: 'grid-cols-1',
@@ -170,7 +188,7 @@ const columnClassMap: Record<number, string> = {
   12: 'grid-cols-12',
 };
 
-const responsiveColumnClassMap = {
+const responsiveColumnClassMap: Record<'sm' | 'md' | 'lg' | 'xl', Record<number, string>> = {
   sm: {
     1: 'sm:grid-cols-1',
     2: 'sm:grid-cols-2',
@@ -227,7 +245,7 @@ const responsiveColumnClassMap = {
     11: 'xl:grid-cols-11',
     12: 'xl:grid-cols-12',
   },
-} as const;
+};
 
 const spanClassMap: Record<number, string> = {
   1: 'col-span-1',
@@ -244,7 +262,7 @@ const spanClassMap: Record<number, string> = {
   12: 'col-span-12',
 };
 
-const responsiveSpanClassMap = {
+const responsiveSpanClassMap: Record<'sm' | 'md' | 'lg' | 'xl', Record<number, string>> = {
   sm: {
     1: 'sm:col-span-1',
     2: 'sm:col-span-2',
@@ -301,7 +319,7 @@ const responsiveSpanClassMap = {
     11: 'xl:col-span-11',
     12: 'xl:col-span-12',
   },
-} as const;
+};
 
 export const Row = ({ xs = 12, sm, md, lg, xl, className, ...props }: RowProps) => {
   const classes = ['grid', 'gap-4', columnClassMap[xs] ?? 'grid-cols-12'];
@@ -322,12 +340,21 @@ export const Col = ({ xs, sm, md, lg, xl, className, ...props }: ColProps) => {
   return <div className={cx(...classes, className)} {...props} />;
 };
 
+type FormComponent = ((props: React.FormHTMLAttributes<HTMLFormElement>) => JSX.Element) & {
+  Group: (props: FormGroupProps) => JSX.Element;
+  Label: (props: React.LabelHTMLAttributes<HTMLLabelElement>) => JSX.Element;
+  Control: (props: FormControlProps) => JSX.Element;
+  Select: (props: FormSelectProps & { id?: string }) => JSX.Element;
+  Text: (props: React.HTMLAttributes<HTMLElement>) => JSX.Element;
+  Check: (props: FormCheckProps) => JSX.Element;
+};
+
 export const Form = Object.assign(
   ({ className, ...props }: React.FormHTMLAttributes<HTMLFormElement>) => (
     <form className={className} {...props} />
   ),
   {
-    Group: ({ className, controlId, as: Component = 'div', ...props }: FormGroupProps & { as?: any }) => (
+    Group: ({ className, controlId, as: Component = 'div', ...props }: FormGroupProps) => (
       <FormContext.Provider value={controlId}>
         <Component className={cx('flex flex-col gap-2', className)} {...props} />
       </FormContext.Provider>
@@ -340,10 +367,23 @@ export const Form = Object.assign(
       const controlId = useContext(FormContext);
       const controlIdOrProvided = id ?? controlId;
       if (as === 'textarea') {
-        const { rows, ...rest } = props;
-        return <textarea id={controlIdOrProvided} className={cx('form-control', className)} rows={rows ?? 3} {...rest} />;
+        const { rows, ...rest } = props as React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+        return (
+          <textarea
+            id={controlIdOrProvided}
+            className={cx('form-control', className)}
+            rows={rows ?? 3}
+            {...rest}
+          />
+        );
       }
-      return <input id={controlIdOrProvided} className={cx('form-control', className)} {...props} />;
+      return (
+        <input
+          id={controlIdOrProvided}
+          className={cx('form-control', className)}
+          {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
+        />
+      );
     },
     Select: ({ className, children, id, ...props }: FormSelectProps & { id?: string }) => {
       const controlId = useContext(FormContext);
@@ -363,7 +403,7 @@ export const Form = Object.assign(
       </label>
     ),
   },
-);
+) as FormComponent;
 
 interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
   striped?: boolean;
@@ -393,11 +433,31 @@ export const Table = ({ striped, bordered, hover, responsive, size, className, c
   return table;
 };
 
-export const ProgressBar = ({ now = 0, className }: { now?: number; className?: string }) => (
+type ProgressVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+
+const progressVariantClass: Record<ProgressVariant, string> = {
+  primary: 'from-aurora to-neon',
+  secondary: 'from-slate-500 to-slate-400',
+  success: 'from-emerald-400 to-emerald-300',
+  warning: 'from-amber-400 to-amber-300',
+  danger: 'from-rose-500 to-rose-400',
+};
+
+export const ProgressBar = ({
+  now = 0,
+  className,
+  variant = 'primary',
+  style,
+}: {
+  now?: number;
+  className?: string;
+  variant?: ProgressVariant;
+  style?: CSSProperties;
+}) => (
   <div className={cx('h-2 w-full overflow-hidden rounded-full bg-slate-800/60', className)}>
     <div
-      className="h-full rounded-full bg-gradient-to-r from-aurora to-neon"
-      style={{ width: `${Math.min(100, Math.max(0, now))}%` }}
+      className={cx('h-full rounded-full bg-gradient-to-r', progressVariantClass[variant])}
+      style={{ width: `${Math.min(100, Math.max(0, now))}%`, ...style }}
     />
   </div>
 );
@@ -414,6 +474,7 @@ interface ModalProps {
   onHide?: () => void;
   size?: 'sm' | 'lg' | 'xl';
   centered?: boolean;
+  backdrop?: boolean | 'static';
   children: ReactNode;
 }
 
@@ -474,9 +535,25 @@ export const Breadcrumb = Object.assign(
     </nav>
   ),
   {
-    Item: ({ active, href, children }: { active?: boolean; href?: string; children: ReactNode }) => (
+    Item: ({
+      active,
+      href,
+      onClick,
+      linkAs,
+      children,
+    }: {
+      active?: boolean;
+      href?: string;
+      onClick?: () => void;
+      linkAs?: 'button' | 'a';
+      children: ReactNode;
+    }) => (
       <li className="flex items-center gap-2">
-        {href && !active ? (
+        {!active && (linkAs === 'button' || onClick) ? (
+          <button type="button" onClick={onClick} className="text-slate-300 transition hover:text-white">
+            {children}
+          </button>
+        ) : href && !active ? (
           <a href={href} className="text-slate-300 transition hover:text-white">
             {children}
           </a>
