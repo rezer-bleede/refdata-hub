@@ -12,6 +12,7 @@ docker compose up --build
 
 This command starts:
 
+
 - **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults.
 - **Target Demo Postgres** (`targetdb`) populated with a realistic customer, order, and product
   warehouse for mapping demos and tests. The dataset now spans departments, employees,
