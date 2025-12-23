@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, Card, Form, ProgressBar, Spinner } from 'react-bootstrap';
 
 import { fetchFieldMappings, fetchMatchStatistics, fetchSourceConnections } from '../api';
+import { useAppState } from '../state/AppStateContext';
 import type { FieldMatchStats, MatchCandidate, SourceConnection, ToastMessage } from '../types';
 
 interface MatchInsightsPageProps {
@@ -29,6 +30,7 @@ const renderSuggestions = (suggestions: MatchCandidate[]) => {
 };
 
 const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
+  const { refreshToken } = useAppState();
   const [connections, setConnections] = useState<SourceConnection[]>([]);
   const [selectedConnectionId, setSelectedConnectionId] = useState<number | ''>('');
   const [stats, setStats] = useState<FieldMatchStats[]>([]);
@@ -96,7 +98,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
     } else {
       setStats([]);
     }
-  }, [selectedConnectionId, loadStats]);
+  }, [selectedConnectionId, loadStats, refreshToken]);
 
   const overallTotals = useMemo(() => {
     const totals = stats.reduce(

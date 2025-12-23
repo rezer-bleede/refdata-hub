@@ -19,6 +19,7 @@ vi.mock('./state/AppStateContext', () => ({
     dimensions: [],
     isLoading: mockIsLoading,
     loadError: mockLoadError,
+    refreshToken: 0,
     refresh: refreshMock,
     updateDimensions: vi.fn(),
   }),

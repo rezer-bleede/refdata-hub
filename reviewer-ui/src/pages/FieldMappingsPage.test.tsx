@@ -11,6 +11,7 @@ const apiMocks = vi.hoisted(() => ({
 }));
 
 vi.mock('../api', () => ({
+  captureMappingSamples: vi.fn(),
   createFieldMapping: vi.fn(),
   deleteFieldMapping: vi.fn(),
   fetchFieldMappings: apiMocks.fetchFieldMappings,

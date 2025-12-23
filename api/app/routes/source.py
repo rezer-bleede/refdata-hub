@@ -46,6 +46,7 @@ from ..services.source_connections import (
     list_fields as service_list_fields,
     list_tables as service_list_tables,
     merge_settings,
+    sample_field_values as service_sample_field_values,
     settings_from_payload,
     test_connection as service_test_connection,
 )
@@ -66,6 +67,14 @@ def _require_connection(session: Session, connection_id: int) -> SourceConnectio
     if not connection:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connection not found")
     return connection
+
+
+def _split_table_identifier(identifier: str) -> tuple[str, str | None]:
+    if "." in identifier:
+        schema, name = identifier.split(".", 1)
+        if name:
+            return name.strip('"'), schema.strip('"') or None
+    return identifier.strip('"'), None
 
 
 def _load_canonical_values(
@@ -348,6 +357,69 @@ def delete_field_mapping(
     session.delete(mapping)
     session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/connections/{connection_id}/mappings/{mapping_id}/capture",
+    response_model=List[SourceSampleRead],
+    status_code=status.HTTP_201_CREATED,
+)
+def capture_mapping_samples(
+    connection_id: int,
+    mapping_id: int,
+    session: Session = Depends(get_session),
+) -> List[SourceSample]:
+    connection = _require_connection(session, connection_id)
+    mapping = session.get(SourceFieldMapping, mapping_id)
+    if not mapping or mapping.source_connection_id != connection.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Mapping not found")
+
+    settings = merge_settings(connection)
+    table_name, schema = _split_table_identifier(mapping.source_table)
+    try:
+        sampled_values = service_sample_field_values(
+            settings,
+            table_name,
+            mapping.source_field,
+            schema=schema,
+            limit=100,
+        )
+    except SourceConnectionServiceError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    now = datetime.now(timezone.utc)
+    updated: list[SourceSample] = []
+    for raw_value, occurrence_count in sampled_values:
+        statement = select(SourceSample).where(
+            and_(
+                SourceSample.source_connection_id == connection.id,
+                SourceSample.source_table == mapping.source_table,
+                SourceSample.source_field == mapping.source_field,
+                SourceSample.raw_value == raw_value,
+            )
+        )
+        sample = session.exec(statement).first()
+        if sample:
+            sample.occurrence_count = occurrence_count
+            sample.dimension = mapping.ref_dimension
+            sample.last_seen_at = now
+        else:
+            sample = SourceSample(
+                source_connection_id=connection.id,
+                source_table=mapping.source_table,
+                source_field=mapping.source_field,
+                dimension=mapping.ref_dimension,
+                raw_value=raw_value,
+                occurrence_count=occurrence_count,
+                last_seen_at=now,
+            )
+        session.add(sample)
+        updated.append(sample)
+
+    session.commit()
+    for sample in updated:
+        session.refresh(sample)
+    return updated
 
 
 @router.get(

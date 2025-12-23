@@ -1,7 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import MatchInsightsPage from './MatchInsightsPage';
+
+let mockRefreshToken = 0;
 
 const apiMocks = vi.hoisted(() => ({
   fetchFieldMappings: vi.fn(),
@@ -15,7 +17,46 @@ vi.mock('../api', () => ({
   fetchSourceConnections: apiMocks.fetchSourceConnections,
 }));
 
+vi.mock('../state/AppStateContext', () => ({
+  useAppState: () => ({
+    refreshToken: mockRefreshToken,
+  }),
+}));
+
 describe('MatchInsightsPage empty-state messaging', () => {
+  beforeEach(() => {
+    mockRefreshToken = 0;
+    vi.clearAllMocks();
+  });
+  it('refreshes match insights when the global sync token changes', async () => {
+    apiMocks.fetchSourceConnections.mockResolvedValue([
+      {
+        id: 1,
+        name: 'Target Demo Warehouse',
+        db_type: 'postgres',
+        host: 'localhost',
+        port: 5432,
+        database: 'targetdb',
+        username: 'svc',
+        options: null,
+        created_at: '',
+        updated_at: '',
+      },
+    ]);
+    apiMocks.fetchMatchStatistics.mockResolvedValue([]);
+    apiMocks.fetchFieldMappings.mockResolvedValue([]);
+
+    const onToast = vi.fn();
+    const { rerender } = render(<MatchInsightsPage onToast={onToast} />);
+
+    await waitFor(() => expect(apiMocks.fetchMatchStatistics).toHaveBeenCalledTimes(1));
+
+    mockRefreshToken = 1;
+    rerender(<MatchInsightsPage onToast={onToast} />);
+
+    await waitFor(() => expect(apiMocks.fetchMatchStatistics).toHaveBeenCalledTimes(2));
+  });
+
   it('falls back to field mappings when match stats are empty', async () => {
     apiMocks.fetchSourceConnections.mockResolvedValue([
       {

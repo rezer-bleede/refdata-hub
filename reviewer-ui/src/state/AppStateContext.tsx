@@ -21,6 +21,7 @@ interface AppStateValue {
   dimensions: DimensionDefinition[];
   isLoading: boolean;
   loadError: string | null;
+  refreshToken: number;
   refresh: () => Promise<boolean>;
   setConfig: (updater: SystemConfig | null | ((prev: SystemConfig | null) => SystemConfig | null)) => void;
   updateCanonicalValues: (
@@ -47,6 +48,7 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
   const [dimensions, setDimensions] = useState<DimensionDefinition[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0);
 
   const refresh = useCallback(async (): Promise<boolean> => {
     setIsLoading(true);
@@ -86,6 +88,7 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
     }
 
     setIsLoading(false);
+    setRefreshToken((value) => value + 1);
 
     if (errors.length) {
       const joined = errors.length === 2 ? errors.join(' and ') : errors[0];
@@ -108,6 +111,7 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
       dimensions,
       isLoading,
       loadError,
+      refreshToken,
       refresh,
       setConfig: (updater) => {
         setConfig((prev) =>
@@ -131,7 +135,7 @@ export const AppStateProvider = ({ children }: PropsWithChildren) => {
         });
       },
     }),
-    [canonicalValues, config, dimensions, isLoading, loadError, refresh],
+    [canonicalValues, config, dimensions, isLoading, loadError, refresh, refreshToken],
   );
 
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>;

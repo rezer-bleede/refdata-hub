@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Optional
 from urllib.parse import urlencode
 
-from sqlalchemy import inspect, text
+from sqlalchemy import MetaData, Table, func, inspect, select, text
 from sqlalchemy.engine import URL
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import create_engine
@@ -274,6 +274,55 @@ def list_fields(
 
     fields.sort(key=lambda item: item["name"])
     return fields
+
+
+def sample_field_values(
+    settings: ConnectionSettings,
+    table_name: str,
+    field_name: str,
+    schema: Optional[str],
+    limit: int = 100,
+) -> list[tuple[str, int]]:
+    try:
+        engine, parsed = _create_engine(settings)
+    except SourceConnectionServiceError:
+        raise
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.debug("Failed to initialise engine for sample capture", exc_info=exc)
+        raise SourceConnectionServiceError(str(exc)) from exc
+
+    target_schema = schema if schema is not None else parsed.schema
+
+    try:
+        metadata = MetaData(schema=target_schema)
+        table = Table(table_name, metadata, autoload_with=engine, schema=target_schema)
+        if field_name not in table.c:
+            raise SourceConnectionServiceError(
+                f"Field '{field_name}' not found on {table_name}."
+            )
+        column = table.c[field_name]
+        query = (
+            select(column.label("raw_value"), func.count().label("occurrence_count"))
+            .select_from(table)
+            .where(column.is_not(None))
+            .group_by(column)
+            .order_by(func.count().desc())
+            .limit(limit)
+        )
+        with engine.connect() as connection:
+            rows = connection.execute(query).fetchall()
+    except SQLAlchemyError as exc:
+        logger.debug(
+            "Failed to sample values for %s.%s",
+            table_name,
+            field_name,
+            exc_info=exc,
+        )
+        raise SourceConnectionServiceError(str(exc)) from exc
+    finally:
+        engine.dispose()
+
+    return [(str(row.raw_value), int(row.occurrence_count)) for row in rows]
 
 
 def merge_settings(

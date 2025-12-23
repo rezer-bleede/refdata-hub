@@ -399,6 +399,15 @@ export async function deleteFieldMapping(connectionId: number, mappingId: number
   await apiFetchVoid(`/api/source/connections/${connectionId}/mappings/${mappingId}`, { method: 'DELETE' });
 }
 
+export async function captureMappingSamples(
+  connectionId: number,
+  mappingId: number,
+): Promise<SourceSample[]> {
+  return apiFetchJson<SourceSample[]>(`/api/source/connections/${connectionId}/mappings/${mappingId}/capture`, {
+    method: 'POST',
+  });
+}
+
 export async function ingestSamples(
   connectionId: number,
   source_table: string,
