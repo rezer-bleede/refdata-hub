@@ -53,7 +53,8 @@ The interface is organised into task-focused pages that surface the entire curat
   Available tables and columns are now surfaced directly from the connected database so analysts can choose valid metadata from
   dropdowns instead of typing freeform text.
 - **Match Insights** – visualise match rates per mapping, inspect top outliers, and track overall harmonisation health, with
-  clear empty states when no samples have been captured yet.
+  clear empty states when no samples have been captured yet and fallback insights that stay visible from configured
+  field mappings even before statistics are available.
 - **Suggestions** – approve semantic suggestions or manually link raw values to canonical standards.
 - **Mapping History** – audit every approved mapping, edit or retire entries, and export a normalised view per connection.
 

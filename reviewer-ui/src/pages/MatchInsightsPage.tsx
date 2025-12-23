@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge, Card, Form, ProgressBar, Spinner } from 'react-bootstrap';
 
-import { fetchMatchStatistics, fetchSourceConnections } from '../api';
+import { fetchFieldMappings, fetchMatchStatistics, fetchSourceConnections } from '../api';
 import type { FieldMatchStats, MatchCandidate, SourceConnection, ToastMessage } from '../types';
 
 interface MatchInsightsPageProps {
@@ -52,7 +52,30 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
       setLoading(true);
       try {
         const response = await fetchMatchStatistics(connectionId);
-        setStats(response);
+        if (response.length) {
+          setStats(response);
+          return;
+        }
+
+        const mappings = await fetchFieldMappings(connectionId);
+        if (mappings.length) {
+          setStats(
+            mappings.map((mapping) => ({
+              mapping_id: mapping.id ?? 0,
+              source_table: mapping.source_table,
+              source_field: mapping.source_field,
+              ref_dimension: mapping.ref_dimension,
+              total_values: 0,
+              matched_values: 0,
+              unmatched_values: 0,
+              match_rate: 0,
+              top_unmatched: [],
+            })),
+          );
+          return;
+        }
+
+        setStats([]);
       } catch (error) {
         console.error(error);
         onToast({ type: 'error', content: 'Unable to compute match statistics.' });
