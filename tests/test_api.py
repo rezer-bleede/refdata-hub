@@ -879,6 +879,67 @@ def test_source_sample_endpoint_returns_distinct_values() -> None:
 
     assert bob["occurrence_count"] == 2
     assert bob["dimension"] is None
+
+
+def test_capture_mapping_samples_ingests_source_values() -> None:
+    client = build_test_client()
+    db_path, temp_dir = create_sqlite_source()
+    try:
+        connection = sqlite3.connect(db_path)
+        try:
+            cursor = connection.cursor()
+            cursor.executemany(
+                "INSERT INTO customers (name, email) VALUES (?, ?)",
+                [
+                    ("Alice", "alice@example.com"),
+                    ("Bob", "bob@example.com"),
+                    ("Bob", "bob@example.com"),
+                ],
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        connection_response = client.post(
+            "/api/source/connections",
+            json={
+                "name": "sqlite-warehouse",
+                "db_type": "sqlite",
+                "host": "localhost",
+                "port": 5432,
+                "database": str(db_path),
+                "username": "ignored",
+            },
+        )
+        assert connection_response.status_code == 201
+        connection_id = connection_response.json()["id"]
+
+        mapping_response = client.post(
+            f"/api/source/connections/{connection_id}/mappings",
+            json={
+                "source_table": "customers",
+                "source_field": "name",
+                "ref_dimension": "customer_name",
+            },
+        )
+        assert mapping_response.status_code == 201
+        mapping_id = mapping_response.json()["id"]
+
+        capture_response = client.post(
+            f"/api/source/connections/{connection_id}/mappings/{mapping_id}/capture",
+        )
+        assert capture_response.status_code == 201
+        payload = capture_response.json()
+        assert payload
+        bob_sample = next(item for item in payload if item["raw_value"] == "Bob")
+        assert bob_sample["occurrence_count"] == 2
+
+        stats_response = client.get(f"/api/source/connections/{connection_id}/match-stats")
+        assert stats_response.status_code == 200
+        stats = stats_response.json()
+        assert stats[0]["total_values"] == 3
+    finally:
+        temp_dir.cleanup()
 def test_source_connection_test_endpoint_success() -> None:
     client = build_test_client()
     db_path, temp_dir = create_sqlite_source()

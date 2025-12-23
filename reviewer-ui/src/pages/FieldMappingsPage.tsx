@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
+  captureMappingSamples,
   createFieldMapping,
   deleteFieldMapping,
   fetchFieldMappings,
@@ -288,6 +289,13 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
       setMappings((prev) => [...prev, created]);
       setForm({ ...initialMapping });
       onToast({ type: 'success', content: 'Field mapping created.' });
+      try {
+        await captureMappingSamples(selectedConnectionId, created.id);
+        onToast({ type: 'success', content: 'Match Insights updated with new samples.' });
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Unable to capture samples for Match Insights.' });
+      }
     } catch (error) {
       console.error(error);
       onToast({ type: 'error', content: 'Unable to create field mapping.' });
@@ -313,6 +321,13 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
       const updated = await updateFieldMapping(selectedConnectionId, editing.id, editForm);
       setMappings((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
       onToast({ type: 'success', content: 'Field mapping updated.' });
+      try {
+        await captureMappingSamples(selectedConnectionId, updated.id);
+        onToast({ type: 'success', content: 'Match Insights updated with refreshed samples.' });
+      } catch (error) {
+        console.error(error);
+        onToast({ type: 'error', content: 'Unable to refresh samples for Match Insights.' });
+      }
       setEditing(null);
     } catch (error) {
       console.error(error);

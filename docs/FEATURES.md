@@ -27,8 +27,9 @@
   behind a React-Bootstrap-compatible component shim so existing screens retain their ergonomic JSX structure.
   The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
   widescreen monitors.
-- Match Insights cards clearly call out when no samples have been ingested yet, preventing misleading 0/0 match readouts, and
-  stay visible by falling back to configured field mappings when statistics are empty.
+- Match Insights cards clearly call out when no samples have been ingested yet, preventing misleading 0/0 match readouts, stay
+  visible by falling back to configured field mappings when statistics are empty, and automatically refresh their samples when
+  mappings are created, edited, or the global sync action runs.
 
 ## 4. Integration & Access
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.
