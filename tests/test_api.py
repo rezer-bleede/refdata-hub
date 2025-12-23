@@ -1013,3 +1013,44 @@ def test_seeded_source_connection_available() -> None:
     payload = response.json()
     assert any(connection["name"] == "Target Demo Warehouse" for connection in payload)
 
+
+def test_match_stats_without_samples_returns_empty_totals() -> None:
+    client = build_test_client()
+
+    connection_response = client.post(
+        "/api/source/connections",
+        json={
+            "name": "Demo Warehouse",
+            "db_type": "postgres",
+            "host": "localhost",
+            "port": 5432,
+            "database": "targetdb",
+            "username": "svc",
+            "password": None,
+            "options": None,
+        },
+    )
+    assert connection_response.status_code == 201
+    connection_id = connection_response.json()["id"]
+
+    mapping_response = client.post(
+        f"/api/source/connections/{connection_id}/mappings",
+        json={
+            "source_table": "public.customers",
+            "source_field": "marital_status",
+            "ref_dimension": "marital_status",
+            "description": "Demo mapping",
+        },
+    )
+    assert mapping_response.status_code == 201
+
+    response = client.get(f"/api/source/connections/{connection_id}/match-stats")
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    stats = payload[0]
+    assert stats["total_values"] == 0
+    assert stats["matched_values"] == 0
+    assert stats["unmatched_values"] == 0
+    assert stats["match_rate"] == 0.0
+    assert stats["top_unmatched"] == []
