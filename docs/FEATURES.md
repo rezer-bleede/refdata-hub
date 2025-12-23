@@ -27,6 +27,7 @@
   behind a React-Bootstrap-compatible component shim so existing screens retain their ergonomic JSX structure.
   The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
   widescreen monitors.
+- Match Insights cards clearly call out when no samples have been ingested yet, preventing misleading 0/0 match readouts.
 
 ## 4. Integration & Access
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.
