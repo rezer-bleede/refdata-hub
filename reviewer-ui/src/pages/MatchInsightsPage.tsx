@@ -75,7 +75,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
     }
   }, [selectedConnectionId, loadStats]);
 
-  const overallRate = useMemo(() => {
+  const overallTotals = useMemo(() => {
     const totals = stats.reduce(
       (acc, item) => {
         acc.total += item.total_values;
@@ -84,8 +84,10 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
       },
       { total: 0, matched: 0 },
     );
-    if (!totals.total) return 0;
-    return totals.matched / totals.total;
+    return {
+      ...totals,
+      rate: totals.total ? totals.matched / totals.total : 0,
+    };
   }, [stats]);
 
   return (
@@ -95,7 +97,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
           <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
             <div>
               <Card.Title as="h1" className="section-heading h4 mb-1">
-                Match insights
+                Match Insights
               </Card.Title>
               <Card.Text className="text-body-secondary mb-0">
                 Monitor alignment between raw values and canonical records. Use the insights below to prioritise review efforts.
@@ -121,10 +123,19 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
           <div className="d-flex align-items-center gap-3">
             <div>
               <p className="text-body-secondary mb-1">Overall match rate</p>
-              <h2 className="display-6 fw-semibold mb-0">{(overallRate * 100).toFixed(1)}%</h2>
+              <h2 className="display-6 fw-semibold mb-0">
+                {overallTotals.total ? `${(overallTotals.rate * 100).toFixed(1)}%` : '—'}
+              </h2>
+              {!overallTotals.total && (
+                <p className="text-body-secondary mb-0">Match statistics are not available yet.</p>
+              )}
             </div>
             <div className="flex-grow-1">
-              <ProgressBar now={overallRate * 100} variant="success" style={{ height: '0.75rem' }} />
+              <ProgressBar
+                now={overallTotals.rate * 100}
+                variant="success"
+                style={{ height: '0.75rem' }}
+              />
             </div>
           </div>
           {loading && <Spinner animation="border" role="status" className="align-self-start" />}
@@ -144,9 +155,13 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
                 </Card.Text>
               </div>
               <div className="text-end">
-                <div className="display-6 fw-semibold">{(item.match_rate * 100).toFixed(1)}%</div>
+                <div className="display-6 fw-semibold">
+                  {item.total_values ? `${(item.match_rate * 100).toFixed(1)}%` : '—'}
+                </div>
                 <div className="text-body-secondary">
-                  {item.matched_values} / {item.total_values} matched
+                  {item.total_values
+                    ? `${item.matched_values} / ${item.total_values} matched`
+                    : 'Match statistics are not available yet.'}
                 </div>
               </div>
             </div>
@@ -154,25 +169,33 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
             <div>
               <h3 className="h6 mb-2">Top unmatched values</h3>
               <div className="d-flex flex-column gap-2">
-                {item.top_unmatched.length ? (
-                  item.top_unmatched.map((unmatched) => (
-                    <Card key={unmatched.raw_value} body className="border-0 bg-body-tertiary">
-                      <div className="d-flex justify-content-between align-items-start">
-                        <div>
-                          <div className="fw-semibold">{unmatched.raw_value}</div>
-                          <div className="text-body-secondary small">
-                            {unmatched.occurrence_count} occurrences
+                {item.total_values ? (
+                  item.top_unmatched.length ? (
+                    item.top_unmatched.map((unmatched) => (
+                      <Card key={unmatched.raw_value} body className="border-0 bg-body-tertiary">
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div>
+                            <div className="fw-semibold">{unmatched.raw_value}</div>
+                            <div className="text-body-secondary small">
+                              {unmatched.occurrence_count} occurrences
+                            </div>
                           </div>
+                          <Badge bg="warning" text="dark">
+                            Needs review
+                          </Badge>
                         </div>
-                        <Badge bg="warning" text="dark">
-                          Needs review
-                        </Badge>
-                      </div>
-                      <div className="mt-2">{renderSuggestions(unmatched.suggestions)}</div>
-                    </Card>
-                  ))
+                        <div className="mt-2">{renderSuggestions(unmatched.suggestions)}</div>
+                      </Card>
+                    ))
+                  ) : (
+                    <p className="text-body-secondary mb-0">
+                      Every sampled value met the configured threshold.
+                    </p>
+                  )
                 ) : (
-                  <p className="text-body-secondary mb-0">Every sampled value met the configured threshold.</p>
+                  <p className="text-body-secondary mb-0">
+                    Match statistics are not available for this mapping yet.
+                  </p>
                 )}
               </div>
             </div>
