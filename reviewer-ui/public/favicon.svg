@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RefData Hub icon">
+  <defs>
+    <linearGradient id="f" x1="14" x2="50" y1="10" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22d3ee" offset="0" />
+      <stop stop-color="#6366f1" offset="1" />
+    </linearGradient>
+  </defs>
+  <rect x="14" y="10" width="36" height="44" rx="10" fill="#0f172a" />
+  <rect x="16.5" y="13" width="31" height="38" rx="8" fill="url(#f)" opacity="0.28" />
+  <path d="M20 22.5c0-3.59 2.91-6.5 6.5-6.5h11c3.59 0 6.5 2.91 6.5 6.5v18c0 3.59-2.91 6.5-6.5 6.5h-11c-3.59 0-6.5-2.91-6.5-6.5z" fill="#0ea5e9" opacity="0.15" />
+  <path d="M19 20c0-3.866 3.134-7 7-7h12c3.866 0 7 3.134 7 7v24c0 3.866-3.134 7-7 7H26c-3.866 0-7-3.134-7-7z" fill="none" stroke="#e2e8f0" stroke-width="3" />
+  <path d="M21 32h-5" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+  <path d="M43 26h5" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+  <path d="M32 26c-3.5 0-6-1.5-6-4m12 0c0 2.5-2.5 4-6 4" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+  <path d="M32 38c-3.5 0-6 1.5-6 4m12 0c0-2.5-2.5-4-6-4" stroke="#e2e8f0" stroke-width="3" stroke-linecap="round" />
+  <circle cx="16" cy="32" r="3" fill="#22d3ee" />
+  <circle cx="48" cy="24" r="3" fill="#a5b4fc" />
+  <circle cx="32" cy="24" r="2.4" fill="#67e8f9" />
+  <circle cx="32" cy="40" r="2.4" fill="#c7d2fe" />
+  <circle cx="32" cy="32" r="3.6" fill="#e2e8f0" opacity="0.35" />
+</svg>
