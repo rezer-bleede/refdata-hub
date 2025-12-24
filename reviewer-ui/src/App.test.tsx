@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComponentProps } from 'react';
@@ -111,6 +111,22 @@ describe('AppScaffold layout', () => {
 
     expect(screen.getByRole('link', { name: 'Source Connections' })).toHaveClass('active');
     expect(screen.getByRole('heading', { name: 'Source Connections' })).toBeInTheDocument();
+  });
+
+  it('renders the branded logo in the sidebar header', () => {
+    const { props } = createProps();
+    render(
+      <MemoryRouter>
+        <AppScaffold {...props} />
+      </MemoryRouter>,
+    );
+
+    const logoContainer = screen.getByTestId('app-logo-mark');
+    const logo = within(logoContainer).getByRole('img', { name: 'RefData Hub logo' });
+
+    expect(logoContainer).toBeVisible();
+    expect(logo.tagName.toLowerCase()).toBe('svg');
+    expect(logo).toHaveAttribute('viewBox', '0 0 64 64');
   });
 
   it('invokes the refresh workflow and surfaces success toasts', async () => {

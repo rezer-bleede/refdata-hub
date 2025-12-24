@@ -37,9 +37,10 @@ The interface is organised into task-focused pages that surface the entire curat
   [OpenMetadata](https://open-metadata.org/), giving analysts a familiar observability workspace with responsive theme
   switching and mobile-friendly navigation. The rail now remains pinned while scrolling long datasets and can collapse on
   large displays so reviewers can reclaim horizontal space without losing orientation. When collapsed, the navigation now
-  swaps placeholder dots for meaningful icons so reviewers can still recognise each workspace at a glance. The redesign
-  leans on Tailwind CSS utility tokens rendered through shared UI primitives, enabling a futuristic, neon-accented
-  experience without rewriting the reviewer workflows.
+  swaps placeholder dots for meaningful icons so reviewers can still recognise each workspace at a glance. A bespoke
+  RefData helix mark now lives in the top-left of the rail so the product brand stays visible on every theme and screen
+  size. The redesign leans on Tailwind CSS utility tokens rendered through shared UI primitives, enabling a futuristic,
+  neon-accented experience without rewriting the reviewer workflows.
 - **Dashboard** – monitor canonical coverage and experiment with semantic suggestions in a live playground.
 - **Settings** – manage matcher thresholds, embedding defaults, and LLM connectivity in a dedicated workspace.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV. Dimension chips now use high-contrast aurora badges so codes stay legible against the dark canvas.

@@ -208,7 +208,55 @@ const AppScaffold = ({
         aria-label="Primary navigation"
       >
         <Link to="/dashboard" className="app-sidebar__brand" onClick={() => setIsSidebarOpen(false)}>
-          <span className="app-sidebar__brand-mark" aria-hidden />
+          <span className="app-sidebar__brand-mark" data-testid="app-logo-mark">
+            <svg
+              viewBox="0 0 64 64"
+              role="img"
+              aria-label="RefData Hub logo"
+              className="app-sidebar__brand-logo"
+            >
+              <path
+                d="M20 22.5c0-3.59 2.91-6.5 6.5-6.5h11c3.59 0 6.5 2.91 6.5 6.5v18c0 3.59-2.91 6.5-6.5 6.5h-11c-3.59 0-6.5-2.91-6.5-6.5z"
+                fill="currentColor"
+                opacity="0.14"
+              />
+              <path
+                d="M19 20c0-3.866 3.134-7 7-7h12c3.866 0 7 3.134 7 7v24c0 3.866-3.134 7-7 7H26c-3.866 0-7-3.134-7-7z"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                fill="none"
+              />
+              <path
+                d="M20 32h-4.5c-1.38 0-2.5 1.12-2.5 2.5S14.12 37 15.5 37H20"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M44 28h4.5c1.38 0 2.5-1.12 2.5-2.5S49.88 23 48.5 23H44"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M25 24c0 2.209 2.686 4 6 4s6-1.791 6-4"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+              <path
+                d="M25 40c0-2.209 2.686-4 6-4s6 1.791 6 4"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              />
+              <circle cx="16" cy="32" r="2.6" fill="currentColor" />
+              <circle cx="48" cy="24" r="2.6" fill="currentColor" />
+              <circle cx="32" cy="24" r="2" fill="#0ff" opacity="0.7" />
+              <circle cx="32" cy="40" r="2" fill="#a5b4fc" opacity="0.9" />
+              <circle cx="32" cy="32" r="3.4" fill="currentColor" opacity="0.3" />
+            </svg>
+          </span>
           <span className="app-sidebar__brand-text">
             <span className="app-sidebar__brand-title">RefData Hub</span>
             <span className="app-sidebar__brand-subtitle">Metadata stewardship workspace</span>
