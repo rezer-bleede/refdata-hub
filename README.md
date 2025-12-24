@@ -182,6 +182,8 @@ See [`docs/FEATURES.md`](docs/FEATURES.md) for a detailed description of the pla
 
 The backend uses a pluggable `SemanticMatcher` abstraction. In Docker Compose deployments the matcher starts in offline mode, issuing ranking prompts to the bundled Ollama llama3 container. Provide the API base URL, model identifier, and optional API key in the Reviewer UI to switch `llm_mode` between offline and online providers. When `llm_mode` is set to `online`, the matcher routes requests to an OpenAI-compatible endpoint and falls back to TF-IDF embeddings if the provider is unreachable.
 
+When the semantic playground is used without explicitly selecting a dimension, the `/api/reference/propose` endpoint now falls back to the dimension that contains available canonical values instead of returning an empty result for the `general` placeholder dimension. This ensures that common values such as “Single” still resolve to their canonical matches even when the default dimension is sparsely populated.
+
 ## License
 
 This project is released under the [MIT License](LICENSE).

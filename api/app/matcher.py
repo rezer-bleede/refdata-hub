@@ -42,6 +42,8 @@ class SemanticMatcher:
         if not self.canonical_values:
             return []
 
+        normalised_raw = raw_text.strip().casefold()
+
         try:
             sentences = [raw_text] + [self._canonical_as_sentence(cv) for cv in self.canonical_values]
             vectorizer = TfidfVectorizer().fit(sentences)
@@ -56,6 +58,8 @@ class SemanticMatcher:
         matches = []
         for canonical, score in zip(self.canonical_values, scores):
             scaled = float(max(0.0, min(1.0, score)))
+            if canonical.canonical_label.strip().casefold() == normalised_raw:
+                scaled = 1.0
             matches.append(
                 MatchCandidate(
                     canonical_id=canonical.id or 0,
@@ -77,6 +81,8 @@ class SemanticMatcher:
         if not raw_tokens:
             return []
 
+        normalised_raw = raw_text.strip().casefold()
+
         candidates: list[MatchCandidate] = []
         for canonical in self.canonical_values:
             canonical_tokens = self._tokenize(self._canonical_as_sentence(canonical))
@@ -85,6 +91,8 @@ class SemanticMatcher:
             overlap = len(raw_tokens & canonical_tokens)
             union = len(raw_tokens | canonical_tokens)
             score = float(overlap / union) if union else 0.0
+            if canonical.canonical_label.strip().casefold() == normalised_raw:
+                score = 1.0
             candidates.append(
                 MatchCandidate(
                     canonical_id=canonical.id or 0,
