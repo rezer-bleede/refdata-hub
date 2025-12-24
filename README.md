@@ -41,17 +41,19 @@ The interface is organised into task-focused pages that surface the entire curat
   enabling a futuristic, neon-accented experience without rewriting the reviewer workflows.
 - **Dashboard** – monitor canonical coverage and experiment with semantic suggestions in a live playground.
 - **Settings** – manage matcher thresholds, embedding defaults, and LLM connectivity in a dedicated workspace.
-- **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV.
+- **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV. Dimension chips now use high-contrast aurora badges so codes stay legible against the dark canvas.
 - **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema.
 - **Dimension Relations** – model parent/child hierarchies such as regions to districts and manage canonical value pairings.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems, verify credentials with the
   built-in **Test connection** action, and deep-dive into each source to inspect schemas, tables, fields, match statistics, and
   profiled sample values. Distinct sample previews now consolidate duplicate raw values captured across ingestion runs and roll
-  their counts together so analysts always review truly unique source content. A demo connection targeting the bundled
+  their counts together so analysts always review truly unique source content. The existing connections grid now sits above the
+  registration form so teams can audit connectivity before onboarding new integrations. A demo connection targeting the bundled
   `targetdb` Postgres instance is seeded automatically for tutorials and integration tests.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
   Available tables and columns are now surfaced directly from the connected database so analysts can choose valid metadata from
-  dropdowns instead of typing freeform text.
+  dropdowns instead of typing freeform text. The existing mappings table is pinned above the creation form to keep context
+  visible while adding or editing records.
 - **Match Insights** – visualise match rates per mapping, inspect top outliers, and track overall harmonisation health, with
   automatic sample capture when mappings are created or updated, clear empty states when no samples have been captured yet,
   and fallback insights that stay visible from configured field mappings even before statistics are available. Insights refresh

@@ -950,7 +950,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                     <tr key={value.id}>
                       <td className="font-semibold">{value.canonical_label}</td>
                       <td>
-                        <Badge bg="info" text="dark">
+                        <Badge bg="info" className="bg-aurora/20 text-aurora">
                           {dimension ? `${dimension.label} (${dimension.code})` : value.dimension}
                         </Badge>
                       </td>

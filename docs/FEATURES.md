@@ -11,6 +11,12 @@
   to review schemas, objects, column profiles, match statistics, and captured sample values before curating mappings.
   Sample previews collapse duplicate raw values captured during multiple ingestion runs so reviewers always focus on distinct
   content with accurate occurrence totals.
+- The Source Connections workspace foregrounds the existing connections grid ahead of the registration form so reviewers can
+  audit current coverage before onboarding new systems, keeping the maintenance flow top-of-mind.
+- Field mappings surface the existing mapping grid before the creation form to preserve context and reduce back-and-forth when
+  analysts add or update rules.
+- Canonical library dimension badges now use brighter aurora accents on translucent backgrounds to stay readable on the dark
+  reviewer shell.
 
 ## 2. Semantic Matching
 - Use NLP and embedding models to suggest standardized values for new raw inputs.

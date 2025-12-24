@@ -426,6 +426,72 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
             </label>
           </div>
 
+          <div className="space-y-2">
+            <h2 className="section-heading text-xl">Existing mappings</h2>
+            <p className="text-sm text-slate-400">
+              Manage mapped fields for the selected connection. Edit or remove entries as your schema evolves.
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-slate-800/70">
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left">Source table</th>
+                    <th className="px-4 py-3 text-left">Source field</th>
+                    <th className="px-4 py-3 text-left">Dimension</th>
+                    <th className="px-4 py-3 text-left">Description</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {mappings.map((mapping) => (
+                    <tr key={mapping.id} className="bg-slate-900/40">
+                      <td className="px-4 py-3 text-slate-100">{mapping.source_table}</td>
+                      <td className="px-4 py-3 text-slate-100">{mapping.source_field}</td>
+                      <td className="px-4 py-3 text-slate-200">{mapping.ref_dimension}</td>
+                      <td className="px-4 py-3 text-sm text-slate-400">{mapping.description || '—'}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            className="rounded-full border border-slate-700/60 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-aurora/50 hover:text-white"
+                            onClick={() => openEdit(mapping)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-full border border-red-500/50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-red-300 transition hover:border-red-400 hover:text-red-100"
+                            onClick={() => setDeleteTarget(mapping)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!mappings.length && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                        {loadingMappings ? 'Loading mappings…' : 'No mappings defined for this connection.'}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section className="surface-card flex flex-col gap-6">
+          <div className="space-y-2">
+            <h2 className="section-heading text-xl">Add a new mapping</h2>
+            <p className="text-sm text-slate-400">
+              Capture how a source table and field align to reference dimensions to drive consistent downstream reporting.
+            </p>
+          </div>
+
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -519,65 +585,6 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </button>
             </div>
           </form>
-        </section>
-
-        <section className="surface-card flex flex-col gap-4">
-          <div className="space-y-2">
-            <h2 className="section-heading text-xl">Existing mappings</h2>
-            <p className="text-sm text-slate-400">
-              Manage mapped fields for the selected connection. Edit or remove entries as your schema evolves.
-            </p>
-          </div>
-          <div className="overflow-hidden rounded-3xl border border-slate-800/70">
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left">Source table</th>
-                    <th className="px-4 py-3 text-left">Source field</th>
-                    <th className="px-4 py-3 text-left">Dimension</th>
-                    <th className="px-4 py-3 text-left">Description</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mappings.map((mapping) => (
-                    <tr key={mapping.id} className="bg-slate-900/40">
-                      <td className="px-4 py-3 text-slate-100">{mapping.source_table}</td>
-                      <td className="px-4 py-3 text-slate-100">{mapping.source_field}</td>
-                      <td className="px-4 py-3 text-slate-200">{mapping.ref_dimension}</td>
-                      <td className="px-4 py-3 text-sm text-slate-400">{mapping.description || '—'}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            className="rounded-full border border-slate-700/60 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-200 transition hover:border-aurora/50 hover:text-white"
-                            onClick={() => openEdit(mapping)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-full border border-red-500/50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-red-300 transition hover:border-red-400 hover:text-red-100"
-                            onClick={() => setDeleteTarget(mapping)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {!mappings.length && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
-                        {loadingMappings ? 'Loading mappings…' : 'No mappings defined for this connection.'}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </section>
 
         <section className="surface-card flex flex-col gap-6">

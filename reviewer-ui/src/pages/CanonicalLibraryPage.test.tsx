@@ -13,8 +13,26 @@ vi.mock('../api', () => ({
 
 vi.mock('../state/AppStateContext', () => ({
   useAppState: () => ({
-    canonicalValues: [],
-    dimensions: [],
+    canonicalValues: [
+      {
+        id: 1,
+        canonical_label: 'Abu Dhabi',
+        dimension: 'region',
+        description: 'UAE region',
+        attributes: null,
+      },
+    ],
+    dimensions: [
+      {
+        id: 1,
+        code: 'region',
+        label: 'Region',
+        description: 'Geographic areas',
+        extra_fields: [],
+        created_at: '',
+        updated_at: '',
+      },
+    ],
     updateCanonicalValues: vi.fn(),
   }),
 }));
@@ -30,5 +48,15 @@ describe('CanonicalLibraryPage bulk import', () => {
     fireEvent.change(textarea, { target: { value: 'dimension,label\nregion,Abu Dhabi' } });
 
     expect(textarea).toHaveValue('dimension,label\nregion,Abu Dhabi');
+  });
+
+  it('shows dimension badges with readable contrast', () => {
+    const onToast = vi.fn();
+    render(<CanonicalLibraryPage onToast={onToast} />);
+
+    const badge = screen.getByText('Region (region)', { selector: 'span' });
+
+    expect(badge.className).toContain('text-aurora');
+    expect(badge.className).not.toContain('text-slate-900');
   });
 });
