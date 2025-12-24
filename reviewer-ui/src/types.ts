@@ -153,12 +153,21 @@ export interface FieldMatchStats {
   unmatched_values: number;
   match_rate: number;
   top_unmatched: UnmatchedValuePreview[];
+  top_matched: MatchedValuePreview[];
 }
 
 export interface UnmatchedValuePreview {
   raw_value: string;
   occurrence_count: number;
   suggestions: MatchCandidate[];
+}
+
+export interface MatchedValuePreview {
+  raw_value: string;
+  occurrence_count: number;
+  canonical_label: string;
+  match_type: 'mapping' | 'semantic';
+  confidence?: number | null;
 }
 
 export interface UnmatchedValueRecord extends UnmatchedValuePreview {

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Iterable, List, Sequence
+from typing import Iterable, List, Literal, Sequence
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
@@ -21,12 +21,13 @@ from ..models import (
 )
 from ..schemas import (
     FieldMatchStats,
+    MatchedValuePreview,
     SourceConnectionCreate,
     SourceConnectionRead,
-    SourceConnectionUpdate,
     SourceConnectionTestOverrides,
     SourceConnectionTestPayload,
     SourceConnectionTestResult,
+    SourceConnectionUpdate,
     SourceFieldMappingCreate,
     SourceFieldMappingRead,
     SourceFieldMappingUpdate,
@@ -514,22 +515,72 @@ def ingest_samples(
     return updated
 
 
+def _record_matched_preview(
+    accumulator: dict[str, MatchedValuePreview],
+    sample: SourceSample,
+    *,
+    canonical_label: str,
+    match_type: Literal["mapping", "semantic"],
+    confidence: float | None,
+) -> None:
+    existing = accumulator.get(sample.raw_value)
+    if existing:
+        existing.occurrence_count += sample.occurrence_count
+        if confidence is not None:
+            existing.confidence = max(existing.confidence or 0.0, confidence)
+        if existing.match_type == "semantic" and match_type == "mapping":
+            existing.match_type = match_type
+            existing.canonical_label = canonical_label
+        return
+
+    accumulator[sample.raw_value] = MatchedValuePreview(
+        raw_value=sample.raw_value,
+        occurrence_count=sample.occurrence_count,
+        canonical_label=canonical_label,
+        match_type=match_type,
+        confidence=confidence,
+    )
+
+
 def _suggestions_for_samples(
     samples: Iterable[SourceSample],
     matcher: SemanticMatcher,
     threshold: float,
-    mapped_values: set[str],
-) -> tuple[int, List[UnmatchedValuePreview]]:
+    mapped_values: dict[str, ValueMapping],
+    canonical_lookup: dict[int, CanonicalValue],
+) -> tuple[int, List[UnmatchedValuePreview], List[MatchedValuePreview]]:
     matched_count = 0
     unmatched: list[UnmatchedValuePreview] = []
+    matched: dict[str, MatchedValuePreview] = {}
     for sample in samples:
-        if sample.raw_value in mapped_values:
+        mapping = mapped_values.get(sample.raw_value)
+        if mapping:
+            canonical_label = (
+                canonical_lookup.get(mapping.canonical_id).canonical_label
+                if mapping.canonical_id in canonical_lookup
+                else "Mapped canonical value"
+            )
             matched_count += sample.occurrence_count
+            _record_matched_preview(
+                matched,
+                sample,
+                canonical_label=canonical_label,
+                match_type="mapping",
+                confidence=mapping.confidence,
+            )
             continue
 
         ranked = matcher.rank(sample.raw_value)
         if ranked and ranked[0].score >= threshold:
+            best = ranked[0]
             matched_count += sample.occurrence_count
+            _record_matched_preview(
+                matched,
+                sample,
+                canonical_label=best.canonical_label,
+                match_type="semantic",
+                confidence=best.score,
+            )
             continue
 
         candidate_threshold = max(threshold * 0.75, 0.2)
@@ -544,7 +595,10 @@ def _suggestions_for_samples(
             )
         )
 
-    return matched_count, unmatched
+    matched_values = sorted(
+        matched.values(), key=lambda item: item.occurrence_count, reverse=True
+    )
+    return matched_count, unmatched, matched_values
 
 
 @router.get(
@@ -580,21 +634,22 @@ def compute_match_statistics(
         ).all()
 
         total = sum(sample.occurrence_count for sample in samples)
-        mapped_values = {
-            vm.raw_value
-            for vm in session.exec(
-                select(ValueMapping).where(
-                    and_(
-                        ValueMapping.source_connection_id == connection.id,
-                        ValueMapping.source_table == mapping.source_table,
-                        ValueMapping.source_field == mapping.source_field,
-                    )
+        value_mappings = session.exec(
+            select(ValueMapping).where(
+                and_(
+                    ValueMapping.source_connection_id == connection.id,
+                    ValueMapping.source_table == mapping.source_table,
+                    ValueMapping.source_field == mapping.source_field,
                 )
-            ).all()
-        }
+            )
+        ).all()
+        mapped_values = {vm.raw_value: vm for vm in value_mappings}
+        canonical_lookup = _canonical_lookup(
+            session, {vm.canonical_id for vm in value_mappings if vm.canonical_id}
+        )
 
-        matched_count, unmatched = _suggestions_for_samples(
-            samples, matcher, config.match_threshold, mapped_values
+        matched_count, unmatched, matched_values = _suggestions_for_samples(
+            samples, matcher, config.match_threshold, mapped_values, canonical_lookup
         )
         unmatched.sort(key=lambda item: item.occurrence_count, reverse=True)
 
@@ -609,6 +664,7 @@ def compute_match_statistics(
                 unmatched_values=max(total - matched_count, 0),
                 match_rate=float(matched_count / total) if total else 0.0,
                 top_unmatched=unmatched[:10],
+                top_matched=matched_values[:10],
             )
         )
 
@@ -632,12 +688,12 @@ def list_unmatched_values(
     ).all()
 
     records: list[UnmatchedValueRecord] = []
-    value_mapping_index: dict[tuple[str, str], set[str]] = {}
+    value_mapping_index: dict[tuple[str, str], dict[str, ValueMapping]] = {}
     for vm in session.exec(
         select(ValueMapping).where(ValueMapping.source_connection_id == connection.id)
     ).all():
         key = (vm.source_table, vm.source_field)
-        value_mapping_index.setdefault(key, set()).add(vm.raw_value)
+        value_mapping_index.setdefault(key, {})[vm.raw_value] = vm
 
     for mapping in mappings:
         canonical_values = _load_canonical_values(session, mapping.ref_dimension)
@@ -652,11 +708,19 @@ def list_unmatched_values(
             )
         ).all()
 
-        _, unmatched = _suggestions_for_samples(
+        mapped_values = value_mapping_index.get(
+            (mapping.source_table, mapping.source_field), {}
+        )
+        canonical_lookup = _canonical_lookup(
+            session, {vm.canonical_id for vm in mapped_values.values() if vm.canonical_id}
+        )
+
+        _, unmatched, _ = _suggestions_for_samples(
             samples,
             matcher,
             config.match_threshold,
-            value_mapping_index.get((mapping.source_table, mapping.source_field), set()),
+            mapped_values,
+            canonical_lookup,
         )
 
         for item in unmatched:

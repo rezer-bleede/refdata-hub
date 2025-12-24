@@ -787,6 +787,8 @@ def test_source_mapping_flow() -> None:
     stat = next(item for item in stats if item["mapping_id"] == mapping_id)
     assert stat["unmatched_values"] >= 1
     assert stat["total_values"] == 8
+    assert stat["top_matched"]
+    assert any(match["raw_value"] == "Married" for match in stat["top_matched"])
 
     # Retrieve unmatched values (should include "Singel")
     unmatched_response = client.get(f"/api/source/connections/{connection_id}/unmatched")
@@ -810,6 +812,12 @@ def test_source_mapping_flow() -> None:
         },
     )
     assert create_mapping_response.status_code == 201
+
+    refreshed_stats = client.get(
+        f"/api/source/connections/{connection_id}/match-stats"
+    ).json()
+    updated_stat = next(item for item in refreshed_stats if item["mapping_id"] == mapping_id)
+    assert any(match["raw_value"] == "Singel" for match in updated_stat["top_matched"])
 
     # The value should disappear from unmatched results
     unmatched_after = client.get(f"/api/source/connections/{connection_id}/unmatched").json()

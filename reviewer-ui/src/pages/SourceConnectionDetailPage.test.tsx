@@ -50,6 +50,7 @@ describe('SourceConnectionDetailPage', () => {
         unmatched_values: 10,
         match_rate: 0.9,
         top_unmatched: [],
+        top_matched: [],
       },
     ]);
     apiMocks.fetchSourceFields.mockResolvedValue([
