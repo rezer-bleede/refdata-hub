@@ -408,7 +408,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </p>
             </div>
             <label htmlFor="connection-select" className="flex w-full flex-col gap-2 lg:max-w-xs">
-              <span className="form-label">Active connection</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Active connection</span>
               <select
                 id="connection-select"
                 value={selectedConnectionId}
@@ -434,7 +434,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
             className="grid gap-4 lg:grid-cols-3"
           >
             <label htmlFor="mapping-table" className="flex flex-col gap-2">
-              <span className="form-label">Source table</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Source table</span>
               <select
                 id="mapping-table"
                 value={form.source_table}
@@ -457,7 +457,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </select>
             </label>
             <label htmlFor="mapping-field" className="flex flex-col gap-2">
-              <span className="form-label">Source field</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Source field</span>
               <select
                 id="mapping-field"
                 value={form.source_field}
@@ -479,7 +479,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </select>
             </label>
             <label htmlFor="mapping-dimension" className="flex flex-col gap-2">
-              <span className="form-label">Reference dimension</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Reference dimension</span>
               <select
                 id="mapping-dimension"
                 value={form.ref_dimension}
@@ -495,7 +495,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </select>
             </label>
             <label htmlFor="mapping-description" className="flex flex-col gap-2 lg:col-span-3">
-              <span className="form-label">Description</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Description</span>
               <input
                 id="mapping-description"
                 value={form.description ?? ''}
@@ -595,7 +595,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
             className="grid gap-4 lg:grid-cols-3"
           >
             <label htmlFor="sample-table" className="flex flex-col gap-2">
-              <span className="form-label">Source table</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Source table</span>
               <select
                 id="sample-table"
                 value={sampleTable}
@@ -618,7 +618,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </select>
             </label>
             <label htmlFor="sample-field" className="flex flex-col gap-2">
-              <span className="form-label">Source field</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Source field</span>
               <select
                 id="sample-field"
                 value={sampleField}
@@ -636,7 +636,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </select>
             </label>
             <label htmlFor="sample-dimension" className="flex flex-col gap-2">
-              <span className="form-label">Reference dimension override</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Reference dimension override</span>
               <select
                 id="sample-dimension"
                 value={sampleDimension}
@@ -651,7 +651,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
               </select>
             </label>
             <label htmlFor="sample-values" className="flex flex-col gap-2 lg:col-span-3">
-              <span className="form-label">Sample values</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Sample values</span>
               <textarea
                 id="sample-values"
                 rows={6}
@@ -693,7 +693,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
             </button>
             <form className="mt-4 flex flex-col gap-4">
               <label htmlFor="edit-source-table" className="flex flex-col gap-2">
-                <span className="form-label">Source table</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Source table</span>
                 <select
                   id="edit-source-table"
                   value={editForm.source_table}
@@ -715,7 +715,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
                 </select>
               </label>
               <label htmlFor="edit-source-field" className="flex flex-col gap-2">
-                <span className="form-label">Source field</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Source field</span>
                 <select
                   id="edit-source-field"
                   value={editForm.source_field}
@@ -734,7 +734,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
                 </select>
               </label>
               <label htmlFor="edit-dimension" className="flex flex-col gap-2">
-                <span className="form-label">Reference dimension</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Reference dimension</span>
                 <select
                   id="edit-dimension"
                   value={editForm.ref_dimension}
@@ -748,7 +748,7 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
                 </select>
               </label>
               <label htmlFor="edit-description" className="flex flex-col gap-2">
-                <span className="form-label">Description</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Description</span>
                 <input
                   id="edit-description"
                   value={editForm.description ?? ''}

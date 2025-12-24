@@ -131,13 +131,13 @@ const AppScaffold = ({
             </NavLink>
           ))}
         </nav>
-        <div className="app-sidebar__footer text-body-secondary">
-          <p className="mb-0 small">Curate canonical dimensions with confidence and audit-ready lineage.</p>
+        <div className="app-sidebar__footer text-slate-400">
+          <p className="mb-0 text-xs">Curate canonical dimensions with confidence and audit-ready lineage.</p>
         </div>
       </aside>
       <button
         type="button"
-        className={`app-sidebar-overlay d-lg-none${isSidebarOpen ? ' is-visible' : ''}`}
+        className={`app-sidebar-overlay lg:hidden${isSidebarOpen ? ' is-visible' : ''}`}
         aria-hidden={!isSidebarOpen}
         aria-label="Close navigation"
         tabIndex={isSidebarOpen ? 0 : -1}

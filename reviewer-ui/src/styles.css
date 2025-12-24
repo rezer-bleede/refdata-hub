@@ -181,19 +181,15 @@
     @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-aurora to-indigo-500 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-glow-sm transition hover:shadow-glow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .btn-primary {
+  .button-primary {
     @apply neon-button;
   }
 
-  .btn-secondary {
+  .button-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/70 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-slate-200 shadow-inner-border transition hover:border-slate-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
-  }
-
-  .btn-danger {
+  .button-danger {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-red-200 transition hover:border-red-400 hover:text-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
@@ -221,12 +217,6 @@
     @apply inline-flex items-center rounded-full border border-aurora/30 bg-aurora/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-aurora;
   }
 
-  .form-label {
-    @apply text-xs font-semibold uppercase tracking-[0.35em] text-slate-400;
-  }
-
-  .form-control,
-  .form-select,
   textarea,
   input,
   select {
@@ -261,165 +251,21 @@
     @apply sr-only;
   }
 
-  .d-flex {
-    @apply flex;
-  }
-
-  .d-inline-flex {
-    @apply inline-flex;
-  }
-
-  .flex-column {
-    @apply flex-col;
-  }
-
-  .flex-lg-row {
-    @apply lg:flex-row;
-  }
-
-  .flex-md-row {
-    @apply md:flex-row;
-  }
-
-  .flex-grow-1 {
-    @apply grow;
-  }
-
-  .align-items-center {
-    @apply items-center;
-  }
-
-  .align-items-start {
-    @apply items-start;
-  }
-
-  .align-items-end {
-    @apply items-end;
-  }
-
-  .align-items-lg-center {
-    @apply lg:items-center;
-  }
-
-  .align-self-start {
-    @apply self-start;
-  }
-
-  .justify-content-between {
-    @apply justify-between;
-  }
-
-  .justify-content-center {
-    @apply justify-center;
-  }
-
-  .justify-content-end {
-    @apply justify-end;
-  }
-
-  .g-1 {
-    @apply gap-1;
-  }
-
-  .g-2 {
-    @apply gap-2;
-  }
-
-  .g-3 {
-    @apply gap-3;
-  }
-
-  .g-4 {
-    @apply gap-4;
-  }
-
-  .g-6 {
-    @apply gap-6;
-  }
-
-  .g-8 {
-    @apply gap-8;
-  }
-
-  .w-25 {
-    @apply w-1/4;
-  }
-
-  .h-100 {
-    @apply h-full;
-  }
-
-  .text-body-secondary {
-    @apply text-slate-400;
-  }
-
-  .fw-semibold {
-    @apply font-semibold;
-  }
-
-  .text-monospaced {
-    @apply font-mono;
-  }
-
-  .text-uppercase {
-    @apply uppercase tracking-[0.3em];
-  }
-
-  .text-nowrap {
-    @apply whitespace-nowrap;
-  }
-
-  .table-responsive {
-    @apply overflow-x-auto;
-  }
-
-  .table-nowrap {
-    @apply whitespace-nowrap;
-  }
-
-  .table-striped tbody tr:nth-child(even) {
+  .data-table--striped tbody tr:nth-child(even) {
     @apply bg-slate-900/60;
   }
 
-  .table-bordered {
+  .data-table--bordered {
     @apply border border-slate-800/60;
   }
 
-  .table-hover tbody tr:hover {
+  .data-table--hover tbody tr:hover {
     @apply bg-slate-900/80;
   }
 
-  .table-sm td,
-  .table-sm th {
+  .data-table--compact td,
+  .data-table--compact th {
     @apply px-3 py-2 text-sm;
-  }
-
-  .bg-body-tertiary {
-    @apply bg-slate-900/70;
-  }
-
-  .shadow-sm {
-    @apply shadow-glow-sm;
-  }
-
-  .position-relative {
-    @apply relative;
-  }
-
-  .me-2 {
-    @apply mr-2;
-  }
-
-  .ms-auto {
-    @apply ml-auto;
-  }
-
-  .ps-0 {
-    @apply pl-0;
-  }
-
-  .pe-0 {
-    @apply pr-0;
   }
 
   .modal-backdrop {

@@ -62,16 +62,29 @@ type FormCheckProps = React.InputHTMLAttributes<HTMLInputElement> & {
 const cx = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
+const baseButtonClass =
+  'inline-flex items-center justify-center gap-2 rounded-full border border-transparent px-5 py-2 text-sm font-semibold uppercase tracking-wide transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+const primaryButtonClass =
+  'neon-button shadow-glow-sm hover:shadow-glow-md focus-visible:outline-neon';
+const secondaryButtonClass =
+  'border border-slate-700/60 bg-slate-900/70 text-slate-200 shadow-inner-border hover:border-slate-500 hover:text-white focus-visible:outline-aurora';
+const outlineButtonClass =
+  'border border-slate-600/60 bg-transparent text-slate-200 hover:border-aurora/60 hover:text-white focus-visible:outline-aurora';
+const outlineSuccessButtonClass =
+  'border border-emerald-500/50 bg-emerald-500/10 text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 focus-visible:outline-emerald-400';
+const dangerButtonClass =
+  'border border-red-500/60 bg-red-500/10 text-red-200 hover:border-red-400 hover:text-red-100 focus-visible:outline-red-400';
+
 const buttonVariantClass: Record<Variant, string> = {
-  primary: 'btn-primary',
-  success: 'btn-primary',
-  secondary: 'btn-secondary',
-  'outline-primary': 'btn-secondary',
-  'outline-light': 'btn-secondary',
-  'outline-secondary': 'btn-secondary',
-  'outline-success': 'btn-secondary',
-  'outline-danger': 'btn-danger',
-  danger: 'btn-danger',
+  primary: primaryButtonClass,
+  success: primaryButtonClass,
+  secondary: secondaryButtonClass,
+  'outline-primary': outlineButtonClass,
+  'outline-light': outlineButtonClass,
+  'outline-secondary': outlineButtonClass,
+  'outline-success': outlineSuccessButtonClass,
+  'outline-danger': dangerButtonClass,
+  danger: dangerButtonClass,
 };
 
 const buttonSizeClass: Record<ButtonSize, string> = {
@@ -81,7 +94,10 @@ const buttonSizeClass: Record<ButtonSize, string> = {
 };
 
 export const Button = ({ variant = 'primary', size = 'md', className, children, ...props }: ButtonProps) => (
-  <button className={cx(buttonVariantClass[variant], buttonSizeClass[size], className)} {...props}>
+  <button
+    className={cx(baseButtonClass, buttonVariantClass[variant], buttonSizeClass[size], className)}
+    {...props}
+  >
     {children}
   </button>
 );
@@ -349,6 +365,9 @@ type FormComponent = ((props: React.FormHTMLAttributes<HTMLFormElement>) => JSX.
   Check: (props: FormCheckProps) => JSX.Element;
 };
 
+const inputBaseClass =
+  'rounded-2xl border border-slate-800/70 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 shadow-inner-border transition placeholder:text-slate-500 focus:border-aurora/60 focus:ring-2 focus:ring-aurora/40';
+
 export const Form = Object.assign(
   ({ className, ...props }: React.FormHTMLAttributes<HTMLFormElement>) => (
     <form className={className} {...props} />
@@ -361,7 +380,13 @@ export const Form = Object.assign(
     ),
     Label: ({ className, htmlFor, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) => {
       const controlId = useContext(FormContext);
-      return <label className={cx('form-label', className)} htmlFor={htmlFor ?? controlId} {...props} />;
+      return (
+        <label
+          className={cx('text-xs font-semibold uppercase tracking-[0.35em] text-slate-400', className)}
+          htmlFor={htmlFor ?? controlId}
+          {...props}
+        />
+      );
     },
     Control: ({ as, className, id, ...props }: FormControlProps) => {
       const controlId = useContext(FormContext);
@@ -371,7 +396,7 @@ export const Form = Object.assign(
         return (
           <textarea
             id={controlIdOrProvided}
-            className={cx('form-control', className)}
+            className={cx(inputBaseClass, className)}
             rows={rows ?? 3}
             {...rest}
           />
@@ -380,7 +405,7 @@ export const Form = Object.assign(
       return (
         <input
           id={controlIdOrProvided}
-          className={cx('form-control', className)}
+          className={cx(inputBaseClass, className)}
           {...(props as React.InputHTMLAttributes<HTMLInputElement>)}
         />
       );
@@ -388,7 +413,7 @@ export const Form = Object.assign(
     Select: ({ className, children, id, ...props }: FormSelectProps & { id?: string }) => {
       const controlId = useContext(FormContext);
       return (
-        <select id={id ?? controlId} className={cx('form-select', className)} {...props}>
+        <select id={id ?? controlId} className={cx(inputBaseClass, className)} {...props}>
           {children}
         </select>
       );
@@ -416,10 +441,10 @@ interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
 export const Table = ({ striped, bordered, hover, responsive, size, className, children, ...props }: TableProps) => {
   const tableClass = cx(
     'data-table',
-    striped && 'table-striped',
-    bordered && 'table-bordered',
-    hover && 'table-hover',
-    size === 'sm' && 'table-sm',
+    striped && 'data-table--striped',
+    bordered && 'data-table--bordered',
+    hover && 'data-table--hover',
+    size === 'sm' && 'data-table--compact',
     className,
   );
   const table = (
@@ -428,7 +453,7 @@ export const Table = ({ striped, bordered, hover, responsive, size, className, c
     </table>
   );
   if (responsive) {
-    return <div className="table-responsive">{table}</div>;
+    return <div className="overflow-x-auto">{table}</div>;
   }
   return table;
 };

@@ -9,11 +9,6 @@ export default defineConfig(({ mode }) => {
     define: {
       __API_BASE_URL__: JSON.stringify(env.VITE_API_BASE_URL || ''),
     },
-    resolve: {
-      alias: {
-        'react-bootstrap': '/src/react-bootstrap',
-      },
-    },
     server: {
       host: '0.0.0.0',
       port: 5173,

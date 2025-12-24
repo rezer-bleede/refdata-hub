@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Badge, Breadcrumb, Card, Col, ListGroup, Row, Spinner, Table } from 'react-bootstrap';
+import { Badge, Breadcrumb, Card, Col, ListGroup, Row, Spinner, Table } from '../components/ui';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import {
@@ -194,7 +194,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
   }, [tables]);
 
   return (
-    <div className="d-flex flex-column gap-4" aria-busy={loadingSummary}>
+    <div className="flex flex-col gap-4" aria-busy={loadingSummary}>
       <Breadcrumb>
         <Breadcrumb.Item onClick={() => navigate('/connections')} linkAs="button">
           Source connections
@@ -203,41 +203,43 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
       </Breadcrumb>
 
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-3">
+        <Card.Body className="flex flex-col gap-3">
           <div>
-            <Card.Title as="h1" className="section-heading h4 mb-2">
+            <Card.Title as="h1" className="text-2xl mb-2">
               {connection?.name ?? 'Loading connection…'}
             </Card.Title>
-            <Card.Text className="text-body-secondary mb-0">
+            <Card.Text className="text-slate-400 mb-0">
               Review ingested metadata, field statistics, and profiling samples for this data source.
             </Card.Text>
           </div>
           {connection ? (
-            <Row xs={1} md={3} className="g-3">
+            <Row xs={1} md={3} className="gap-3">
               <Col>
-                <Card className="h-100">
+                <Card className="h-full">
                   <Card.Body>
-                    <Card.Subtitle className="text-body-secondary mb-1">Database type</Card.Subtitle>
-                    <Card.Title className="h5 text-uppercase">{connection.db_type}</Card.Title>
+                    <Card.Subtitle className="text-slate-400 mb-1">Database type</Card.Subtitle>
+                    <Card.Title className="text-base font-semibold uppercase tracking-[0.3em]">
+                      {connection.db_type}
+                    </Card.Title>
                     <Card.Text className="mb-0">Host: {connection.host}</Card.Text>
                     <Card.Text className="mb-0">Port: {connection.port}</Card.Text>
                   </Card.Body>
                 </Card>
               </Col>
               <Col>
-                <Card className="h-100">
+                <Card className="h-full">
                   <Card.Body>
-                    <Card.Subtitle className="text-body-secondary mb-1">Catalog</Card.Subtitle>
-                    <Card.Title className="h5">{connection.database}</Card.Title>
+                    <Card.Subtitle className="text-slate-400 mb-1">Catalog</Card.Subtitle>
+                    <Card.Title className="text-lg">{connection.database}</Card.Title>
                     <Card.Text className="mb-0">Schemas discovered: {schemaSummary.schemaCount}</Card.Text>
                     <Card.Text className="mb-0">Tables &amp; views: {schemaSummary.tableCount}</Card.Text>
                   </Card.Body>
                 </Card>
               </Col>
               <Col>
-                <Card className="h-100">
+                <Card className="h-full">
                   <Card.Body>
-                    <Card.Subtitle className="text-body-secondary mb-1">Credentials</Card.Subtitle>
+                    <Card.Subtitle className="text-slate-400 mb-1">Credentials</Card.Subtitle>
                     <Card.Text className="mb-0">User: {connection.username}</Card.Text>
                     <Card.Text className="mb-0">Updated: {new Date(connection.updated_at).toLocaleString()}</Card.Text>
                     <Card.Text className="mb-0">Created: {new Date(connection.created_at).toLocaleString()}</Card.Text>
@@ -246,7 +248,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
               </Col>
             </Row>
           ) : (
-            <div className="d-flex align-items-center gap-2 text-body-secondary">
+            <div className="flex items-center gap-2 text-slate-400">
               <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
               Loading connection…
             </div>
@@ -254,15 +256,15 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
         </Card.Body>
       </Card>
 
-      <Row xs={1} xl={2} className="g-4">
+      <Row xs={1} xl={2} className="gap-4">
         <Col xl={4}>
-          <Card className="card-section h-100">
-            <Card.Body className="d-flex flex-column gap-3">
+          <Card className="card-section h-full">
+            <Card.Body className="flex flex-col gap-3">
               <div>
-                <Card.Title as="h2" className="section-heading h5 mb-1">
+                <Card.Title as="h2" className="text-lg mb-1">
                   Schemas &amp; objects
                 </Card.Title>
-                <Card.Text className="text-body-secondary mb-0">
+                <Card.Text className="text-slate-400 mb-0">
                   Select a table or view to inspect field metadata and profiles.
                 </Card.Text>
               </div>
@@ -278,21 +280,21 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                         action
                         active={isActive}
                         onClick={() => handleTableSelect(table)}
-                        className="d-flex flex-column align-items-start"
+                        className="flex flex-col items-start"
                       >
-                        <div className="d-flex align-items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <strong>{table.name}</strong>
                           <Badge bg={table.type === 'view' ? 'info' : 'secondary'}>{table.type}</Badge>
                         </div>
                         {table.schema ? (
-                          <small className="text-body-secondary">Schema: {table.schema}</small>
+                          <small className="text-slate-400">Schema: {table.schema}</small>
                         ) : null}
                       </ListGroup.Item>
                     );
                   })}
                 </ListGroup>
               ) : (
-                <div className="d-flex align-items-center gap-2 text-body-secondary">
+                <div className="flex items-center gap-2 text-slate-400">
                   <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                   Discovering tables…
                 </div>
@@ -301,26 +303,26 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
           </Card>
         </Col>
         <Col xl={8}>
-          <Card className="card-section h-100">
-            <Card.Body className="d-flex flex-column gap-3">
-              <div className="d-flex justify-content-between align-items-center">
+          <Card className="card-section h-full">
+            <Card.Body className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
                 <div>
-                  <Card.Title as="h2" className="section-heading h5 mb-1">
+                  <Card.Title as="h2" className="text-lg mb-1">
                     Field catalogue
                   </Card.Title>
                   {selectedTable ? (
-                    <Card.Text className="text-body-secondary mb-0">
+                    <Card.Text className="text-slate-400 mb-0">
                       {selectedTable.schema ? `${selectedTable.schema}.` : ''}
                       {selectedTable.name}
                     </Card.Text>
                   ) : (
-                    <Card.Text className="text-body-secondary mb-0">Select an object to continue.</Card.Text>
+                    <Card.Text className="text-slate-400 mb-0">Select an object to continue.</Card.Text>
                   )}
                 </div>
               </div>
               {selectedTable ? (
                 loadingFields && fieldsForSelectedTable.length === 0 ? (
-                  <div className="d-flex align-items-center gap-2 text-body-secondary">
+                  <div className="flex items-center gap-2 text-slate-400">
                     <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                     Loading fields…
                   </div>
@@ -345,7 +347,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                           <tr
                             key={field.name}
                             role="button"
-                            className={isSelected ? 'table-active' : ''}
+                            className={isSelected ? 'bg-aurora/10 text-white' : ''}
                             onClick={() => void handleFieldSelect(field)}
                           >
                             <td>{field.name}</td>
@@ -355,7 +357,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                             <td className="text-end">
                               {stats ? `${(stats.match_rate * 100).toFixed(1)}%` : '—'}
                             </td>
-                            <td className="text-end text-monospaced">
+                            <td className="text-end font-mono">
                               {stats
                                 ? `${stats.matched_values.toLocaleString()} / ${stats.total_values.toLocaleString()}`
                                 : '—'}
@@ -366,10 +368,10 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                     </tbody>
                   </Table>
                 ) : (
-                  <p className="text-body-secondary mb-0">No fields were discovered for this object.</p>
+                  <p className="text-slate-400 mb-0">No fields were discovered for this object.</p>
                 )
               ) : (
-                <p className="text-body-secondary mb-0">Select a table or view to see its fields.</p>
+                <p className="text-slate-400 mb-0">Select a table or view to see its fields.</p>
               )}
             </Card.Body>
           </Card>
@@ -377,20 +379,20 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
       </Row>
 
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-3">
-          <div className="d-flex justify-content-between align-items-center">
+        <Card.Body className="flex flex-col gap-3">
+          <div className="flex justify-between items-center">
             <div>
-              <Card.Title as="h2" className="section-heading h5 mb-1">
+              <Card.Title as="h2" className="text-lg mb-1">
                 Distinct sample values
               </Card.Title>
-              <Card.Text className="text-body-secondary mb-0">
+              <Card.Text className="text-slate-400 mb-0">
                 Click a field above to preview distinct raw values stored for profiling and reconciliation.
               </Card.Text>
             </div>
           </div>
           {selectedFieldKey ? (
             loadingSamples && selectedSamples.length === 0 ? (
-              <div className="d-flex align-items-center gap-2 text-body-secondary">
+              <div className="flex items-center gap-2 text-slate-400">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Loading samples…
               </div>
@@ -407,17 +409,17 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                   {distinctSamples.map((sample) => (
                     <tr key={`${sample.source_field}-${sample.raw_value}`}>
                       <td>{sample.raw_value}</td>
-                      <td className="text-end text-monospaced">{sample.occurrence_count.toLocaleString()}</td>
+                      <td className="text-end font-mono">{sample.occurrence_count.toLocaleString()}</td>
                       <td className="text-end">{new Date(sample.last_seen_at).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
             ) : (
-              <p className="text-body-secondary mb-0">No samples captured for this field yet.</p>
+              <p className="text-slate-400 mb-0">No samples captured for this field yet.</p>
             )
           ) : (
-            <p className="text-body-secondary mb-0">Select a field to view its distinct values.</p>
+            <p className="text-slate-400 mb-0">Select a field to view its distinct values.</p>
           )}
         </Card.Body>
       </Card>

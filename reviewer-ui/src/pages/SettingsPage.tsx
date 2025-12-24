@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Button, Card, Col, Form, Spinner } from 'react-bootstrap';
+import { Button, Card, Col, Form, Spinner } from '../components/ui';
 
 import { updateConfig } from '../api';
 import { useAppState } from '../state/AppStateContext';
@@ -64,14 +64,14 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
   ]);
 
   return (
-    <div className="d-flex flex-column gap-4" aria-busy={isLoading}>
+    <div className="flex flex-col gap-4" aria-busy={isLoading}>
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-4">
+        <Card.Body className="flex flex-col gap-4">
           <div>
-            <Card.Title as="h1" className="section-heading h4 mb-2">
+            <Card.Title as="h1" className="section-heading text-xl mb-2">
               System configuration
             </Card.Title>
-            <Card.Text className="text-body-secondary mb-0">
+            <Card.Text className="text-slate-400 mb-0">
               Fine-tune matcher defaults, LLM integrations, and semantic controls. Changes apply immediately after saving.
             </Card.Text>
           </div>
@@ -81,7 +81,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                 event.preventDefault();
                 void handleSubmit();
               }}
-              className="row g-3"
+              className="grid grid-cols-12 gap-3"
             >
               <Form.Group as={Col} md={6} controlId="settings-default-dimension">
                 <Form.Label>Default dimension</Form.Label>
@@ -130,7 +130,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   <option value="online">Online API (OpenAI compatible)</option>
                   <option value="offline">Offline Ollama (llama3)</option>
                 </Form.Select>
-                <Form.Text className="text-body-secondary">
+                <Form.Text className="text-slate-400">
                   Choose between the hosted API endpoint and the bundled Ollama service.
                 </Form.Text>
               </Form.Group>
@@ -152,10 +152,10 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   onChange={(event) => handleChange('llm_api_base', event.target.value)}
                 />
               </Form.Group>
-              <Col xs={12} className="d-flex justify-content-end">
+              <Col xs={12} className="flex justify-end">
                 <Button type="submit" variant="primary" disabled={saving}>
                   {saving ? (
-                    <span className="d-inline-flex align-items-center gap-2">
+                    <span className="inline-flex items-center gap-2">
                       <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                       Saving…
                     </span>
@@ -166,7 +166,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
               </Col>
             </Form>
           ) : (
-            <p className="text-body-secondary mb-0">Configuration is still loading.</p>
+            <p className="text-slate-400 mb-0">Configuration is still loading.</p>
           )}
         </Card.Body>
       </Card>

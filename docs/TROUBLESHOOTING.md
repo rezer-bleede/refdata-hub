@@ -88,7 +88,7 @@ If `npm run build` fails with errors like:
 Type 'ChangeEventHandler<HTMLInputElement>' is not assignable to type 'ChangeEventHandler<HTMLTextAreaElement>'
 ```
 
-ensure that multiline fields are rendered through the custom `Form.Control` shim using `as="textarea"` and that the shim
-accepts textarea-specific props. The current implementation in `reviewer-ui/src/react-bootstrap.tsx` narrows props based on the
+ensure that multiline fields are rendered through the shared `Form.Control` primitive using `as="textarea"` and that the component
+accepts textarea-specific props. The current implementation in `reviewer-ui/src/components/ui.tsx` narrows props based on the
 `as` value, so `onChange`, `rows`, and related attributes are correctly typed. After updating, rerun `npm run build` to confirm
 the frontend bundle succeeds.
