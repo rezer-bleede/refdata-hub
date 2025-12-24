@@ -326,7 +326,7 @@ const AppScaffold = ({
             <p className="app-header__eyebrow">RefData Hub</p>
             <h1 className="app-header__title">{activeItem.label}</h1>
             <p className="app-header__subtitle">
-              Operationalise semantic standards with observability inspired by OpenMetadata.
+              Operationalise semantic standards with observability inspired by modern data catalogs.
             </p>
           </div>
           <div className="app-header__actions">
