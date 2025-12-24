@@ -32,7 +32,8 @@
   responsive themes for comfortable accessibility in varied environments, now implemented with a Tailwind CSS design system
   behind a React-Bootstrap-compatible component shim so existing screens retain their ergonomic JSX structure.
   The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
-  widescreen monitors.
+  widescreen monitors. A custom RefData helix mark sits in the top-left brand lockup so the workspace always shows a
+  recognizable identity even when the sidebar collapses to icon-only mode.
 - Match Insights cards clearly call out when no samples have been ingested yet, preventing misleading 0/0 match readouts, stay
   visible by falling back to configured field mappings when statistics are empty, and automatically refresh their samples when
   mappings are created, edited, or the global sync action runs.

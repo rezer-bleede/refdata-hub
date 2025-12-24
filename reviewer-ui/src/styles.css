@@ -44,7 +44,16 @@
   }
 
   .app-sidebar__brand-mark {
-    @apply h-11 w-11 rounded-xl bg-gradient-to-br from-aurora to-indigo-400 shadow-glow-sm;
+    @apply relative grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-aurora to-indigo-400 text-white shadow-glow-sm;
+  }
+
+  .app-sidebar__brand-mark::after {
+    content: '';
+    @apply absolute inset-1 rounded-lg border border-white/20 bg-white/5 backdrop-blur-[1px];
+  }
+
+  .app-sidebar__brand-logo {
+    @apply relative z-10 h-7 w-7 drop-shadow-[0_8px_18px_rgba(0,0,0,0.45)];
   }
 
   .app-sidebar__brand-text {
