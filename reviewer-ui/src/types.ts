@@ -210,6 +210,12 @@ export interface ValueMappingPayload {
 
 export interface ValueMappingUpdatePayload extends Partial<ValueMappingPayload> {}
 
+export interface ValueMappingImportResult {
+  created: number;
+  updated: number;
+  errors: string[];
+}
+
 export type DimensionExtraFieldType = 'string' | 'number' | 'boolean';
 
 export interface DimensionExtraFieldDefinition {

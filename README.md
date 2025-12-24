@@ -67,7 +67,7 @@ The interface is organised into task-focused pages that surface the entire curat
   and fallback insights that stay visible from configured field mappings even before statistics are available. Insights refresh
   on-demand via the global **Sync data** action.
 - **Suggestions** – approve semantic suggestions or manually link raw values to canonical standards.
-- **Mapping History** – audit every approved mapping, edit or retire entries, and export a normalised view per connection.
+- **Mapping History** – audit every approved mapping, edit or retire entries, export CSV/Excel snapshots, or import bulk updates per connection.
 
 Detailed curation guidance, including an import-ready Abu Dhabi region dataset for the canonical library, lives in
 [`docs/CANONICAL_LIBRARY.md`](docs/CANONICAL_LIBRARY.md).
@@ -127,6 +127,8 @@ The FastAPI service now exposes a rich set of endpoints under `/api`:
 - `/source/connections/{id}/unmatched` – retrieve unmatched raw values with inline suggestions for remediation.
 - `/source/connections/{id}/value-mappings` – approve, update, or delete specific raw-to-canonical mappings.
 - `/source/value-mappings` – consolidated view of all mappings across connections.
+- `/source/value-mappings/export` – download mapping history as CSV or Excel across all connections or filtered by connection.
+- `/source/value-mappings/import` – upload CSV/Excel mapping updates with validation feedback and connection scoping.
 
 Endpoints accept and return structured JSON payloads that align with the React TypeScript models in `reviewer-ui/src/types.ts`.
 

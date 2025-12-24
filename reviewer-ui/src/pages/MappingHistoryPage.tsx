@@ -3,9 +3,11 @@ import { Button, Card, Form, Modal, Spinner, Table } from '../components/ui';
 
 import {
   deleteValueMapping,
+  exportValueMappings,
   fetchAllValueMappings,
   fetchConnectionValueMappings,
   fetchSourceConnections,
+  importValueMappings,
   updateValueMapping,
 } from '../api';
 import { useAppState } from '../state/AppStateContext';
@@ -14,6 +16,7 @@ import type {
   SourceConnection,
   ToastMessage,
   ValueMappingExpanded,
+  ValueMappingImportResult,
   ValueMappingUpdatePayload,
 } from '../types';
 
@@ -32,6 +35,11 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
   const [deleteTarget, setDeleteTarget] = useState<ValueMappingExpanded | null>(null);
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
+  const [exporting, setExporting] = useState<'csv' | 'xlsx' | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ValueMappingImportResult | null>(null);
 
   const canonicalByDimension = useMemo(() => {
     const map = new Map<string, CanonicalValue[]>();
@@ -80,6 +88,59 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
   useEffect(() => {
     void loadMappings(selectedConnection);
   }, [selectedConnection, loadMappings]);
+
+  const handleExport = async (format: 'csv' | 'xlsx') => {
+    try {
+      setExporting(format);
+      const blob = await exportValueMappings(selectedConnection === 'all' ? undefined : selectedConnection, format);
+      const url = window.URL.createObjectURL(blob);
+      const filenamePrefix = selectedConnection === 'all' ? 'all-connections' : `connection-${selectedConnection}`;
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `value-mappings-${filenamePrefix}.${format === 'csv' ? 'csv' : 'xlsx'}`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      onToast({ type: 'success', content: `Exported mappings as ${format.toUpperCase()}.` });
+    } catch (error) {
+      console.error(error);
+      onToast({ type: 'error', content: 'Unable to export mappings.' });
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const handleImport = async () => {
+    if (selectedConnection === 'all') {
+      onToast({ type: 'error', content: 'Select a connection before importing mappings.' });
+      return;
+    }
+    if (!importFile) {
+      onToast({ type: 'error', content: 'Choose a CSV or Excel file to import.' });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const result = await importValueMappings(importFile, selectedConnection);
+      setImportResult(result);
+      await loadMappings(selectedConnection);
+
+      const summary = `Imported ${result.created} created / ${result.updated} updated`;
+      const suffix = result.errors.length ? ` with ${result.errors.length} warning(s).` : '.';
+      onToast({ type: 'success', content: `${summary}${suffix}` });
+
+      if (!result.errors.length) {
+        setShowImport(false);
+        setImportFile(null);
+        setImportResult(null);
+      }
+    } catch (error) {
+      console.error(error);
+      onToast({ type: 'error', content: 'Unable to import mappings.' });
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const openEdit = (mapping: ValueMappingExpanded) => {
     setEditing(mapping);
@@ -204,23 +265,53 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
                 Review every approved mapping and ensure canonical assignments stay current.
               </Card.Text>
             </div>
-            <Form.Group controlId="history-connection" className="w-auto">
-              <Form.Label>Connection</Form.Label>
-              <Form.Select
-                value={selectedConnection}
-                onChange={(event) => {
-                  const value = event.target.value;
-                  setSelectedConnection(value === 'all' ? 'all' : Number(value));
-                }}
-              >
-                <option value="all">All connections</option>
-                {connections.map((connection) => (
-                  <option key={connection.id} value={connection.id}>
-                    {connection.name}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+            <div className="flex flex-col items-stretch lg:items-end gap-2 w-full lg:w-auto">
+              <Form.Group controlId="history-connection" className="w-full lg:w-auto">
+                <Form.Label>Connection</Form.Label>
+                <Form.Select
+                  value={selectedConnection}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setSelectedConnection(value === 'all' ? 'all' : Number(value));
+                  }}
+                >
+                  <option value="all">All connections</option>
+                  {connections.map((connection) => (
+                    <option key={connection.id} value={connection.id}>
+                      {connection.name}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+              <div className="flex flex-wrap gap-2 justify-end">
+                <Button
+                  size="sm"
+                  variant="outline-secondary"
+                  onClick={() => void handleExport('csv')}
+                  disabled={exporting !== null}
+                >
+                  {exporting === 'csv' ? 'Exporting CSV…' : 'Export CSV'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline-secondary"
+                  onClick={() => void handleExport('xlsx')}
+                  disabled={exporting !== null}
+                >
+                  {exporting === 'xlsx' ? 'Exporting Excel…' : 'Export Excel'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => {
+                    setImportResult(null);
+                    setShowImport(true);
+                  }}
+                >
+                  Import
+                </Button>
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <Table striped hover className="align-middle whitespace-nowrap">
@@ -240,6 +331,79 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
           </div>
         </Card.Body>
       </Card>
+
+      <Modal
+        show={showImport}
+        onHide={() => {
+          setShowImport(false);
+          setImportFile(null);
+          setImportResult(null);
+        }}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Import mappings</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="flex flex-col gap-3">
+          <p className="mb-0 text-slate-500">
+            Upload a CSV or Excel file containing mapping rows. Required columns are{' '}
+            <code>source_table</code>, <code>source_field</code>, <code>raw_value</code>, and{' '}
+            <code>canonical_id</code>. When importing from this page, the selected connection will
+            be applied automatically.
+          </p>
+          <Form.Group controlId="import-file">
+            <Form.Label>Import file</Form.Label>
+            <Form.Control
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={(event) => {
+                setImportFile(event.target.files?.[0] ?? null);
+                setImportResult(null);
+              }}
+            />
+          </Form.Group>
+          {importResult && (
+            <div className="flex flex-col gap-2 rounded border border-slate-200 p-3 bg-slate-50">
+              <div className="font-semibold">Summary</div>
+              <div className="text-sm text-slate-600">
+                Created {importResult.created} • Updated {importResult.updated}
+              </div>
+              {importResult.errors.length > 0 && (
+                <div className="text-sm text-amber-600">
+                  <div className="font-semibold">Warnings</div>
+                  <ul className="list-disc pl-5 mt-1 mb-0 space-y-1">
+                    {importResult.errors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              setShowImport(false);
+              setImportFile(null);
+              setImportResult(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={() => void handleImport()} disabled={importing}>
+            {importing ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                Importing…
+              </span>
+            ) : (
+              'Import mappings'
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <Modal show={Boolean(editing)} onHide={() => setEditing(null)} centered>
         <Modal.Header closeButton>

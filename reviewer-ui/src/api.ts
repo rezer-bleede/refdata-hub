@@ -30,6 +30,7 @@ import type {
   ValueMapping,
   ValueMappingExpanded,
   ValueMappingPayload,
+  ValueMappingImportResult,
   ValueMappingUpdatePayload,
 } from './types';
 
@@ -112,6 +113,23 @@ async function apiFetchVoid(path: string, init?: RequestInit): Promise<void> {
   }
 
   console.debug(`[api] ${method} ${url} <- ${response.status}`);
+}
+
+async function apiFetchBlob(path: string, init?: RequestInit): Promise<Blob> {
+  const { response, url, method } = await performRequest(path, init);
+
+  if (!response.ok) {
+    const body = truncate(await response.text());
+    console.error(`[api] ${method} ${url} failed`, {
+      status: response.status,
+      statusText: response.statusText,
+      body,
+    });
+    throw new Error(body || `Request failed with status ${response.status}`);
+  }
+
+  console.debug(`[api] ${method} ${url} <- ${response.status}`);
+  return await response.blob();
 }
 
 export function getApiBaseUrl(): string {
@@ -462,6 +480,41 @@ export async function fetchConnectionValueMappings(connectionId: number): Promis
 
 export async function fetchAllValueMappings(): Promise<ValueMappingExpanded[]> {
   return apiFetchJson<ValueMappingExpanded[]>('/api/source/value-mappings');
+}
+
+export async function exportValueMappings(
+  connectionId: number | 'all' | undefined,
+  format: 'csv' | 'xlsx',
+): Promise<Blob> {
+  const params = new URLSearchParams({ format });
+  if (connectionId !== undefined && connectionId !== 'all') {
+    params.set('connection_id', String(connectionId));
+  }
+
+  const query = params.toString();
+  return apiFetchBlob(`/api/source/value-mappings/export?${query}`);
+}
+
+export async function importValueMappings(
+  file: File,
+  connectionId?: number,
+): Promise<ValueMappingImportResult> {
+  const params = new URLSearchParams();
+  if (connectionId !== undefined) {
+    params.set('connection_id', String(connectionId));
+  }
+  const suffix = params.toString();
+  const path = suffix
+    ? `/api/source/value-mappings/import?${suffix}`
+    : '/api/source/value-mappings/import';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return apiFetchJson<ValueMappingImportResult>(path, {
+    method: 'POST',
+    body: formData,
+  });
 }
 
 export async function updateValueMapping(
