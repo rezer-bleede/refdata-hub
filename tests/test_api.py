@@ -29,6 +29,7 @@ from api.app.main import create_app
 from api.app.config import Settings
 from api.app.database import create_db_engine, init_db, get_session
 from api.app.models import SourceSample, SystemConfig
+from api.app.services.source_connections import SourceConnectionServiceError
 
 
 def build_test_client() -> TestClient:
@@ -1058,6 +1059,37 @@ def test_source_connection_metadata_and_existing_test() -> None:
             json={"db_type": "oracle"},
         )
         assert override_failure.status_code == 400
+
+    finally:
+        temp_dir.cleanup()
+
+
+def test_source_tables_surface_connection_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = build_test_client()
+    db_path, temp_dir = create_sqlite_source()
+    try:
+        create_response = client.post(
+            "/api/source/connections",
+            json={
+                "name": "unreachable-db",
+                "db_type": "sqlite",
+                "host": "localhost",
+                "port": 5432,
+                "database": str(db_path),
+                "username": "ignored",
+            },
+        )
+        assert create_response.status_code == 201
+        connection_id = create_response.json()["id"]
+
+        def _fail(*_: object, **__: object) -> None:
+            raise SourceConnectionServiceError("connection is bad: Name or service not known")
+
+        monkeypatch.setattr("api.app.routes.source.service_list_tables", _fail)
+
+        response = client.get(f"/api/source/connections/{connection_id}/tables")
+        assert response.status_code == 400
+        assert "connection is bad" in response.json()["detail"]
     finally:
         temp_dir.cleanup()
 

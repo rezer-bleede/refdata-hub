@@ -188,10 +188,14 @@ def list_tables(settings: ConnectionSettings) -> list[dict[str, Any]]:
         logger.debug("Failed to initialise engine for table discovery", exc_info=exc)
         raise SourceConnectionServiceError(str(exc)) from exc
 
-    inspector = inspect(engine)
-    dialect = engine.dialect.name
-
     try:
+        try:
+            inspector = inspect(engine)
+            dialect = engine.dialect.name
+        except SQLAlchemyError as exc:
+            logger.debug("Failed to create inspector for table discovery", exc_info=exc)
+            raise SourceConnectionServiceError(str(exc)) from exc
+
         if parsed.schema:
             schemas: Iterable[Optional[str]] = [parsed.schema]
         else:
@@ -243,19 +247,25 @@ def list_fields(
         logger.debug("Failed to initialise engine for column discovery", exc_info=exc)
         raise SourceConnectionServiceError(str(exc)) from exc
 
-    inspector = inspect(engine)
-    target_schema = schema if schema is not None else parsed.schema
-
     try:
-        columns = inspector.get_columns(table_name, schema=target_schema)
-    except SQLAlchemyError as exc:
-        logger.debug(
-            "Failed to inspect columns for %s.%s",
-            target_schema,
-            table_name,
-            exc_info=exc,
-        )
-        raise SourceConnectionServiceError(str(exc)) from exc
+        try:
+            inspector = inspect(engine)
+        except SQLAlchemyError as exc:
+            logger.debug("Failed to create inspector for column discovery", exc_info=exc)
+            raise SourceConnectionServiceError(str(exc)) from exc
+
+        target_schema = schema if schema is not None else parsed.schema
+
+        try:
+            columns = inspector.get_columns(table_name, schema=target_schema)
+        except SQLAlchemyError as exc:
+            logger.debug(
+                "Failed to inspect columns for %s.%s",
+                target_schema,
+                table_name,
+                exc_info=exc,
+            )
+            raise SourceConnectionServiceError(str(exc)) from exc
     finally:
         engine.dispose()
 
