@@ -117,7 +117,8 @@ The FastAPI service now exposes a rich set of endpoints under `/api`:
 - `/source/connections/test` – validate new connection details on demand and surface connection latency without saving the
   record.
 - `/source/connections/{id}/tables` – discover available tables and views for a connection so mapping workflows can present
-  authoritative dropdowns.
+  authoritative dropdowns. Connection or DNS failures are now surfaced as clear 400-level responses instead of generic 500s,
+  making it easier to diagnose unreachable hosts directly from the UI.
 - `/source/connections/{id}/tables/{table}/fields` – inspect column metadata for a given table (or view) to power the field
   selector in the reviewer UI.
 - `/source/connections/{id}/mappings` – create/update/delete field mappings to reference dimensions.
