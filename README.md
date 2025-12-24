@@ -43,7 +43,9 @@ The interface is organised into task-focused pages that surface the entire curat
 - **Dashboard** – monitor canonical coverage and experiment with semantic suggestions in a live playground.
 - **Settings** – manage matcher thresholds, embedding defaults, and LLM connectivity in a dedicated workspace.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV. Dimension chips now use high-contrast aurora badges so codes stay legible against the dark canvas.
-- **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema.
+- **Dimensions** – maintain each dimension's code, label, description, and custom attribute schema. Each row now opens a
+  dedicated detail view that aggregates canonical coverage, attribute fill rates, and mapping health for that dimension so
+  reviewers can audit governance readiness before onboarding new sources.
 - **Dimension Relations** – model parent/child hierarchies such as regions to districts and manage canonical value pairings.
 - **Source Connections** – register and maintain connectivity metadata for upstream systems, verify credentials with the
   built-in **Test connection** action, and deep-dive into each source to inspect schemas, tables, fields, match statistics, and
