@@ -148,4 +148,42 @@ describe('api client helpers', () => {
       undefined,
     );
   });
+
+  it('exports and imports value mappings', async () => {
+    vi.stubGlobal('__API_BASE_URL__', '');
+    const fetchMock = vi.fn((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (url.includes('/export')) {
+        return Promise.resolve(new Response('raw_value,canonical_id\nCA,1', { status: 200 }));
+      }
+      if (url.includes('/import')) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ created: 1, updated: 0, errors: [] }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          }),
+        );
+      }
+      return Promise.reject(new Error('unexpected request'));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { exportValueMappings, importValueMappings } = await import('./api');
+
+    const blob = await exportValueMappings('all', 'csv');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/source/value-mappings/export?format=csv',
+      undefined,
+    );
+    expect(blob.size).toBeGreaterThan(0);
+
+    const file = new File(['raw_value,canonical_id\nCA,1'], 'mappings.csv', { type: 'text/csv' });
+    const result = await importValueMappings(file, 7);
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/source/value-mappings/import?connection_id=7',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(result.created).toBe(1);
+    expect(result.errors).toHaveLength(0);
+  });
 });

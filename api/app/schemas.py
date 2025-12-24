@@ -278,6 +278,12 @@ class ValueMappingExpanded(ValueMappingRead):
     ref_dimension: str
 
 
+class ValueMappingImportResult(BaseModel):
+    created: int
+    updated: int
+    errors: list[str]
+
+
 class DimensionExtraFieldDefinition(BaseModel):
     key: str = Field(..., min_length=1)
     label: str = Field(..., min_length=1)

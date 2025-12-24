@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from io import BytesIO, StringIO
+from pathlib import Path
 from typing import Iterable, List, Literal, Sequence
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
+import pandas as pd
+from fastapi import (APIRouter, Body, Depends, File, HTTPException, Query, Response,
+                     UploadFile, status)
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, and_, delete, select
 
@@ -39,6 +43,7 @@ from ..schemas import (
     UnmatchedValueRecord,
     ValueMappingCreate,
     ValueMappingExpanded,
+    ValueMappingImportResult,
     ValueMappingRead,
     ValueMappingUpdate,
 )
@@ -90,6 +95,45 @@ def _canonical_lookup(session: Session, identifiers: set[int]) -> dict[int, Cano
         return {}
     statement = select(CanonicalValue).where(CanonicalValue.id.in_(identifiers))
     return {canonical.id: canonical for canonical in session.exec(statement).all()}
+
+
+def _value_mapping_export_rows(
+    records: Sequence[ValueMapping],
+    canonicals: dict[int, CanonicalValue],
+    connections: dict[int, SourceConnection],
+) -> list[dict[str, object | None]]:
+    rows: list[dict[str, object | None]] = []
+    for record in records:
+        canonical = canonicals.get(record.canonical_id)
+        connection = connections.get(record.source_connection_id)
+        rows.append(
+            {
+                "source_connection_id": record.source_connection_id,
+                "connection_name": connection.name if connection else "",
+                "source_table": record.source_table,
+                "source_field": record.source_field,
+                "raw_value": record.raw_value,
+                "canonical_id": record.canonical_id,
+                "canonical_label": canonical.canonical_label if canonical else "",
+                "ref_dimension": canonical.dimension if canonical else "",
+                "status": record.status,
+                "confidence": record.confidence,
+                "suggested_label": record.suggested_label,
+                "notes": record.notes,
+                "created_at": record.created_at.isoformat(),
+                "updated_at": record.updated_at.isoformat(),
+            }
+        )
+
+    rows.sort(
+        key=lambda item: (
+            item.get("source_connection_id"),
+            item.get("source_table"),
+            item.get("source_field"),
+            item.get("raw_value"),
+        )
+    )
+    return rows
 
 
 def _build_connection_test_result(latency_ms: float) -> SourceConnectionTestResult:
@@ -889,3 +933,181 @@ def list_all_value_mappings(session: Session = Depends(get_session)) -> List[Val
 
     expanded.sort(key=lambda item: (item.source_connection_id, item.source_table, item.source_field, item.raw_value))
     return expanded
+
+
+@router.get("/value-mappings/export")
+def export_value_mappings(
+    format: Literal["csv", "xlsx"] = Query("csv", description="Export file format"),
+    connection_id: int | None = Query(None, description="Optional source connection filter"),
+    session: Session = Depends(get_session),
+) -> Response:
+    statement = select(ValueMapping)
+    if connection_id is not None:
+        _require_connection(session, connection_id)
+        statement = statement.where(ValueMapping.source_connection_id == connection_id)
+
+    records = session.exec(statement).all()
+    canonical_by_id = _canonical_lookup(session, {record.canonical_id for record in records})
+    connections = {
+        connection.id: connection
+        for connection in session.exec(select(SourceConnection)).all()
+        if connection.id is not None
+    }
+    rows = _value_mapping_export_rows(records, canonical_by_id, connections)
+
+    if format == "xlsx":
+        buffer = BytesIO()
+        pd.DataFrame(rows).to_excel(buffer, index=False)
+        buffer.seek(0)
+        return Response(
+            content=buffer.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=value-mappings.xlsx"},
+        )
+
+    buffer = StringIO()
+    pd.DataFrame(rows).to_csv(buffer, index=False)
+    return Response(
+        content=buffer.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=value-mappings.csv"},
+    )
+
+
+@router.post("/value-mappings/import", response_model=ValueMappingImportResult)
+async def import_value_mappings(
+    connection_id: int | None = Query(None, description="Default connection to apply to imported rows"),
+    file: UploadFile = File(...),
+    session: Session = Depends(get_session),
+) -> ValueMappingImportResult:
+    raw_content = await file.read()
+    if not raw_content:
+        raise HTTPException(status_code=400, detail="Upload a non-empty CSV or Excel file.")
+
+    suffix = Path(file.filename or "").suffix.lower()
+    buffer = BytesIO(raw_content)
+    try:
+        if suffix in {".xlsx", ".xls"}:
+            dataframe = pd.read_excel(buffer)
+        else:
+            dataframe = pd.read_csv(buffer)
+    except Exception as exc:  # pragma: no cover - exercised in tests
+        raise HTTPException(status_code=400, detail="Unable to parse uploaded file.") from exc
+
+    dataframe.columns = [str(column).strip() for column in dataframe.columns]
+    required_columns = ["source_table", "source_field", "raw_value", "canonical_id"]
+    if connection_id is None:
+        required_columns.append("source_connection_id")
+
+    missing = [column for column in required_columns if column not in dataframe.columns]
+    if missing:
+        raise HTTPException(
+            status_code=400, detail=f"Missing required columns: {', '.join(sorted(missing))}"
+        )
+
+    if dataframe.empty:
+        return ValueMappingImportResult(created=0, updated=0, errors=["Uploaded file contains no rows."])
+
+    connections = {
+        connection.id: connection
+        for connection in session.exec(select(SourceConnection)).all()
+        if connection.id is not None
+    }
+    canonicals: dict[int, CanonicalValue] = {
+        canonical.id: canonical
+        for canonical in session.exec(select(CanonicalValue)).all()
+        if canonical.id is not None
+    }
+
+    created = 0
+    updated = 0
+    errors: list[str] = []
+
+    for index, row in dataframe.iterrows():
+        row_number = index + 2  # account for header row in spreadsheets
+
+        resolved_connection_id = connection_id or row.get("source_connection_id")
+        if pd.isna(resolved_connection_id):
+            errors.append(f"Row {row_number}: source_connection_id is required when no default is provided.")
+            continue
+        resolved_connection_id = int(resolved_connection_id)
+        if resolved_connection_id not in connections:
+            errors.append(f"Row {row_number}: connection {resolved_connection_id} does not exist.")
+            continue
+
+        try:
+            canonical_identifier = int(row.get("canonical_id"))
+        except (TypeError, ValueError):
+            errors.append(f"Row {row_number}: canonical_id must be a valid integer.")
+            continue
+
+        canonical = canonicals.get(canonical_identifier)
+        if not canonical:
+            errors.append(f"Row {row_number}: canonical value {canonical_identifier} was not found.")
+            continue
+
+        raw_value = row.get("raw_value")
+        source_table = row.get("source_table")
+        source_field = row.get("source_field")
+        if any(pd.isna(value) for value in (raw_value, source_table, source_field)):
+            errors.append(
+                f"Row {row_number}: source_table, source_field, and raw_value must all be provided."
+            )
+            continue
+
+        status = (row.get("status") or "approved").strip()
+        if status not in {"approved", "pending", "rejected"}:
+            errors.append(f"Row {row_number}: status '{status}' is not supported.")
+            continue
+
+        confidence_value = row.get("confidence")
+        confidence = None
+        if pd.notna(confidence_value):
+            try:
+                confidence = float(confidence_value)
+            except (TypeError, ValueError):
+                errors.append(f"Row {row_number}: confidence must be numeric.")
+                continue
+            if confidence < 0 or confidence > 1:
+                errors.append(f"Row {row_number}: confidence must be between 0 and 1.")
+                continue
+
+        payload = {
+            "source_connection_id": resolved_connection_id,
+            "source_table": str(source_table),
+            "source_field": str(source_field),
+            "raw_value": str(raw_value),
+            "canonical_id": canonical_identifier,
+            "status": status,
+            "confidence": confidence,
+            "suggested_label": row.get("suggested_label") if not pd.isna(row.get("suggested_label")) else None,
+            "notes": row.get("notes") if not pd.isna(row.get("notes")) else None,
+        }
+
+        existing = session.exec(
+            select(ValueMapping).where(
+                and_(
+                    ValueMapping.source_connection_id == resolved_connection_id,
+                    ValueMapping.source_table == payload["source_table"],
+                    ValueMapping.source_field == payload["source_field"],
+                    ValueMapping.raw_value == payload["raw_value"],
+                )
+            )
+        ).first()
+
+        if existing:
+            for key, value in payload.items():
+                setattr(existing, key, value)
+            existing.touch()
+            session.add(existing)
+            updated += 1
+            continue
+
+        mapping = ValueMapping(**payload)
+        mapping.touch()
+        session.add(mapping)
+        created += 1
+
+    session.commit()
+
+    return ValueMappingImportResult(created=created, updated=updated, errors=errors)
