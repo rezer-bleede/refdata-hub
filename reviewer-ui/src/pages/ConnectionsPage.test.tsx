@@ -67,4 +67,20 @@ describe('ConnectionsPage', () => {
       expect.objectContaining({ type: 'success', content: 'Connection added.' }),
     );
   });
+
+  it('prioritises the existing connections list above the creation form', async () => {
+    const onToast = vi.fn();
+    render(
+      <MemoryRouter>
+        <ConnectionsPage onToast={onToast} />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(apiMocks.fetchSourceConnections).toHaveBeenCalled());
+
+    const existingHeading = await screen.findByRole('heading', { name: 'Source connections' });
+    const registrationHeading = screen.getByRole('heading', { name: 'Register a source connection' });
+
+    expect(existingHeading.compareDocumentPosition(registrationHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

@@ -230,9 +230,99 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
   return (
     <Fragment>
       <div className="flex flex-col gap-8">
+        <section className="surface-card flex flex-col gap-4">
+          <div className="space-y-2">
+            <h1 className="section-heading text-2xl">Source connections</h1>
+            <p className="text-sm text-slate-400">
+              Edit or remove existing integrations. Deleting a connection removes associated mappings and samples.
+            </p>
+          </div>
+          <div className="overflow-hidden rounded-3xl border border-slate-800/70">
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left">Name</th>
+                    <th className="px-4 py-3 text-left">Database</th>
+                    <th className="px-4 py-3 text-left">Host</th>
+                    <th className="px-4 py-3 text-left">Updated</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                        Loading connections…
+                      </td>
+                    </tr>
+                  )}
+                  {!loading && sortedConnections.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                        No connections registered yet.
+                      </td>
+                    </tr>
+                  )}
+                  {!loading &&
+                    sortedConnections.map((connection) => (
+                      <tr key={connection.id} className="bg-slate-900/40">
+                        <td className="px-4 py-3 font-semibold text-slate-100">{connection.name}</td>
+                        <td className="px-4 py-3 text-slate-300">{connection.database}</td>
+                        <td className="px-4 py-3 text-slate-300">{connection.host}</td>
+                        <td className="px-4 py-3 text-sm text-slate-400">
+                          {new Date(connection.updated_at).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <Link to={`/connections/${connection.id}`} className="button-primary text-xs">
+                              View
+                            </Link>
+                            <button
+                              type="button"
+                              className="button-secondary text-xs"
+                              onClick={() => void handleTestExistingConnection(connection.id)}
+                              disabled={testingExistingId === connection.id}
+                            >
+                              {testingExistingId === connection.id ? (
+                                <span className="flex items-center gap-2">
+                                  <span
+                                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                                    aria-hidden="true"
+                                  />
+                                  Testing…
+                                </span>
+                              ) : (
+                                'Test'
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              className="button-secondary text-xs"
+                              onClick={() => openEdit(connection)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="button-danger text-xs"
+                              onClick={() => setDeleteTarget(connection)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section className="surface-card flex flex-col gap-6">
           <div className="space-y-2">
-            <h1 className="section-heading text-2xl">Register a source connection</h1>
+            <h2 className="section-heading text-xl">Register a source connection</h2>
             <p className="text-sm text-slate-400">
               Store connection metadata for sampling, mapping, and reconciliation workflows.
             </p>
@@ -350,96 +440,6 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               </button>
             </div>
           </form>
-        </section>
-
-        <section className="surface-card flex flex-col gap-4">
-          <div className="space-y-2">
-            <h2 className="section-heading text-xl">Source connections</h2>
-            <p className="text-sm text-slate-400">
-              Edit or remove existing integrations. Deleting a connection removes associated mappings and samples.
-            </p>
-          </div>
-          <div className="overflow-hidden rounded-3xl border border-slate-800/70">
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Database</th>
-                    <th className="px-4 py-3 text-left">Host</th>
-                    <th className="px-4 py-3 text-left">Updated</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
-                        Loading connections…
-                      </td>
-                    </tr>
-                  )}
-                  {!loading && sortedConnections.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
-                        No connections registered yet.
-                      </td>
-                    </tr>
-                  )}
-                  {!loading &&
-                    sortedConnections.map((connection) => (
-                      <tr key={connection.id} className="bg-slate-900/40">
-                        <td className="px-4 py-3 font-semibold text-slate-100">{connection.name}</td>
-                        <td className="px-4 py-3 text-slate-300">{connection.database}</td>
-                        <td className="px-4 py-3 text-slate-300">{connection.host}</td>
-                        <td className="px-4 py-3 text-sm text-slate-400">
-                          {new Date(connection.updated_at).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap justify-end gap-2">
-                            <Link to={`/connections/${connection.id}`} className="button-primary text-xs">
-                              View
-                            </Link>
-                            <button
-                              type="button"
-                              className="button-secondary text-xs"
-                              onClick={() => void handleTestExistingConnection(connection.id)}
-                              disabled={testingExistingId === connection.id}
-                            >
-                              {testingExistingId === connection.id ? (
-                                <span className="flex items-center gap-2">
-                                  <span
-                                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
-                                    aria-hidden="true"
-                                  />
-                                  Testing…
-                                </span>
-                              ) : (
-                                'Test'
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="button-secondary text-xs"
-                              onClick={() => openEdit(connection)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="button-danger text-xs"
-                              onClick={() => setDeleteTarget(connection)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </section>
       </div>
 

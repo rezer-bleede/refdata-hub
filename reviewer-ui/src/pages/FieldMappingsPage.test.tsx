@@ -78,4 +78,14 @@ describe('FieldMappingsPage metadata selectors', () => {
     );
     expect(optionLabels).toContain('id');
   });
+
+  it('surfaces existing mappings before the creation form', async () => {
+    const onToast = vi.fn();
+    render(<FieldMappingsPage onToast={onToast} />);
+
+    const existingHeading = await screen.findByRole('heading', { name: 'Existing mappings' });
+    const addHeading = screen.getByRole('heading', { name: 'Add a new mapping' });
+
+    expect(existingHeading.compareDocumentPosition(addHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });
