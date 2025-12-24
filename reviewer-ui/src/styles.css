@@ -4,12 +4,85 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    --color-scheme: dark;
+    --color-page-bg: linear-gradient(180deg, rgba(2, 6, 23, 1) 0%, rgba(15, 23, 42, 0.9) 35%, rgba(15, 23, 42, 1) 100%);
+    --color-shell-bg: radial-gradient(
+        circle at 15% 5%,
+        rgba(99, 102, 241, 0.28),
+        transparent 55%
+      ),
+      radial-gradient(circle at 85% 0%, rgba(45, 212, 191, 0.22), transparent 45%),
+      linear-gradient(180deg, rgba(15, 23, 42, 0.92) 0%, rgba(15, 23, 42, 0.78) 100%);
+    --color-sidebar-bg: linear-gradient(180deg, rgba(7, 11, 26, 0.98) 0%, rgba(11, 16, 35, 0.9) 100%);
+    --color-header-bg: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.72) 100%);
+    --color-surface: rgba(15, 23, 42, 0.7);
+    --color-surface-strong: rgba(15, 23, 42, 0.8);
+    --color-surface-soft: rgba(15, 23, 42, 0.6);
+    --color-border-strong: rgba(148, 163, 184, 0.35);
+    --color-border-muted: rgba(148, 163, 184, 0.18);
+    --color-text-primary: #e2e8f0;
+    --color-text-secondary: #94a3b8;
+    --color-control-bg: rgba(3, 7, 18, 0.85);
+    --color-control-border: rgba(148, 163, 184, 0.3);
+    --color-table-header-bg: rgba(15, 23, 42, 0.7);
+    --color-table-row: rgba(15, 23, 42, 0.55);
+    --color-table-row-hover: rgba(15, 23, 42, 0.65);
+    --color-nav-indicator: #94a3b8;
+  }
+
+  body.theme-light {
+    --color-scheme: light;
+    --color-page-bg: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 40%, #f8fafc 100%);
+    --color-shell-bg: radial-gradient(circle at 10% 0%, rgba(99, 102, 241, 0.12), transparent 45%),
+      radial-gradient(circle at 85% 0%, rgba(34, 211, 238, 0.12), transparent 35%),
+      linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    --color-sidebar-bg: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    --color-header-bg: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    --color-surface: #ffffff;
+    --color-surface-strong: #f8fafc;
+    --color-surface-soft: #f1f5f9;
+    --color-border-strong: #cbd5e1;
+    --color-border-muted: #e2e8f0;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-control-bg: #ffffff;
+    --color-control-border: #cbd5e1;
+    --color-table-header-bg: #e2e8f0;
+    --color-table-row: #f8fafc;
+    --color-table-row-hover: #e2e8f0;
+    --color-nav-indicator: #a5b4fc;
+  }
+
+  body.theme-midnight {
+    --color-scheme: dark;
+    --color-page-bg: radial-gradient(circle at 15% 5%, rgba(99, 102, 241, 0.3), transparent 45%),
+      radial-gradient(circle at 85% 0%, rgba(45, 212, 191, 0.18), transparent 30%),
+      linear-gradient(180deg, #0b1224 0%, #0f172a 100%);
+    --color-shell-bg: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.32), transparent 55%),
+      radial-gradient(circle at 90% 20%, rgba(34, 211, 238, 0.25), transparent 45%),
+      linear-gradient(180deg, #0b1224 0%, #0f172a 100%);
+    --color-sidebar-bg: linear-gradient(180deg, #0b1224 0%, #0f172a 100%);
+    --color-header-bg: linear-gradient(135deg, #0b162d 0%, #111827 100%);
+    --color-surface: rgba(11, 17, 36, 0.92);
+    --color-surface-strong: rgba(17, 24, 39, 0.85);
+    --color-surface-soft: rgba(17, 24, 39, 0.75);
+    --color-border-strong: rgba(129, 140, 248, 0.35);
+    --color-border-muted: rgba(129, 140, 248, 0.2);
+    --color-text-primary: #e0e7ff;
+    --color-text-secondary: #c7d2fe;
+    --color-control-bg: rgba(10, 14, 35, 0.9);
+    --color-control-border: rgba(129, 140, 248, 0.35);
+    --color-table-header-bg: rgba(17, 24, 39, 0.82);
+    --color-table-row: rgba(17, 24, 39, 0.7);
+    --color-table-row-hover: rgba(17, 24, 39, 0.85);
+    --color-nav-indicator: #c7d2fe;
   }
 
   body {
-    @apply m-0 min-h-screen bg-abyss font-sans text-slate-100 antialiased;
-    background-image: linear-gradient(180deg, rgba(2, 6, 23, 1) 0%, rgba(15, 23, 42, 0.9) 35%, rgba(15, 23, 42, 1) 100%);
+    @apply m-0 min-h-screen font-sans antialiased;
+    background-image: var(--color-page-bg);
+    color: var(--color-text-primary);
+    color-scheme: var(--color-scheme);
   }
 
   h1,
@@ -24,11 +97,16 @@
 
 @layer components {
   .app-shell {
-    @apply flex min-h-screen bg-cosmic-radial text-slate-100;
+    @apply flex min-h-screen;
+    background: var(--color-shell-bg);
+    color: var(--color-text-primary);
   }
 
   .app-sidebar {
-    @apply sticky top-0 flex h-screen w-72 flex-col gap-6 overflow-y-auto border-r border-slate-800/60 bg-sidebar-glow p-8 shadow-inner-border transition-all duration-300 ease-in-out;
+    @apply sticky top-0 flex h-screen w-72 flex-col gap-6 overflow-y-auto p-8 shadow-inner-border transition-all duration-300 ease-in-out;
+    background: var(--color-sidebar-bg);
+    border-right: 1px solid var(--color-border-strong);
+    color: var(--color-text-primary);
   }
 
   .app-sidebar.is-open {
@@ -44,7 +122,8 @@
   }
 
   .app-sidebar__brand {
-    @apply flex items-center gap-4 text-slate-200 no-underline;
+    @apply flex items-center gap-4 no-underline;
+    color: var(--color-text-primary);
   }
 
   .app-sidebar__brand-mark {
@@ -69,7 +148,8 @@
   }
 
   .app-sidebar__brand-subtitle {
-    @apply text-xs text-slate-400;
+    @apply text-xs;
+    color: var(--color-text-secondary);
   }
 
   .app-sidebar__nav {
@@ -77,7 +157,8 @@
   }
 
   .app-nav-link {
-    @apply relative flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium text-slate-300 transition duration-200 ease-out hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
+    @apply relative flex items-center gap-3 rounded-xl px-4 py-2 text-sm font-medium transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
+    color: var(--color-text-secondary);
   }
 
   .app-nav-link::before {
@@ -93,7 +174,8 @@
   }
 
   .app-nav-link .app-nav-indicator {
-    @apply h-2 w-2 rounded-full bg-slate-500 transition-all duration-200;
+    @apply h-2 w-2 rounded-full transition-all duration-200;
+    background-color: var(--color-nav-indicator);
   }
 
   .app-nav-link.active .app-nav-indicator {
@@ -104,8 +186,14 @@
     @apply flex-1;
   }
 
+  .app-nav-link:hover,
+  .app-nav-link.active {
+    color: var(--color-text-primary);
+  }
+
   .app-nav-icon {
-    @apply flex h-5 w-5 items-center justify-center text-slate-400 transition;
+    @apply flex h-5 w-5 items-center justify-center transition;
+    color: var(--color-text-secondary);
   }
 
   .app-nav-icon svg {
@@ -114,15 +202,19 @@
 
   .app-nav-link:hover .app-nav-icon,
   .app-nav-link.active .app-nav-icon {
-    @apply text-white;
+    color: var(--color-text-primary);
   }
 
   .app-sidebar__footer {
-    @apply text-xs leading-relaxed text-slate-400;
+    @apply text-xs leading-relaxed;
+    color: var(--color-text-secondary);
   }
 
   .app-sidebar__collapse-toggle {
-    @apply hidden items-center justify-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300 shadow-inner-border transition hover:border-slate-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora lg:inline-flex;
+    @apply hidden items-center justify-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-inner-border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora lg:inline-flex;
+    background-color: var(--color-surface-soft);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-secondary);
   }
 
   .app-sidebar.is-collapsed .app-sidebar__brand-text,
@@ -156,11 +248,14 @@
   }
 
   .app-main {
-    @apply flex flex-1 flex-col bg-cosmic-radial;
+    @apply flex flex-1 flex-col;
+    background: var(--color-shell-bg);
   }
 
   .app-header {
-    @apply sticky top-0 z-30 flex flex-col gap-4 border-b border-slate-800/70 bg-nebula-panel px-6 py-6 backdrop-blur-lg md:flex-row md:items-center md:justify-between;
+    @apply sticky top-0 z-30 flex flex-col gap-4 border-b px-6 py-6 backdrop-blur-lg md:flex-row md:items-center md:justify-between;
+    background: var(--color-header-bg);
+    border-color: var(--color-border-strong);
   }
 
   .app-header__titles {
@@ -168,15 +263,18 @@
   }
 
   .app-header__eyebrow {
-    @apply text-xs uppercase tracking-[0.35em] text-slate-400;
+    @apply text-xs uppercase tracking-[0.35em];
+    color: var(--color-text-secondary);
   }
 
   .app-header__title {
-    @apply text-3xl font-semibold text-white;
+    @apply text-3xl font-semibold;
+    color: var(--color-text-primary);
   }
 
   .app-header__subtitle {
-    @apply max-w-xl text-sm text-slate-400;
+    @apply max-w-xl text-sm;
+    color: var(--color-text-secondary);
   }
 
   .app-header__actions {
@@ -196,19 +294,28 @@
   }
 
   .panel-card {
-    @apply rounded-3xl border border-slate-800/60 bg-slate-900/60 p-6 shadow-inner-border transition hover:border-slate-700 hover:shadow-glow-md;
+    @apply rounded-3xl border p-6 shadow-inner-border transition hover:shadow-glow-md;
+    background-color: var(--color-surface);
+    border-color: var(--color-border-muted);
+  }
+
+  .panel-card:hover {
+    border-color: var(--color-border-strong);
   }
 
   .panel-heading {
-    @apply text-sm font-semibold uppercase tracking-[0.25em] text-slate-400;
+    @apply text-sm font-semibold uppercase tracking-[0.25em];
+    color: var(--color-text-secondary);
   }
 
   .metric-value {
-    @apply text-3xl font-semibold text-white;
+    @apply text-3xl font-semibold;
+    color: var(--color-text-primary);
   }
 
   .metric-subtitle {
-    @apply text-xs text-slate-400;
+    @apply text-xs;
+    color: var(--color-text-secondary);
   }
 
   .neon-button {
@@ -220,7 +327,10 @@
   }
 
   .button-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/70 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-slate-200 shadow-inner-border transition hover:border-slate-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold uppercase tracking-wide shadow-inner-border transition hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: var(--color-surface-soft);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-primary);
   }
 
   .button-danger {
@@ -228,7 +338,9 @@
   }
 
   .surface-card {
-    @apply rounded-3xl border border-slate-800/70 bg-slate-900/70 p-6 shadow-inner-border;
+    @apply rounded-3xl border p-6 shadow-inner-border;
+    background-color: var(--color-surface);
+    border-color: var(--color-border-muted);
   }
 
   .surface-card--accent {
@@ -236,15 +348,20 @@
   }
 
   .data-table {
-    @apply w-full table-auto overflow-hidden rounded-2xl border border-slate-800/60 text-sm;
+    @apply w-full table-auto overflow-hidden rounded-2xl border text-sm;
+    border-color: var(--color-border-muted);
   }
 
   .data-table thead {
-    @apply bg-slate-900/70 text-slate-300;
+    @apply text-slate-300;
+    background: var(--color-table-header-bg);
+    color: var(--color-text-secondary);
   }
 
   .data-table tbody tr {
-    @apply border-t border-slate-800/60 transition hover:bg-slate-900/80;
+    @apply border-t transition;
+    border-color: var(--color-border-muted);
+    background: var(--color-surface);
   }
 
   .badge-pill {
@@ -255,7 +372,18 @@
   textarea,
   input,
   select {
-    @apply rounded-2xl border border-slate-800/70 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 shadow-inner-border transition placeholder:text-slate-500 focus:border-aurora/60 focus:ring-2 focus:ring-aurora/40;
+    @apply rounded-2xl border px-4 py-3 text-sm shadow-inner-border transition focus:border-aurora/60 focus:ring-2 focus:ring-aurora/40;
+    background-color: var(--color-control-bg);
+    border-color: var(--color-control-border);
+    color: var(--color-text-primary);
+    caret-color: var(--color-text-primary);
+  }
+
+  .form-input::placeholder,
+  textarea::placeholder,
+  input::placeholder,
+  select::placeholder {
+    color: var(--color-text-secondary);
   }
 
   .form-input:-webkit-autofill,
@@ -267,19 +395,29 @@
   }
 
   .section-heading {
-    @apply text-lg font-semibold text-white;
+    @apply text-lg font-semibold;
+    color: var(--color-text-primary);
   }
 
   .empty-state {
-    @apply rounded-3xl border border-dashed border-slate-700/80 bg-slate-900/60 p-8 text-center text-sm text-slate-400;
+    @apply rounded-3xl border border-dashed p-8 text-center text-sm;
+    background-color: var(--color-surface-soft);
+    border-color: var(--color-border-muted);
+    color: var(--color-text-secondary);
   }
 
   .app-header__badge {
-    @apply inline-flex items-center rounded-full border border-slate-700/60 bg-slate-900/80 px-4 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-slate-300;
+    @apply inline-flex items-center rounded-full border px-4 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.35em];
+    background-color: var(--color-surface-soft);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-secondary);
   }
 
   .app-header__select {
-    @apply min-w-[12rem] rounded-2xl border border-slate-800/70 bg-slate-950/60 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300 shadow-inner-border focus:border-aurora/50 focus:outline-none focus:ring-2 focus:ring-aurora/30;
+    @apply min-w-[12rem] rounded-2xl border px-4 py-2 text-xs uppercase tracking-[0.3em] shadow-inner-border focus:border-aurora/50 focus:outline-none focus:ring-2 focus:ring-aurora/30;
+    background-color: var(--color-control-bg);
+    border-color: var(--color-control-border);
+    color: var(--color-text-secondary);
   }
 
   .app-header__button {
@@ -287,7 +425,10 @@
   }
 
   .app-sidebar-toggle {
-    @apply inline-flex items-center rounded-full border border-slate-700/60 bg-slate-900/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-slate-300 shadow-inner-border transition hover:border-slate-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
+    @apply inline-flex items-center rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] shadow-inner-border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
+    background-color: var(--color-control-bg);
+    border-color: var(--color-border-strong);
+    color: var(--color-text-secondary);
   }
 
   .visually-hidden {
@@ -295,15 +436,16 @@
   }
 
   .data-table--striped tbody tr:nth-child(even) {
-    @apply bg-slate-900/60;
+    background: var(--color-table-row);
   }
 
   .data-table--bordered {
-    @apply border border-slate-800/60;
+    @apply border;
+    border-color: var(--color-border-muted);
   }
 
   .data-table--hover tbody tr:hover {
-    @apply bg-slate-900/80;
+    background: var(--color-table-row-hover);
   }
 
   .data-table--compact td,
@@ -312,15 +454,19 @@
   }
 
   .modal-backdrop {
-    @apply fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur;
+    @apply fixed inset-0 z-50 flex items-center justify-center px-4 backdrop-blur;
+    background-color: rgba(2, 6, 23, 0.8);
   }
 
   .modal-panel {
-    @apply w-full max-w-xl rounded-3xl border border-slate-800/80 bg-slate-900/90 p-6 shadow-glow-md;
+    @apply w-full max-w-xl rounded-3xl border p-6 shadow-glow-md;
+    background-color: var(--color-surface-strong);
+    border-color: var(--color-border-strong);
   }
 
   .modal-title {
-    @apply text-xl font-semibold text-white;
+    @apply text-xl font-semibold;
+    color: var(--color-text-primary);
   }
 
   .modal-actions {
@@ -328,6 +474,7 @@
   }
 
   .modal-close {
-    @apply absolute right-4 top-4 text-slate-500 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
+    @apply absolute right-4 top-4 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora;
+    color: var(--color-text-secondary);
   }
 }

@@ -41,7 +41,9 @@ The interface is organised into task-focused pages that surface the entire curat
   RefData helix mark now lives in the top-left of the rail so the product brand stays visible on every theme and screen
   size. The redesign leans on Tailwind CSS utility tokens rendered through shared UI primitives, enabling a futuristic,
   neon-accented experience without rewriting the reviewer workflows. The browser tab now ships with a branded favicon, and
-  the collapse toggle sits alongside the logo in the rail header for quicker access to the expanded/collapsed states.
+  the collapse toggle sits alongside the logo in the rail header for quicker access to the expanded/collapsed states. Theme
+  preferences are saved between sessions and drive distinct palettes for dark, light, and midnight modes so accessibility
+  is maintained regardless of ambient lighting.
 - **Dashboard** – monitor canonical coverage and experiment with semantic suggestions in a live playground.
 - **Settings** – manage matcher thresholds, embedding defaults, and LLM connectivity in a dedicated workspace.
 - **Canonical Library** – manage curated reference values, filter by dimension, import tabular data in bulk, and export the library to CSV. Dimension chips now use high-contrast aurora badges so codes stay legible against the dark canvas.

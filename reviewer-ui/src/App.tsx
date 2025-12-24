@@ -14,7 +14,7 @@ import DimensionRelationsPage from './pages/DimensionRelationsPage';
 import SettingsPage from './pages/SettingsPage';
 import SourceConnectionDetailPage from './pages/SourceConnectionDetailPage';
 import { AppStateProvider, useAppState } from './state/AppStateContext';
-import { applyTheme, themeDefinitions, themeOrder, ThemeChoice } from './themes';
+import { applyTheme, persistTheme, resolveInitialTheme, themeDefinitions, themeOrder, ThemeChoice } from './themes';
 import type { ToastMessage } from './types';
 
 interface AppScaffoldProps {
@@ -419,12 +419,13 @@ const AppScaffold = ({
 };
 
 const App = () => {
-  const [themeChoice, setThemeChoice] = useState<ThemeChoice>('dark');
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>(() => resolveInitialTheme('dark'));
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [toastKey, setToastKey] = useState(0);
 
   useEffect(() => {
     applyTheme(themeChoice);
+    persistTheme(themeChoice);
   }, [themeChoice]);
 
   const handleToast = useCallback((message: ToastMessage) => {

@@ -6,6 +6,8 @@ interface ThemeDefinition {
   bodyClass?: string;
 }
 
+const THEME_STORAGE_KEY = 'refdata-hub:theme-choice';
+
 export const themeDefinitions: Record<ThemeChoice, ThemeDefinition> = {
   dark: {
     label: 'Dark',
@@ -40,3 +42,37 @@ export function applyTheme(choice: ThemeChoice): void {
     document.body.classList.add(definition.bodyClass);
   }
 }
+
+export function persistTheme(choice: ThemeChoice): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, choice);
+  } catch (error) {
+    console.warn('Unable to persist theme preference', error);
+  }
+}
+
+export function resolveInitialTheme(fallback: ThemeChoice = 'dark'): ThemeChoice {
+  if (typeof window === 'undefined') {
+    return fallback;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored && (stored === 'dark' || stored === 'light' || stored === 'midnight')) {
+      return stored;
+    }
+  } catch (error) {
+    console.warn('Unable to read persisted theme preference', error);
+  }
+
+  const prefersLight =
+    typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  return prefersLight ? 'light' : fallback;
+}
+
+export { THEME_STORAGE_KEY };
