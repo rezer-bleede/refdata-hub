@@ -85,6 +85,26 @@ def test_match_proposal_returns_candidates() -> None:
     assert top_match["canonical_label"] in {"Married", "Single"}
 
 
+def test_match_proposal_falls_back_when_default_dimension_empty() -> None:
+    client = build_test_client()
+
+    config_response = client.get("/api/config")
+    assert config_response.status_code == 200
+    config = config_response.json()
+    assert config["default_dimension"] == "general"
+
+    response = client.post(
+        "/api/reference/propose",
+        json={"raw_text": "Single"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["matches"]
+    assert payload["dimension"] == "marital_status"
+    assert any(match["canonical_label"] == "Single" for match in payload["matches"])
+
+
 def test_canonical_crud_operations() -> None:
     client = build_test_client()
 

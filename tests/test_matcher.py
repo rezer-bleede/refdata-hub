@@ -102,3 +102,14 @@ def test_parse_llm_json_extracts_list(canonical_values) -> None:
     fenced = "```json\n[{\"id\": 1, \"score\": 0.5}]\n```"
     parsed = matcher._parse_llm_json(fenced)
     assert parsed == [{"id": 1, "score": 0.5}]
+
+
+def test_embedding_rank_respects_exact_label_match(canonical_values) -> None:
+    config = SystemConfig(matcher_backend="embedding", top_k=2)
+    matcher = SemanticMatcher(config=config, canonical_values=canonical_values)
+
+    matches = matcher.rank("Single")
+
+    assert matches
+    assert matches[0].canonical_label == "Single"
+    assert matches[0].score == 1.0

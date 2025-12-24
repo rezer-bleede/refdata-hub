@@ -1028,6 +1028,44 @@ def propose_match(
         ).all()
         dimension_code = fallback_dimension.code
 
+    normalised_raw = payload.raw_text.strip().lower()
+
+    if not canonical_values:
+        direct_match = session.exec(
+            select(CanonicalValue).where(
+                func.lower(CanonicalValue.canonical_label) == normalised_raw
+            )
+        ).all()
+
+        if direct_match:
+            dimension_code = direct_match[0].dimension
+            canonical_values = session.exec(
+                select(CanonicalValue).where(
+                    CanonicalValue.dimension == dimension_code
+                )
+            ).all()
+
+    if not canonical_values:
+        richest_dimension = session.exec(
+            select(CanonicalValue.dimension)
+                .group_by(CanonicalValue.dimension)
+                .order_by(func.count(CanonicalValue.id).desc())
+        ).first()
+
+        dimension_value = None
+        if isinstance(richest_dimension, tuple):
+            dimension_value = richest_dimension[0]
+        elif isinstance(richest_dimension, str):
+            dimension_value = richest_dimension
+
+        if dimension_value:
+            dimension_code = dimension_value
+            canonical_values = session.exec(
+                select(CanonicalValue).where(
+                    CanonicalValue.dimension == dimension_code
+                )
+            ).all()
+
     matcher = SemanticMatcher(config=config, canonical_values=canonical_values)
     ranked = matcher.rank(payload.raw_text)
     filtered = [match for match in ranked if match.score >= config.match_threshold]
