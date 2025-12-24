@@ -114,7 +114,7 @@ The FastAPI service now exposes a rich set of endpoints under `/api`:
   selector in the reviewer UI.
 - `/source/connections/{id}/mappings` – create/update/delete field mappings to reference dimensions.
 - `/source/connections/{id}/samples` – ingest aggregated raw samples collected from source systems or manual uploads.
-- `/source/connections/{id}/match-stats` – compute match rates, top unmatched values, and semantic suggestions.
+- `/source/connections/{id}/match-stats` – compute match rates, top matched and unmatched values, plus semantic suggestions.
 - `/source/connections/{id}/unmatched` – retrieve unmatched raw values with inline suggestions for remediation.
 - `/source/connections/{id}/value-mappings` – approve, update, or delete specific raw-to-canonical mappings.
 - `/source/value-mappings` – consolidated view of all mappings across connections.

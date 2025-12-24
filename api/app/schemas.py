@@ -217,6 +217,14 @@ class UnmatchedValueRecord(UnmatchedValuePreview):
     ref_dimension: str
 
 
+class MatchedValuePreview(BaseModel):
+    raw_value: str
+    occurrence_count: int
+    canonical_label: str
+    match_type: Literal["mapping", "semantic"]
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+
+
 class FieldMatchStats(BaseModel):
     mapping_id: int
     source_table: str
@@ -227,6 +235,7 @@ class FieldMatchStats(BaseModel):
     unmatched_values: int
     match_rate: float
     top_unmatched: List[UnmatchedValuePreview]
+    top_matched: List[MatchedValuePreview]
 
 
 class ValueMappingBase(BaseModel):

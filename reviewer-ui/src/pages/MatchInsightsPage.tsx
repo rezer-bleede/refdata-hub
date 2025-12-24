@@ -29,6 +29,33 @@ const renderSuggestions = (suggestions: MatchCandidate[]) => {
   );
 };
 
+const renderMatchedValueCard = (matched: FieldMatchStats['top_matched'][number]) => {
+  const confidence = matched.confidence ?? null;
+  const badgeLabel = matched.match_type === 'mapping' ? 'Mapped value' : 'Semantic match';
+  const badgeVariant = matched.match_type === 'mapping' ? 'success' : 'secondary';
+
+  return (
+    <Card key={`${matched.raw_value}-${matched.canonical_label}`} body className="border-0 bg-slate-900/70">
+      <div className="flex justify-between items-start gap-4">
+        <div className="min-w-0">
+          <div className="font-semibold truncate" title={matched.raw_value}>
+            {matched.raw_value}
+          </div>
+          <div className="text-slate-400 text-xs">{matched.occurrence_count} occurrences</div>
+        </div>
+        <Badge bg={badgeVariant}>{badgeLabel}</Badge>
+      </div>
+      <div className="mt-2 text-sm text-slate-200">
+        <span className="font-semibold text-slate-100">Canonical:</span>{' '}
+        <span>{matched.canonical_label}</span>
+        {confidence !== null && (
+          <span className="ml-2 text-xs text-slate-400">{`Confidence ${(confidence * 100).toFixed(0)}%`}</span>
+        )}
+      </div>
+    </Card>
+  );
+};
+
 const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
   const { refreshToken } = useAppState();
   const [connections, setConnections] = useState<SourceConnection[]>([]);
@@ -55,7 +82,12 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
       try {
         const response = await fetchMatchStatistics(connectionId);
         if (response.length) {
-          setStats(response);
+          setStats(
+            response.map((item) => ({
+              ...item,
+              top_matched: item.top_matched ?? [],
+            })),
+          );
           return;
         }
 
@@ -72,6 +104,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
               unmatched_values: 0,
               match_rate: 0,
               top_unmatched: [],
+              top_matched: [],
             })),
           );
           return;
@@ -226,6 +259,28 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
                 )}
               </div>
             </div>
+
+            <details
+              className="group rounded-2xl border border-slate-800/60 bg-slate-900/50 px-4 py-3"
+              data-testid={`matched-section-${item.mapping_id}`}
+            >
+              <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-300">
+                Matched values
+                <span className="text-xs text-slate-500 group-open:hidden">Expand</span>
+                <span className="hidden text-xs text-slate-500 group-open:inline">Collapse</span>
+              </summary>
+              <div className="mt-3 flex flex-col gap-2">
+                {item.total_values ? (
+                  item.top_matched.length ? (
+                    item.top_matched.map((matched) => renderMatchedValueCard(matched))
+                  ) : (
+                    <p className="text-slate-400 mb-0">No matched values recorded yet.</p>
+                  )
+                ) : (
+                  <p className="text-slate-400 mb-0">No samples have been captured for this mapping yet.</p>
+                )}
+              </div>
+            </details>
           </Card.Body>
         </Card>
       ))}
