@@ -91,6 +91,19 @@
     @apply flex-1;
   }
 
+  .app-nav-icon {
+    @apply flex h-5 w-5 items-center justify-center text-slate-400 transition;
+  }
+
+  .app-nav-icon svg {
+    @apply h-full w-full;
+  }
+
+  .app-nav-link:hover .app-nav-icon,
+  .app-nav-link.active .app-nav-icon {
+    @apply text-white;
+  }
+
   .app-sidebar__footer {
     @apply text-xs leading-relaxed text-slate-400;
   }
@@ -102,6 +115,14 @@
   .app-sidebar.is-collapsed .app-sidebar__brand-text,
   .app-sidebar.is-collapsed .app-nav-label,
   .app-sidebar.is-collapsed .app-sidebar__footer {
+    @apply hidden;
+  }
+
+  .app-sidebar.is-collapsed .app-nav-link {
+    @apply justify-center;
+  }
+
+  .app-sidebar.is-collapsed .app-nav-indicator {
     @apply hidden;
   }
 

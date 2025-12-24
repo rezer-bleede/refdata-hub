@@ -28,19 +28,130 @@ interface AppScaffoldProps {
 interface NavItem {
   path: string;
   label: string;
+  icon: JSX.Element;
 }
 
+const iconProps = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.6,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+} as const;
+
 const navItems: NavItem[] = [
-  { path: '/dashboard', label: 'Dashboard' },
-  { path: '/dimensions', label: 'Dimensions' },
-  { path: '/canonical-library', label: 'Canonical Library' },
-  { path: '/dimension-relations', label: 'Dimension Relations' },
-  { path: '/connections', label: 'Source Connections' },
-  { path: '/field-mappings', label: 'Field Mappings' },
-  { path: '/match-insights', label: 'Match Insights' },
-  { path: '/suggestions', label: 'Suggestions' },
-  { path: '/mapping-history', label: 'Mapping History' },
-  { path: '/settings', label: 'Settings' },
+  {
+    path: '/dashboard',
+    label: 'Dashboard',
+    icon: (
+      <svg {...iconProps}>
+        <rect x="4" y="4" width="7" height="7" rx="2" />
+        <rect x="13" y="4" width="7" height="7" rx="2" />
+        <rect x="4" y="13" width="7" height="7" rx="2" />
+        <rect x="13" y="13" width="7" height="7" rx="2" />
+      </svg>
+    ),
+  },
+  {
+    path: '/dimensions',
+    label: 'Dimensions',
+    icon: (
+      <svg {...iconProps}>
+        <circle cx="7" cy="7" r="2.25" />
+        <circle cx="17" cy="7" r="2.25" />
+        <circle cx="7" cy="17" r="2.25" />
+        <path d="M9.25 7h5.5M7 9.25v5.5M9.4 15 15 9.4" />
+      </svg>
+    ),
+  },
+  {
+    path: '/canonical-library',
+    label: 'Canonical Library',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M7 5.5h8.5a2 2 0 0 1 2 2v9.75a1.25 1.25 0 0 1-1.25 1.25H7A2.5 2.5 0 0 1 4.5 16V8A2.5 2.5 0 0 1 7 5.5Z" />
+        <path d="M16.5 7.25H10a1.5 1.5 0 0 0-1.5 1.5V18" />
+        <path d="M9 10.5h4" />
+      </svg>
+    ),
+  },
+  {
+    path: '/dimension-relations',
+    label: 'Dimension Relations',
+    icon: (
+      <svg {...iconProps}>
+        <circle cx="7" cy="12" r="2.25" />
+        <circle cx="17" cy="7" r="2.25" />
+        <circle cx="17" cy="17" r="2.25" />
+        <path d="M9.25 12H14.5M14.75 8.25 11 10M14.75 15.75 11 14" />
+      </svg>
+    ),
+  },
+  {
+    path: '/connections',
+    label: 'Source Connections',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M9.5 7.5H7.25A2.25 2.25 0 0 0 5 9.75v4.5A2.25 2.25 0 0 0 7.25 16.5H9.5" />
+        <path d="m13 7 3.5-3.5M13 17l3.5 3.5" />
+        <rect x="9.5" y="6" width="5" height="12" rx="2.25" />
+      </svg>
+    ),
+  },
+  {
+    path: '/field-mappings',
+    label: 'Field Mappings',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M6.5 6.5h5.75a1.25 1.25 0 0 1 1.25 1.25v2.5A1.25 1.25 0 0 1 12.25 11.5H6.5z" />
+        <path d="M6.5 12.5h5.75a1.25 1.25 0 0 1 1.25 1.25v2.5A1.25 1.25 0 0 1 12.25 17.5H6.5z" />
+        <path d="M16.5 9.25h1.25A1.25 1.25 0 0 1 19 10.5v3a1.25 1.25 0 0 1-1.25 1.25H16.5" />
+      </svg>
+    ),
+  },
+  {
+    path: '/match-insights',
+    label: 'Match Insights',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M6 16.5 9.25 12l3 3L18 9" />
+        <path d="M5.5 7.5h-.25A1.25 1.25 0 0 0 4 8.75v6.5A1.75 1.75 0 0 0 5.75 17h12.5" />
+        <path d="M8 6.5h10.25A1.75 1.75 0 0 1 20 8.25v7.5" />
+      </svg>
+    ),
+  },
+  {
+    path: '/suggestions',
+    label: 'Suggestions',
+    icon: (
+      <svg {...iconProps}>
+        <path d="m7 12.5 2.25-.75L10 9.5 12.5 7l.75 2.25 2.25.75L13.25 11l-.75 2.25L10.25 12Z" />
+        <path d="M7.5 17.5c.6.4 1.35.75 2.5.75 2.5 0 4-1.5 6.25-1.5.85 0 1.5.2 2 .5" />
+      </svg>
+    ),
+  },
+  {
+    path: '/mapping-history',
+    label: 'Mapping History',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M12 6.25a5.75 5.75 0 1 0 5.32 8.06" />
+        <path d="M12 8.5v3.5l2.25 1.25" />
+        <path d="M9 6.5V5.25A1.25 1.25 0 0 1 10.25 4h6.5A1.25 1.25 0 0 1 18 5.25v6.5A1.25 1.25 0 0 1 16.75 13H15" />
+      </svg>
+    ),
+  },
+  {
+    path: '/settings',
+    label: 'Settings',
+    icon: (
+      <svg {...iconProps}>
+        <path d="M12 9.25a2.75 2.75 0 1 0 0 5.5 2.75 2.75 0 0 0 0-5.5Z" />
+        <path d="M19 12a7 7 0 0 0-.09-1.14l1.48-.86-1.5-2.6-1.5.86a7 7 0 0 0-1.97-1.14l-.23-1.72H8.81l-.23 1.72A7 7 0 0 0 6.6 8.26l-1.5-.86-1.5 2.6 1.48.86A7 7 0 0 0 5 12c0 .39.03.77.09 1.14l-1.48.86 1.5 2.6 1.5-.86a7 7 0 0 0 1.97 1.14l.23 1.72h4.96l.23-1.72a7 7 0 0 0 1.97-1.14l1.5.86 1.5-2.6-1.48-.86A7 7 0 0 0 19 12Z" />
+      </svg>
+    ),
+  },
 ];
 
 const AppScaffold = ({
@@ -127,6 +238,13 @@ const AppScaffold = ({
               title={item.label}
             >
               <span className="app-nav-indicator" aria-hidden />
+              <span
+                className="app-nav-icon"
+                aria-hidden
+                data-testid={`nav-icon-${item.path.replace(/\//g, '-')}`}
+              >
+                {item.icon}
+              </span>
               <span className="app-nav-label">{item.label}</span>
             </NavLink>
           ))}

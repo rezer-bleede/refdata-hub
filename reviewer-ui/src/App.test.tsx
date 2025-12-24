@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ComponentProps } from 'react';
 
-import { AppScaffold } from './App';
+import { AppScaffold, navItems } from './App';
 import type { ThemeChoice } from './themes';
 
 type AppScaffoldProps = ComponentProps<typeof AppScaffold>;
@@ -193,5 +193,20 @@ describe('AppScaffold layout', () => {
     const expandToggle = screen.getByLabelText('Expand navigation menu');
     fireEvent.click(expandToggle);
     expect(sidebar).not.toHaveClass('is-collapsed');
+  });
+
+  it('shows descriptive navigation icons when collapsed', () => {
+    const { props } = createProps();
+    render(
+      <MemoryRouter>
+        <AppScaffold {...props} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByLabelText('Collapse navigation menu'));
+
+    const icons = screen.getAllByTestId(/nav-icon-/);
+    expect(icons).toHaveLength(navItems.length);
+    icons.forEach((icon) => expect(icon).toBeVisible());
   });
 });
