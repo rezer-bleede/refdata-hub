@@ -39,6 +39,10 @@
     @apply w-20 px-4;
   }
 
+  .app-sidebar__top {
+    @apply flex items-center justify-between gap-3;
+  }
+
   .app-sidebar__brand {
     @apply flex items-center gap-4 text-slate-200 no-underline;
   }
@@ -118,7 +122,7 @@
   }
 
   .app-sidebar__collapse-toggle {
-    @apply hidden items-center justify-center gap-2 self-end rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300 shadow-inner-border transition hover:border-slate-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora lg:flex;
+    @apply hidden items-center justify-center gap-2 rounded-full border border-slate-700/60 bg-slate-900/60 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300 shadow-inner-border transition hover:border-slate-500 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora lg:inline-flex;
   }
 
   .app-sidebar.is-collapsed .app-sidebar__brand-text,
@@ -140,7 +144,7 @@
   }
 
   .app-sidebar.is-collapsed .app-sidebar__collapse-toggle {
-    @apply self-center;
+    @apply lg:inline-flex;
   }
 
   .app-sidebar-overlay {

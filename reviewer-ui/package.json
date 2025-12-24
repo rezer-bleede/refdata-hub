@@ -15,11 +15,12 @@
     "react-router-dom": "^6.23.0"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
+    "@types/node": "^25.0.3",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
-    "@tailwindcss/forms": "^0.5.7",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.19",
     "jsdom": "^27.0.0",

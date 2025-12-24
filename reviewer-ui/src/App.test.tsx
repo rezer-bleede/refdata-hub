@@ -211,6 +211,23 @@ describe('AppScaffold layout', () => {
     expect(sidebar).not.toHaveClass('is-collapsed');
   });
 
+  it('keeps the collapse toggle aligned with the brand row', () => {
+    const { props } = createProps();
+    render(
+      <MemoryRouter>
+        <AppScaffold {...props} />
+      </MemoryRouter>,
+    );
+
+    const brandLink = screen.getByRole('link', { name: /RefData Hub/ });
+    const collapseToggle = screen.getByRole('button', { name: 'Collapse navigation menu' });
+    const topRow = brandLink.parentElement;
+
+    expect(topRow).not.toBeNull();
+    expect(topRow).toHaveClass('app-sidebar__top');
+    expect(collapseToggle.parentElement).toBe(topRow);
+  });
+
   it('shows descriptive navigation icons when collapsed', () => {
     const { props } = createProps();
     render(
