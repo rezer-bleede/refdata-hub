@@ -9,7 +9,7 @@ import {
   Row,
   Spinner,
   Table,
-} from 'react-bootstrap';
+} from '../components/ui';
 
 import {
   createDimensionRelation,
@@ -290,15 +290,15 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
   const currentLinks = selectedRelationId ? linksByRelation.get(selectedRelationId) ?? [] : [];
 
   return (
-    <div className="d-flex flex-column gap-4" aria-label="Dimension relations">
+    <div className="flex flex-col gap-4" aria-label="Dimension relations">
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-4">
-          <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <Card.Body className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
             <div>
-              <Card.Title as="h1" className="section-heading h4 mb-1">
+              <Card.Title as="h1" className="text-2xl mb-1">
                 Dimension relationships
               </Card.Title>
-              <Card.Text className="text-body-secondary mb-0">
+              <Card.Text className="text-slate-400 mb-0">
                 Model parent-child relationships between dimensions—for example, regions and their districts. Maintain
                 canonical value pairings to power drill-downs and validation rules.
               </Card.Text>
@@ -309,32 +309,32 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
           </div>
 
           {isLoading ? (
-            <div className="d-flex justify-content-center py-5">
+            <div className="flex justify-center py-5">
               <Spinner animation="border" role="status" aria-hidden="true" />
             </div>
           ) : relations.length === 0 ? (
-            <div className="text-center text-body-secondary py-5">
+            <div className="text-center text-slate-400 py-5">
               <p className="mb-0">No relations defined yet. Create a relation to begin linking canonical values.</p>
             </div>
           ) : (
-            <Row className="g-3">
+            <Row className="gap-3">
               {relations.map((relation) => (
                 <Col key={relation.id} md={6} xl={4}>
                   <Card
-                    className={`h-100 ${
-                      relation.id === selectedRelationId ? 'border-primary border-2 shadow-sm' : 'border-0 shadow-sm'
+                    className={`h-full ${
+                      relation.id === selectedRelationId ? 'border-aurora border-2 shadow-glow-sm' : 'border-0 shadow-glow-sm'
                     }`}
                     onClick={() => setSelectedRelationId(relation.id)}
                     role="button"
                     style={{ cursor: 'pointer' }}
                   >
-                    <Card.Body className="d-flex flex-column gap-3">
-                      <div className="d-flex justify-content-between align-items-start gap-3">
+                    <Card.Body className="flex flex-col gap-3">
+                      <div className="flex justify-between items-start gap-3">
                         <div>
-                          <Card.Title as="h2" className="h5 mb-1">
+                          <Card.Title as="h2" className="text-lg mb-1">
                             {relation.label}
                           </Card.Title>
-                          <Card.Text className="text-body-secondary mb-0">
+                          <Card.Text className="text-slate-400 mb-0">
                             {relation.description || 'No description provided.'}
                           </Card.Text>
                         </div>
@@ -342,8 +342,8 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                           {relation.link_count} link{relation.link_count === 1 ? '' : 's'}
                         </Badge>
                       </div>
-                      <div className="d-flex flex-column gap-2">
-                        <div className="d-flex align-items-center gap-2">
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
                           <Badge bg="info" text="dark">
                             Parent
                           </Badge>
@@ -351,7 +351,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                             {relation.parent_dimension.label} ({relation.parent_dimension.code})
                           </span>
                         </div>
-                        <div className="d-flex align-items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <Badge bg="warning" text="dark">
                             Child
                           </Badge>
@@ -360,7 +360,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                           </span>
                         </div>
                       </div>
-                      <div className="d-flex gap-2 mt-auto">
+                      <div className="flex gap-2 mt-auto">
                         <Button variant="outline-primary" size="sm" onClick={() => openEditModal(relation)}>
                           Edit
                         </Button>
@@ -379,22 +379,22 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
 
       {selectedRelation && (
         <Card className="card-section">
-          <Card.Body className="d-flex flex-column gap-4">
-            <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <Card.Body className="flex flex-col gap-4">
+            <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
               <div>
-                <Card.Title as="h2" className="h4 mb-1">
+                <Card.Title as="h2" className="text-xl mb-1">
                   {selectedRelation.label}
                 </Card.Title>
-                <Card.Text className="text-body-secondary mb-0">
+                <Card.Text className="text-slate-400 mb-0">
                   {selectedRelation.parent_dimension.label} ➝ {selectedRelation.child_dimension.label}
                 </Card.Text>
               </div>
             </div>
 
-            <Card className="border-0 shadow-sm">
-              <Card.Body className="d-flex flex-column gap-3">
-                <h3 className="h6 mb-0">Add link</h3>
-                <Row className="g-3 align-items-end">
+            <Card className="border-0 shadow-glow-sm">
+              <Card.Body className="flex flex-col gap-3">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400 mb-0">Add link</h3>
+                <Row className="gap-3 items-end">
                   <Col md={6}>
                     <Form.Group controlId="relation-parent-select">
                       <Form.Label>Parent canonical value</Form.Label>
@@ -415,7 +415,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                         ))}
                       </Form.Select>
                       {parentCandidates.length === 0 && (
-                        <Form.Text className="text-body-secondary">
+                        <Form.Text className="text-slate-400">
                           No canonical values found for {selectedRelation.parent_dimension.label}. Add values first.
                         </Form.Text>
                       )}
@@ -441,7 +441,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                         ))}
                       </Form.Select>
                       {childCandidates.length === 0 && (
-                        <Form.Text className="text-body-secondary">
+                        <Form.Text className="text-slate-400">
                           No canonical values found for {selectedRelation.child_dimension.label}. Add values first.
                         </Form.Text>
                       )}
@@ -455,7 +455,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                     disabled={isLinkSubmitting || parentCandidates.length === 0 || childCandidates.length === 0}
                   >
                     {isLinkSubmitting ? (
-                      <span className="d-inline-flex align-items-center gap-2">
+                      <span className="inline-flex items-center gap-2">
                         <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                         Linking…
                       </span>
@@ -467,8 +467,8 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
               </Card.Body>
             </Card>
 
-            <div className="table-responsive">
-              <Table striped hover className="align-middle table-nowrap">
+            <div className="overflow-x-auto">
+              <Table striped hover className="align-middle whitespace-nowrap">
                 <thead>
                   <tr>
                     <th>Parent value</th>
@@ -485,7 +485,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                     </tr>
                   ) : currentLinks.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="text-center text-body-secondary py-4">
+                      <td colSpan={3} className="text-center text-slate-400 py-4">
                         No links defined yet for this relation.
                       </td>
                     </tr>
@@ -517,7 +517,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
         <Modal.Header closeButton>
           <Modal.Title>{editingRelation ? 'Edit relation' : 'New relation'}</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="d-flex flex-column gap-3">
+        <Modal.Body className="flex flex-col gap-3">
           <Form.Group controlId="relation-label">
             <Form.Label>Label</Form.Label>
             <Form.Control
@@ -527,7 +527,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
               placeholder="e.g. Region to District"
             />
           </Form.Group>
-          <Row className="g-3">
+          <Row className="gap-3">
             <Col md={6}>
               <Form.Group controlId="relation-parent-dimension">
                 <Form.Label>Parent dimension</Form.Label>
@@ -584,7 +584,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
           </Button>
           <Button variant="primary" onClick={() => void handleSaveRelation()} disabled={isSubmitting}>
             {isSubmitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
+              <span className="inline-flex items-center gap-2">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Saving…
               </span>
@@ -615,7 +615,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
           </Button>
           <Button variant="danger" onClick={() => void handleDeleteRelation()} disabled={isSubmitting}>
             {isSubmitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
+              <span className="inline-flex items-center gap-2">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Deleting…
               </span>
@@ -637,7 +637,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
           </Button>
           <Button variant="danger" onClick={() => void handleDeleteLink()} disabled={isLinkSubmitting}>
             {isLinkSubmitting ? (
-              <span className="d-inline-flex align-items-center gap-2">
+              <span className="inline-flex items-center gap-2">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Deleting…
               </span>

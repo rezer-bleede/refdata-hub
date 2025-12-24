@@ -246,7 +246,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
             className="grid gap-4 lg:grid-cols-4"
           >
             <label htmlFor="connection-name" className="flex flex-col gap-2">
-              <span className="form-label">Connection name</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Connection name</span>
               <input
                 id="connection-name"
                 value={form.name}
@@ -255,7 +255,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-type" className="flex flex-col gap-2">
-              <span className="form-label">Database type</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database type</span>
               <input
                 id="connection-type"
                 value={form.db_type}
@@ -263,7 +263,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-host" className="flex flex-col gap-2">
-              <span className="form-label">Host</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Host</span>
               <input
                 id="connection-host"
                 value={form.host}
@@ -272,7 +272,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-port" className="flex flex-col gap-2">
-              <span className="form-label">Port</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Port</span>
               <input
                 id="connection-port"
                 type="number"
@@ -281,7 +281,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-database" className="flex flex-col gap-2">
-              <span className="form-label">Database</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database</span>
               <input
                 id="connection-database"
                 value={form.database}
@@ -290,7 +290,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-username" className="flex flex-col gap-2">
-              <span className="form-label">Username</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Username</span>
               <input
                 id="connection-username"
                 value={form.username}
@@ -299,7 +299,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-password" className="flex flex-col gap-2">
-              <span className="form-label">Password</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Password</span>
               <input
                 id="connection-password"
                 type="password"
@@ -308,7 +308,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               />
             </label>
             <label htmlFor="connection-options" className="flex flex-col gap-2 lg:col-span-4">
-              <span className="form-label">Options (JSON)</span>
+              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Options (JSON)</span>
               <input
                 id="connection-options"
                 placeholder='{"sslmode":"require"}'
@@ -319,7 +319,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
             <div className="flex flex-col gap-2 lg:col-span-4 lg:flex-row lg:justify-end">
               <button
                 type="button"
-                className="btn-secondary"
+                className="button-secondary"
                 onClick={() => void handleTestNewConnection()}
                 disabled={testingNewConnection || submitting}
               >
@@ -335,7 +335,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                   'Test connection'
                 )}
               </button>
-              <button type="submit" className="btn-primary" disabled={submitting || testingNewConnection}>
+              <button type="submit" className="button-primary" disabled={submitting || testingNewConnection}>
                 {submitting ? (
                   <span className="flex items-center gap-2">
                     <span
@@ -397,12 +397,12 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap justify-end gap-2">
-                            <Link to={`/connections/${connection.id}`} className="btn-primary text-xs">
+                            <Link to={`/connections/${connection.id}`} className="button-primary text-xs">
                               View
                             </Link>
                             <button
                               type="button"
-                              className="btn-secondary text-xs"
+                              className="button-secondary text-xs"
                               onClick={() => void handleTestExistingConnection(connection.id)}
                               disabled={testingExistingId === connection.id}
                             >
@@ -420,14 +420,14 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                             </button>
                             <button
                               type="button"
-                              className="btn-secondary text-xs"
+                              className="button-secondary text-xs"
                               onClick={() => openEdit(connection)}
                             >
                               Edit
                             </button>
                             <button
                               type="button"
-                              className="btn-danger text-xs"
+                              className="button-danger text-xs"
                               onClick={() => setDeleteTarget(connection)}
                             >
                               Delete
@@ -454,7 +454,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
             </button>
             <form className="mt-4 grid gap-4 lg:grid-cols-2">
               <label htmlFor="edit-name" className="flex flex-col gap-2">
-                <span className="form-label">Name</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Name</span>
                 <input
                   id="edit-name"
                   value={editForm.name ?? ''}
@@ -462,7 +462,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-db-type" className="flex flex-col gap-2">
-                <span className="form-label">Database type</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database type</span>
                 <input
                   id="edit-db-type"
                   value={editForm.db_type ?? ''}
@@ -470,7 +470,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-host" className="flex flex-col gap-2">
-                <span className="form-label">Host</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Host</span>
                 <input
                   id="edit-host"
                   value={editForm.host ?? ''}
@@ -478,7 +478,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-port" className="flex flex-col gap-2">
-                <span className="form-label">Port</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Port</span>
                 <input
                   id="edit-port"
                   type="number"
@@ -487,7 +487,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-database" className="flex flex-col gap-2">
-                <span className="form-label">Database</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database</span>
                 <input
                   id="edit-database"
                   value={editForm.database ?? ''}
@@ -495,7 +495,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-username" className="flex flex-col gap-2">
-                <span className="form-label">Username</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Username</span>
                 <input
                   id="edit-username"
                   value={editForm.username ?? ''}
@@ -503,7 +503,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-password" className="flex flex-col gap-2">
-                <span className="form-label">Password</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Password</span>
                 <input
                   id="edit-password"
                   type="password"
@@ -512,7 +512,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-options" className="flex flex-col gap-2 lg:col-span-2">
-                <span className="form-label">Options</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Options</span>
                 <input
                   id="edit-options"
                   value={editForm.options ?? ''}
@@ -523,14 +523,14 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
             <div className="modal-actions">
               <button
                 type="button"
-                className="btn-secondary"
+                className="button-secondary"
                 onClick={() => setEditing(null)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="btn-secondary"
+                className="button-secondary"
                 onClick={() => editing && void handleTestExistingConnection(editing.id, editForm)}
                 disabled={!editing || testingExistingId === editing.id}
               >
@@ -548,7 +548,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               </button>
               <button
                 type="button"
-                className="btn-primary"
+                className="button-primary"
                 onClick={() => void handleUpdate()}
                 disabled={submitting}
               >
@@ -589,14 +589,14 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
             <div className="modal-actions">
               <button
                 type="button"
-                className="btn-secondary"
+                className="button-secondary"
                 onClick={() => setDeleteTarget(null)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="btn-danger"
+                className="button-danger"
                 onClick={() => void handleDelete()}
                 disabled={submitting}
               >

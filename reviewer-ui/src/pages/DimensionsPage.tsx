@@ -183,7 +183,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                 Curate reusable data domains with consistent canonical attributes and governance metadata.
               </p>
             </div>
-            <button type="button" className="btn-primary" onClick={openCreateModal}>
+            <button type="button" className="button-primary" onClick={openCreateModal}>
               New dimension
             </button>
           </div>
@@ -230,14 +230,14 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                         <div className="flex justify-end gap-2">
                           <button
                             type="button"
-                            className="btn-secondary text-xs"
+                            className="button-secondary text-xs"
                             onClick={() => openEditModal(dimension)}
                           >
                             Edit
                           </button>
                           <button
                             type="button"
-                            className="btn-danger text-xs"
+                            className="button-danger text-xs"
                             onClick={() => setDeleteTarget(dimension)}
                           >
                             Delete
@@ -265,7 +265,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
             <div className="mt-4 flex flex-col gap-6">
               <div className="grid gap-4 lg:grid-cols-3">
                 <label htmlFor="dimension-code" className="flex flex-col gap-2">
-                  <span className="form-label">Code</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Code</span>
                   <input
                     id="dimension-code"
                     type="text"
@@ -279,7 +279,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                   </span>
                 </label>
                 <label htmlFor="dimension-label" className="flex flex-col gap-2 lg:col-span-2">
-                  <span className="form-label">Label</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Label</span>
                   <input
                     id="dimension-label"
                     type="text"
@@ -290,7 +290,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                 </label>
               </div>
               <label htmlFor="dimension-description" className="flex flex-col gap-2">
-                <span className="form-label">Description</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Description</span>
                 <textarea
                   id="dimension-description"
                   rows={3}
@@ -310,7 +310,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                       Define custom fields captured for canonical values in this dimension.
                     </p>
                   </div>
-                  <button type="button" className="btn-secondary" onClick={addExtraField}>
+                  <button type="button" className="button-secondary" onClick={addExtraField}>
                     Add attribute
                   </button>
                 </div>
@@ -324,7 +324,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                     <div key={field.id} className="surface-card surface-card--accent flex flex-col gap-4">
                       <div className="grid gap-4 lg:grid-cols-4">
                         <label htmlFor={`field-key-${field.id}`} className="flex flex-col gap-2">
-                          <span className="form-label">Key</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Key</span>
                           <input
                             id={`field-key-${field.id}`}
                             type="text"
@@ -334,7 +334,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                           />
                         </label>
                         <label htmlFor={`field-label-${field.id}`} className="flex flex-col gap-2">
-                          <span className="form-label">Label</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Label</span>
                           <input
                             id={`field-label-${field.id}`}
                             type="text"
@@ -344,7 +344,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                           />
                         </label>
                         <label htmlFor={`field-type-${field.id}`} className="flex flex-col gap-2">
-                          <span className="form-label">Type</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Type</span>
                           <select
                             id={`field-type-${field.id}`}
                             value={field.data_type}
@@ -360,7 +360,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                         <div className="flex items-end justify-end">
                           <button
                             type="button"
-                            className="btn-danger text-xs"
+                            className="button-danger text-xs"
                             onClick={() => removeExtraField(field.id)}
                             aria-label={`Remove attribute ${field.label || field.key || field.id}`}
                           >
@@ -370,7 +370,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                       </div>
                       <div className="grid gap-4 lg:grid-cols-4">
                         <label htmlFor={`field-description-${field.id}`} className="flex flex-col gap-2 lg:col-span-3">
-                          <span className="form-label">Description</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Description</span>
                           <input
                             id={`field-description-${field.id}`}
                             type="text"
@@ -394,10 +394,10 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
               </div>
             </div>
             <div className="modal-actions">
-              <button type="button" className="btn-secondary" onClick={resetEditor}>
+              <button type="button" className="button-secondary" onClick={resetEditor}>
                 Cancel
               </button>
-              <button type="button" className="btn-primary" onClick={() => void handleSave()} disabled={isSubmitting}>
+              <button type="button" className="button-primary" onClick={() => void handleSave()} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <span
@@ -434,12 +434,12 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
               {deleteTarget.code})? Canonical values linked to this dimension must be removed first.
             </p>
             <div className="modal-actions">
-              <button type="button" className="btn-secondary" onClick={() => setDeleteTarget(null)}>
+              <button type="button" className="button-secondary" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </button>
               <button
                 type="button"
-                className="btn-danger"
+                className="button-danger"
                 onClick={() => void handleDelete()}
                 disabled={isSubmitting}
               >

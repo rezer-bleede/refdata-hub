@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Button, Card, Form, Modal, Spinner, Table } from 'react-bootstrap';
+import { Button, Card, Form, Modal, Spinner, Table } from '../components/ui';
 
 import {
   deleteValueMapping,
@@ -151,7 +151,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
       return (
         <tr>
           <td colSpan={7} className="text-center py-4">
-            <Spinner animation="border" role="status" size="sm" className="me-2" /> Loading mappings…
+            <Spinner animation="border" role="status" size="sm" className="mr-2" /> Loading mappings…
           </td>
         </tr>
       );
@@ -160,7 +160,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
     if (!mappings.length) {
       return (
         <tr>
-          <td colSpan={7} className="text-center text-body-secondary py-4">
+          <td colSpan={7} className="text-center text-slate-400 py-4">
             No mappings available for the selected scope.
           </td>
         </tr>
@@ -169,16 +169,16 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
 
     return mappings.map((mapping) => (
       <tr key={mapping.id}>
-        <td className="fw-semibold">{mapping.raw_value}</td>
+        <td className="font-semibold">{mapping.raw_value}</td>
         <td>{mapping.canonical_label}</td>
         <td>{mapping.ref_dimension}</td>
-        <td className="text-monospaced">{mapping.status}</td>
+        <td className="font-mono">{mapping.status}</td>
         <td>
           {mapping.confidence != null ? `${(mapping.confidence * 100).toFixed(1)}%` : '—'}
         </td>
-        <td className="text-monospaced">{new Date(mapping.updated_at).toLocaleString()}</td>
+        <td className="font-mono">{new Date(mapping.updated_at).toLocaleString()}</td>
         <td className="text-end">
-          <div className="d-inline-flex gap-2">
+          <div className="inline-flex gap-2">
             <Button size="sm" variant="outline-primary" onClick={() => openEdit(mapping)}>
               Edit
             </Button>
@@ -192,15 +192,15 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
   };
 
   return (
-    <div className="d-flex flex-column gap-4">
+    <div className="flex flex-col gap-4">
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-3">
-          <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <Card.Body className="flex flex-col gap-3">
+          <div className="flex flex-col lg:flex-row justify-between gap-3">
             <div>
-              <Card.Title as="h1" className="section-heading h4 mb-1">
+              <Card.Title as="h1" className="text-2xl mb-1">
                 Mapping history
               </Card.Title>
-              <Card.Text className="text-body-secondary mb-0">
+              <Card.Text className="text-slate-400 mb-0">
                 Review every approved mapping and ensure canonical assignments stay current.
               </Card.Text>
             </div>
@@ -222,8 +222,8 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
               </Form.Select>
             </Form.Group>
           </div>
-          <div className="table-responsive">
-            <Table striped hover className="align-middle table-nowrap">
+          <div className="overflow-x-auto">
+            <Table striped hover className="align-middle whitespace-nowrap">
               <thead>
                 <tr>
                   <th>Raw value</th>
@@ -245,7 +245,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
         <Modal.Header closeButton>
           <Modal.Title>Edit mapping</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="d-flex flex-column gap-3">
+        <Modal.Body className="flex flex-col gap-3">
           <Form.Group controlId="edit-canonical">
             <Form.Label>Canonical value</Form.Label>
             <Form.Select
@@ -300,7 +300,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
           </Button>
           <Button variant="primary" onClick={() => void handleUpdate()} disabled={saving}>
             {saving ? (
-              <span className="d-inline-flex align-items-center gap-2">
+              <span className="inline-flex items-center gap-2">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Saving…
               </span>
@@ -324,7 +324,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
           </Button>
           <Button variant="danger" onClick={() => void handleDelete()} disabled={removing}>
             {removing ? (
-              <span className="d-inline-flex align-items-center gap-2">
+              <span className="inline-flex items-center gap-2">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Deleting…
               </span>

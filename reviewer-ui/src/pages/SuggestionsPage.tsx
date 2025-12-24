@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Badge, Button, Card, Form, Spinner } from 'react-bootstrap';
+import { Badge, Button, Card, Form, Spinner } from '../components/ui';
 
 import {
   createValueMapping,
@@ -119,15 +119,15 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
   };
 
   return (
-    <div className="d-flex flex-column gap-4">
+    <div className="flex flex-col gap-4">
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-3">
-          <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <Card.Body className="flex flex-col gap-3">
+          <div className="flex flex-col lg:flex-row justify-between gap-3">
             <div>
-              <Card.Title as="h1" className="section-heading h4 mb-1">
+              <Card.Title as="h1" className="text-2xl mb-1">
                 Triage unmatched values
               </Card.Title>
-              <Card.Text className="text-body-secondary mb-0">
+              <Card.Text className="text-slate-400 mb-0">
                 Review low-confidence matches and confirm the appropriate canonical record. Suggestions are ranked using the semantic matcher.
               </Card.Text>
             </div>
@@ -146,7 +146,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
               </Form.Select>
             </Form.Group>
           </div>
-          {loading && <Spinner animation="border" role="status" className="align-self-start" />}
+          {loading && <Spinner animation="border" role="status" className="self-start" />}
         </Card.Body>
       </Card>
 
@@ -155,16 +155,16 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
         const canonicalOptions = canonicalByDimension.get(record.ref_dimension) ?? [];
         return (
           <Card key={key} className="card-section">
-            <Card.Body className="d-flex flex-column gap-3">
-              <div className="d-flex justify-content-between flex-wrap gap-3">
+            <Card.Body className="flex flex-col gap-3">
+              <div className="flex justify-between flex-wrap gap-3">
                 <div>
-                  <Card.Title as="h2" className="h5 mb-1">
+                  <Card.Title as="h2" className="text-lg mb-1">
                     {record.raw_value}
                   </Card.Title>
-                  <Card.Text className="text-body-secondary mb-0">
+                  <Card.Text className="text-slate-400 mb-0">
                     {record.source_table}.{record.source_field} · {record.ref_dimension}
                   </Card.Text>
-                  <Card.Text className="text-body-secondary small">
+                  <Card.Text className="text-slate-400 text-xs">
                     {record.occurrence_count} occurrences
                   </Card.Text>
                 </div>
@@ -173,7 +173,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
                 </Badge>
               </div>
 
-              <div className="d-flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 {record.suggestions.map((suggestion) => (
                   <Button
                     key={suggestion.canonical_id}
@@ -187,8 +187,8 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
                 ))}
               </div>
 
-              <div className="d-flex flex-column flex-md-row gap-3 align-items-start">
-                <Form.Group controlId={`manual-select-${key}`} className="flex-grow-1">
+              <div className="flex flex-col md:flex-row gap-3 items-start">
+                <Form.Group controlId={`manual-select-${key}`} className="grow">
                   <Form.Label>Manual selection</Form.Label>
                   <Form.Select
                     value={manualSelection[key] ?? ''}
@@ -219,7 +219,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
                   disabled={linking === key}
                 >
                   {linking === key ? (
-                    <span className="d-inline-flex align-items-center gap-2">
+                    <span className="inline-flex items-center gap-2">
                       <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                       Linking…
                     </span>
@@ -236,7 +236,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
       {!unmatched.length && !loading && (
         <Card className="card-section">
           <Card.Body>
-            <p className="text-body-secondary mb-0">All recent values are matched for this connection.</p>
+            <p className="text-slate-400 mb-0">All recent values are matched for this connection.</p>
           </Card.Body>
         </Card>
       )}

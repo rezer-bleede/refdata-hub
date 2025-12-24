@@ -125,7 +125,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
           className="flex flex-col gap-4"
         >
           <label htmlFor="match-raw-value" className="flex flex-col gap-2">
-            <span className="form-label">Raw value</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Raw value</span>
             <textarea
               id="match-raw-value"
               rows={3}
@@ -136,7 +136,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
             />
           </label>
           <label htmlFor="match-dimension" className="flex flex-col gap-2">
-            <span className="form-label">Dimension (optional)</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Dimension (optional)</span>
             <select
               id="match-dimension"
               value={matchDimension}

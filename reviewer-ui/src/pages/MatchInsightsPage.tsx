@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Badge, Card, Form, ProgressBar, Spinner } from 'react-bootstrap';
+import { Badge, Card, Form, ProgressBar, Spinner } from '../components/ui';
 
 import { fetchFieldMappings, fetchMatchStatistics, fetchSourceConnections } from '../api';
 import { useAppState } from '../state/AppStateContext';
@@ -11,16 +11,16 @@ interface MatchInsightsPageProps {
 
 const renderSuggestions = (suggestions: MatchCandidate[]) => {
   if (!suggestions.length) {
-    return <p className="text-body-secondary mb-0">No suggestions above the relaxed threshold.</p>;
+    return <p className="text-slate-400 mb-0">No suggestions above the relaxed threshold.</p>;
   }
 
   return (
-    <div className="d-flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2">
       {suggestions.map((candidate) => (
         <Badge
           key={candidate.canonical_id}
           bg={candidate.score >= 0.6 ? 'primary' : 'secondary'}
-          className="text-wrap"
+          className="whitespace-normal"
         >
           {candidate.canonical_label} ({(candidate.score * 100).toFixed(0)}%)
         </Badge>
@@ -116,15 +116,15 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
   }, [stats]);
 
   return (
-    <div className="d-flex flex-column gap-4">
+    <div className="flex flex-col gap-4">
       <Card className="card-section">
-        <Card.Body className="d-flex flex-column gap-3">
-          <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+        <Card.Body className="flex flex-col gap-3">
+          <div className="flex flex-col lg:flex-row justify-between gap-3">
             <div>
-              <Card.Title as="h1" className="section-heading h4 mb-1">
+              <Card.Title as="h1" className="text-2xl mb-1">
                 Match Insights
               </Card.Title>
-              <Card.Text className="text-body-secondary mb-0">
+              <Card.Text className="text-slate-400 mb-0">
                 Monitor alignment between raw values and canonical records. Use the insights below to prioritise review efforts.
               </Card.Text>
             </div>
@@ -145,17 +145,17 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
               </Form.Select>
             </Form.Group>
           </div>
-          <div className="d-flex align-items-center gap-3">
+          <div className="flex items-center gap-3">
             <div>
-              <p className="text-body-secondary mb-1">Overall match rate</p>
-              <h2 className="display-6 fw-semibold mb-0">
+              <p className="text-slate-400 mb-1">Overall match rate</p>
+              <h2 className="text-3xl font-semibold mb-0">
                 {overallTotals.total ? `${(overallTotals.rate * 100).toFixed(1)}%` : '—'}
               </h2>
               {!overallTotals.total && (
-                <p className="text-body-secondary mb-0">No samples captured yet.</p>
+                <p className="text-slate-400 mb-0">No samples captured yet.</p>
               )}
             </div>
-            <div className="flex-grow-1">
+            <div className="grow">
               <ProgressBar
                 now={overallTotals.rate * 100}
                 variant="success"
@@ -163,27 +163,27 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
               />
             </div>
           </div>
-          {loading && <Spinner animation="border" role="status" className="align-self-start" />}
+          {loading && <Spinner animation="border" role="status" className="self-start" />}
         </Card.Body>
       </Card>
 
       {stats.map((item) => (
         <Card key={item.mapping_id} className="card-section">
-          <Card.Body className="d-flex flex-column gap-3">
-            <div className="d-flex justify-content-between flex-wrap gap-3">
+          <Card.Body className="flex flex-col gap-3">
+            <div className="flex justify-between flex-wrap gap-3">
               <div>
-                <Card.Title as="h2" className="h5 mb-1">
+                <Card.Title as="h2" className="text-lg mb-1">
                   {item.source_table}.{item.source_field}
                 </Card.Title>
-                <Card.Text className="text-body-secondary mb-0">
+                <Card.Text className="text-slate-400 mb-0">
                   Dimension: {item.ref_dimension}
                 </Card.Text>
               </div>
               <div className="text-end">
-                <div className="display-6 fw-semibold">
+                <div className="text-3xl font-semibold">
                   {item.total_values ? `${(item.match_rate * 100).toFixed(1)}%` : '—'}
                 </div>
-                <div className="text-body-secondary">
+                <div className="text-slate-400">
                   {item.total_values
                     ? `${item.matched_values} / ${item.total_values} matched`
                     : 'No samples captured yet.'}
@@ -192,16 +192,18 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
             </div>
 
             <div>
-              <h3 className="h6 mb-2">Top unmatched values</h3>
-              <div className="d-flex flex-column gap-2">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400 mb-2">
+                Top unmatched values
+              </h3>
+              <div className="flex flex-col gap-2">
                 {item.total_values ? (
                   item.top_unmatched.length ? (
                     item.top_unmatched.map((unmatched) => (
-                      <Card key={unmatched.raw_value} body className="border-0 bg-body-tertiary">
-                        <div className="d-flex justify-content-between align-items-start">
+                      <Card key={unmatched.raw_value} body className="border-0 bg-slate-900/70">
+                        <div className="flex justify-between items-start">
                           <div>
-                            <div className="fw-semibold">{unmatched.raw_value}</div>
-                            <div className="text-body-secondary small">
+                            <div className="font-semibold">{unmatched.raw_value}</div>
+                            <div className="text-slate-400 text-xs">
                               {unmatched.occurrence_count} occurrences
                             </div>
                           </div>
@@ -213,12 +215,12 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
                       </Card>
                     ))
                   ) : (
-                    <p className="text-body-secondary mb-0">
+                    <p className="text-slate-400 mb-0">
                       Every sampled value met the configured threshold.
                     </p>
                   )
                 ) : (
-                  <p className="text-body-secondary mb-0">
+                  <p className="text-slate-400 mb-0">
                     No samples have been captured for this mapping yet.
                   </p>
                 )}
@@ -231,7 +233,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
       {!stats.length && !loading && (
         <Card className="card-section">
           <Card.Body>
-            <p className="text-body-secondary mb-0">No mappings available for the selected connection yet.</p>
+            <p className="text-slate-400 mb-0">No mappings available for the selected connection yet.</p>
           </Card.Body>
         </Card>
       )}
