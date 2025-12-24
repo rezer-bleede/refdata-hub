@@ -1,4 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import {
   createDimension,
@@ -46,6 +47,7 @@ const renderFieldTypeLabel = (type: DimensionExtraFieldType) => {
 
 const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
   const { dimensions, updateDimensions } = useAppState();
+  const navigate = useNavigate();
   const [showEditor, setShowEditor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editing, setEditing] = useState<DimensionDefinition | null>(null);
@@ -208,7 +210,11 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                     </tr>
                   )}
                   {sortedDimensions.map((dimension) => (
-                    <tr key={dimension.code} className="bg-slate-900/40">
+                    <tr
+                      key={dimension.code}
+                      className="cursor-pointer bg-slate-900/40 transition hover:bg-slate-800/60"
+                      onClick={() => navigate(`/dimensions/${encodeURIComponent(dimension.code)}`)}
+                    >
                       <td className="px-4 py-3 font-mono text-sm text-aurora">{dimension.code}</td>
                       <td className="px-4 py-3 text-slate-100">{dimension.label}</td>
                       <td className="px-4 py-3 text-sm text-slate-400">{dimension.description || '—'}</td>
@@ -231,14 +237,20 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                           <button
                             type="button"
                             className="button-secondary text-xs"
-                            onClick={() => openEditModal(dimension)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openEditModal(dimension);
+                            }}
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             className="button-danger text-xs"
-                            onClick={() => setDeleteTarget(dimension)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setDeleteTarget(dimension);
+                            }}
                           >
                             Delete
                           </button>

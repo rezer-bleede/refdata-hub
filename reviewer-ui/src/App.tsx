@@ -9,6 +9,7 @@ import MatchInsightsPage from './pages/MatchInsightsPage';
 import SuggestionsPage from './pages/SuggestionsPage';
 import CanonicalLibraryPage from './pages/CanonicalLibraryPage';
 import DimensionsPage from './pages/DimensionsPage';
+import DimensionDetailPage from './pages/DimensionDetailPage';
 import DimensionRelationsPage from './pages/DimensionRelationsPage';
 import SettingsPage from './pages/SettingsPage';
 import SourceConnectionDetailPage from './pages/SourceConnectionDetailPage';
@@ -323,6 +324,7 @@ const AppScaffold = ({
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage onToast={onToast} />} />
               <Route path="/dimensions" element={<DimensionsPage onToast={onToast} />} />
+              <Route path="/dimensions/:code" element={<DimensionDetailPage onToast={onToast} />} />
               <Route path="/canonical-library" element={<CanonicalLibraryPage onToast={onToast} />} />
               <Route path="/dimension-relations" element={<DimensionRelationsPage onToast={onToast} />} />
               <Route path="/connections" element={<ConnectionsPage onToast={onToast} />} />
