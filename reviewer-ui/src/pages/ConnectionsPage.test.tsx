@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -82,5 +82,40 @@ describe('ConnectionsPage', () => {
     const registrationHeading = screen.getByRole('heading', { name: 'Register a source connection' });
 
     expect(existingHeading.compareDocumentPosition(registrationHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('renders the port and password fields with the themed input treatment', async () => {
+    apiMocks.fetchSourceConnections.mockResolvedValueOnce([
+      {
+        id: 7,
+        name: 'Analytics Warehouse',
+        db_type: 'postgres',
+        host: 'warehouse.internal',
+        port: 5432,
+        database: 'analytics',
+        username: 'analyst',
+        options: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+    ]);
+
+    const onToast = vi.fn();
+    render(
+      <MemoryRouter>
+        <ConnectionsPage onToast={onToast} />
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => expect(apiMocks.fetchSourceConnections).toHaveBeenCalled());
+
+    expect(screen.getByLabelText('Port')).toHaveClass('form-input');
+    expect(screen.getByLabelText('Password')).toHaveClass('form-input');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+
+    const editDialog = await screen.findByRole('dialog');
+    expect(within(editDialog).getByLabelText('Port')).toHaveClass('form-input');
+    expect(within(editDialog).getByLabelText('Password')).toHaveClass('form-input');
   });
 });

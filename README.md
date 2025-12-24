@@ -52,8 +52,9 @@ The interface is organised into task-focused pages that surface the entire curat
   built-in **Test connection** action, and deep-dive into each source to inspect schemas, tables, fields, match statistics, and
   profiled sample values. Distinct sample previews now consolidate duplicate raw values captured across ingestion runs and roll
   their counts together so analysts always review truly unique source content. The existing connections grid now sits above the
-  registration form so teams can audit connectivity before onboarding new integrations. A demo connection targeting the bundled
-  `targetdb` Postgres instance is seeded automatically for tutorials and integration tests.
+  registration form so teams can audit connectivity before onboarding new integrations. Port and password fields in the
+  registration workflow now use the dark input treatment so entered values stay legible against the rest of the form. A demo
+  connection targeting the bundled `targetdb` Postgres instance is seeded automatically for tutorials and integration tests.
 - **Field Mappings** – align source tables/fields to reference dimensions and ingest sample values for reconciliation analytics.
   Available tables and columns are now surfaced directly from the connected database so analysts can choose valid metadata from
   dropdowns instead of typing freeform text. The existing mappings table is pinned above the creation form to keep context

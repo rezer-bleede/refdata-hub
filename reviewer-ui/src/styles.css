@@ -247,10 +247,19 @@
     @apply inline-flex items-center rounded-full border border-aurora/30 bg-aurora/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-aurora;
   }
 
+  .form-input,
   textarea,
   input,
   select {
-    @apply rounded-2xl border border-slate-800/70 bg-slate-950/60 px-4 py-3 text-sm text-slate-100 shadow-inner-border transition placeholder:text-slate-500 focus:border-aurora/60 focus:ring-2 focus:ring-aurora/40;
+    @apply rounded-2xl border border-slate-800/70 bg-slate-950/70 px-4 py-3 text-sm text-slate-100 shadow-inner-border transition placeholder:text-slate-500 focus:border-aurora/60 focus:ring-2 focus:ring-aurora/40;
+  }
+
+  .form-input:-webkit-autofill,
+  .form-input:-webkit-autofill:hover,
+  .form-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: rgb(226 232 240);
+    box-shadow: 0 0 0 1000px rgba(3, 7, 18, 0.9) inset;
+    transition: background-color 9999s ease-in-out 0s;
   }
 
   .section-heading {

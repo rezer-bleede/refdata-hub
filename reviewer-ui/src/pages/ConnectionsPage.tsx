@@ -339,6 +339,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Connection name</span>
               <input
                 id="connection-name"
+                className="form-input"
                 value={form.name}
                 onChange={(event) => handleFormChange('name', event.target.value)}
                 required
@@ -348,6 +349,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database type</span>
               <input
                 id="connection-type"
+                className="form-input"
                 value={form.db_type}
                 onChange={(event) => handleFormChange('db_type', event.target.value)}
               />
@@ -356,6 +358,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Host</span>
               <input
                 id="connection-host"
+                className="form-input"
                 value={form.host}
                 onChange={(event) => handleFormChange('host', event.target.value)}
                 required
@@ -365,6 +368,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Port</span>
               <input
                 id="connection-port"
+                className="form-input"
                 type="number"
                 value={form.port}
                 onChange={(event) => handleFormChange('port', event.target.value)}
@@ -374,6 +378,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database</span>
               <input
                 id="connection-database"
+                className="form-input"
                 value={form.database}
                 onChange={(event) => handleFormChange('database', event.target.value)}
                 required
@@ -383,6 +388,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Username</span>
               <input
                 id="connection-username"
+                className="form-input"
                 value={form.username}
                 onChange={(event) => handleFormChange('username', event.target.value)}
                 required
@@ -392,6 +398,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Password</span>
               <input
                 id="connection-password"
+                className="form-input"
                 type="password"
                 value={form.password ?? ''}
                 onChange={(event) => handleFormChange('password', event.target.value)}
@@ -401,6 +408,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Options (JSON)</span>
               <input
                 id="connection-options"
+                className="form-input"
                 placeholder='{"sslmode":"require"}'
                 value={form.options ?? ''}
                 onChange={(event) => handleFormChange('options', event.target.value)}
@@ -457,6 +465,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Name</span>
                 <input
                   id="edit-name"
+                  className="form-input"
                   value={editForm.name ?? ''}
                   onChange={(event) => handleEditChange('name', event.target.value)}
                 />
@@ -465,6 +474,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database type</span>
                 <input
                   id="edit-db-type"
+                  className="form-input"
                   value={editForm.db_type ?? ''}
                   onChange={(event) => handleEditChange('db_type', event.target.value)}
                 />
@@ -473,6 +483,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Host</span>
                 <input
                   id="edit-host"
+                  className="form-input"
                   value={editForm.host ?? ''}
                   onChange={(event) => handleEditChange('host', event.target.value)}
                 />
@@ -481,6 +492,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Port</span>
                 <input
                   id="edit-port"
+                  className="form-input"
                   type="number"
                   value={editForm.port ?? 0}
                   onChange={(event) => handleEditChange('port', event.target.value)}
@@ -490,6 +502,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Database</span>
                 <input
                   id="edit-database"
+                  className="form-input"
                   value={editForm.database ?? ''}
                   onChange={(event) => handleEditChange('database', event.target.value)}
                 />
@@ -498,6 +511,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Username</span>
                 <input
                   id="edit-username"
+                  className="form-input"
                   value={editForm.username ?? ''}
                   onChange={(event) => handleEditChange('username', event.target.value)}
                 />
@@ -506,6 +520,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Password</span>
                 <input
                   id="edit-password"
+                  className="form-input"
                   type="password"
                   value={editForm.password ?? ''}
                   onChange={(event) => handleEditChange('password', event.target.value)}
@@ -515,6 +530,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Options</span>
                 <input
                   id="edit-options"
+                  className="form-input"
                   value={editForm.options ?? ''}
                   onChange={(event) => handleEditChange('options', event.target.value)}
                 />
