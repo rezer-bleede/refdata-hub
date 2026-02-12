@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640">
+  <defs>
+    <linearGradient id="social-og" x1="0" y1="0" x2="1280" y2="640">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="640" rx="24" fill="#0f172a" />
+  <rect width="1280" height="640" rx="24" fill="url(#social-og)" opacity="0.08" />
+
+  <g transform="translate(160, 120)">
+    <rect x="0" y="0" width="400" height="400" rx="64" fill="#020617" />
+    <rect x="0" y="0" width="400" height="400" rx="64" fill="none" stroke="url(#social-og)" stroke-width="8" />
+
+    <g transform="translate(80, 80)">
+      <circle cx="40" cy="40" r="14" fill="#6366f1" opacity="0.8" />
+      <circle cx="96" cy="20" r="12" fill="#6366f1" opacity="0.6" />
+      <circle cx="60" cy="100" r="20" fill="#6366f1" opacity="0.9" />
+      <circle cx="116" cy="80" r="10" fill="#6366f1" opacity="0.5" />
+      <circle cx="40" cy="140" r="12" fill="#6366f1" opacity="0.7" />
+      <circle cx="96" cy="120" r="16" fill="#6366f1" opacity="0.8" />
+    </g>
+
+    <g transform="translate(160, 160)">
+      <rect x="0" y="0" width="80" height="14" rx="7" fill="url(#social-og)" opacity="0.7" />
+      <rect x="0" y="28" width="80" height="14" rx="7" fill="url(#social-og)" opacity="0.8" />
+      <rect x="0" y="56" width="60" height="14" rx="7" fill="url(#social-og)" opacity="0.9" />
+    </g>
+
+    <circle cx="200" cy="200" r="16" fill="#22d3ee" opacity="0.9" />
+  </g>
+
+  <text x="640" y="200" font-family="Space Grotesk, Inter, sans-serif" font-size="64" font-weight="700" fill="url(#social-og)" text-anchor="middle">RefData Hub</text>
+  <text x="640" y="260" font-family="Inter, sans-serif" font-size="24" font-weight="400" fill="#94a3b8" text-anchor="middle">Data Harmonization Platform</text>
+  <text x="640" y="320" font-family="Inter, sans-serif" font-size="20" font-weight="400" fill="#64748b" text-anchor="middle">Transform messy reference data into canonical standards</text>
+  <text x="640" y="380" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="#22d3ee" letter-spacing="0.1em" text-anchor="middle">OPEN SOURCE • SEMANTIC MATCHING • AI-POWERED</text>
+  <text x="640" y="480" font-family="Inter, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">github.com/rezer-bleede/refdata-hub</text>
+</svg>

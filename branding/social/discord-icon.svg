@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="social-discord" x1="0" y1="0" x2="1024" y2="1024">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="64" fill="#0f172a" />
+  <rect width="1024" height="1024" rx="64" fill="url(#social-discord)" opacity="0.1" />
+
+  <g transform="translate(212, 212)">
+    <rect x="0" y="0" width="600" height="600" rx="80" fill="#020617" />
+    <rect x="0" y="0" width="600" height="600" rx="80" fill="none" stroke="url(#social-discord)" stroke-width="10" />
+
+    <g transform="translate(100, 100)">
+      <circle cx="60" cy="60" r="20" fill="#6366f1" opacity="0.8" />
+      <circle cx="144" cy="30" r="16" fill="#6366f1" opacity="0.6" />
+      <circle cx="90" cy="150" r="28" fill="#6366f1" opacity="0.9" />
+      <circle cx="174" cy="120" r="14" fill="#6366f1" opacity="0.5" />
+      <circle cx="60" cy="210" r="16" fill="#6366f1" opacity="0.7" />
+      <circle cx="144" cy="180" r="22" fill="#6366f1" opacity="0.8" />
+    </g>
+
+    <g transform="translate(240, 240)">
+      <rect x="0" y="0" width="120" height="20" rx="10" fill="url(#social-discord)" opacity="0.7" />
+      <rect x="0" y="40" width="120" height="20" rx="10" fill="url(#social-discord)" opacity="0.8" />
+      <rect x="0" y="80" width="90" height="20" rx="10" fill="url(#social-discord)" opacity="0.9" />
+    </g>
+
+    <circle cx="300" cy="300" r="24" fill="#22d3ee" opacity="0.9" />
+  </g>
+
+  <text x="512" y="900" font-family="Space Grotesk, Inter, sans-serif" font-size="32" font-weight="700" fill="url(#social-discord)" text-anchor="middle">RefData Hub</text>
+</svg>

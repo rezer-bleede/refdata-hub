@@ -217,46 +217,32 @@ const AppScaffold = ({
                 aria-label="RefData Hub logo"
                 className="app-sidebar__brand-logo"
               >
-                <path
-                  d="M20 22.5c0-3.59 2.91-6.5 6.5-6.5h11c3.59 0 6.5 2.91 6.5 6.5v18c0 3.59-2.91 6.5-6.5 6.5h-11c-3.59 0-6.5-2.91-6.5-6.5z"
-                  fill="currentColor"
-                  opacity="0.14"
-                />
-                <path
-                  d="M19 20c0-3.866 3.134-7 7-7h12c3.866 0 7 3.134 7 7v24c0 3.866-3.134 7-7 7H26c-3.866 0-7-3.134-7-7z"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  fill="none"
-                />
-                <path
-                  d="M20 32h-4.5c-1.38 0-2.5 1.12-2.5 2.5S14.12 37 15.5 37H20"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M44 28h4.5c1.38 0 2.5-1.12 2.5-2.5S49.88 23 48.5 23H44"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M25 24c0 2.209 2.686 4 6 4s6-1.791 6-4"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M25 40c0-2.209 2.686-4 6-4s6 1.791 6 4"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                />
-                <circle cx="16" cy="32" r="2.6" fill="currentColor" />
-                <circle cx="48" cy="24" r="2.6" fill="currentColor" />
-                <circle cx="32" cy="24" r="2" fill="#0ff" opacity="0.7" />
-                <circle cx="32" cy="40" r="2" fill="#a5b4fc" opacity="0.9" />
-                <circle cx="32" cy="32" r="3.4" fill="currentColor" opacity="0.3" />
+                <rect x="8" y="8" width="48" height="48" rx="10" fill="currentColor" opacity="0.12" />
+                <rect x="8" y="8" width="48" height="48" rx="10" fill="none" stroke="url(#logo-gradient)" strokeWidth="2.5" />
+                <g transform="translate(16, 16)">
+                  <circle cx="8" cy="8" r="3" fill="url(#logo-primary)" opacity="0.8" />
+                  <circle cx="20" cy="4" r="2.5" fill="url(#logo-primary)" opacity="0.6" />
+                  <circle cx="12" cy="20" r="4" fill="url(#logo-primary)" opacity="0.9" />
+                  <circle cx="24" cy="16" r="2" fill="url(#logo-primary)" opacity="0.5" />
+                  <circle cx="8" cy="28" r="2.5" fill="url(#logo-primary)" opacity="0.7" />
+                  <circle cx="20" cy="24" r="3.5" fill="url(#logo-primary)" opacity="0.8" />
+                </g>
+                <g transform="translate(24, 24)">
+                  <rect x="0" y="0" width="16" height="3" rx="1.5" fill="url(#logo-gradient)" opacity="0.7" />
+                  <rect x="0" y="6" width="16" height="3" rx="1.5" fill="url(#logo-gradient)" opacity="0.8" />
+                  <rect x="0" y="12" width="12" height="3" rx="1.5" fill="url(#logo-gradient)" opacity="0.9" />
+                </g>
+                <circle cx="32" cy="32" r="3.5" fill="#22d3ee" opacity="0.9" />
+                <defs>
+                  <linearGradient id="logo-gradient" x1="0" y1="0" x2="64" y2="64">
+                    <stop offset="0%" stop-color="#6366f1" />
+                    <stop offset="100%" stop-color="#22d3ee" />
+                  </linearGradient>
+                  <linearGradient id="logo-primary" x1="0" y1="0" x2="48" y2="48">
+                    <stop offset="0%" stop-color="#6366f1" />
+                    <stop offset="100%" stop-color="#8b5cf6" />
+                  </linearGradient>
+                </defs>
               </svg>
             </span>
             <span className="app-sidebar__brand-text">

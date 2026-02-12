@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="RefData Hub icon-only logo">
+  <defs>
+    <linearGradient id="logo-icon" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="50%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+    <linearGradient id="logo-data-icon" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.6" />
+    </linearGradient>
+    <filter id="logo-glow-icon" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect x="64" y="64" width="384" height="384" rx="64" fill="#0f172a" />
+  <rect x="64" y="64" width="384" height="384" rx="64" fill="url(#logo-icon)" opacity="0.1" />
+  <rect x="64" y="64" width="384" height="384" rx="64" fill="none" stroke="url(#logo-icon)" stroke-width="5" />
+
+  <g transform="translate(112, 128)">
+    <circle cx="32" cy="32" r="12" fill="url(#logo-data-icon)" />
+    <circle cx="112" cy="24" r="9" fill="url(#logo-data-icon)" opacity="0.8" />
+    <circle cx="64" cy="80" r="14" fill="url(#logo-data-icon)" />
+    <circle cx="144" cy="72" r="7" fill="url(#logo-data-icon)" opacity="0.7" />
+    <circle cx="40" cy="128" r="10" fill="url(#logo-data-icon)" opacity="0.9" />
+    <circle cx="104" cy="120" r="12" fill="url(#logo-data-icon)" />
+    <circle cx="24" cy="176" r="9" fill="url(#logo-data-icon)" opacity="0.8" />
+    <circle cx="88" cy="168" r="11" fill="url(#logo-data-icon)" opacity="0.7" />
+  </g>
+
+  <g transform="translate(272, 160)">
+    <path d="M0 0h112v28H0z" fill="url(#logo-icon)" opacity="0.5" />
+    <path d="M0 40h112v28H0z" fill="url(#logo-icon)" opacity="0.6" />
+    <path d="M0 80h112v28H0z" fill="url(#logo-icon)" opacity="0.7" />
+    <path d="M0 120h80v28H0z" fill="url(#logo-icon)" opacity="0.8" />
+    <path d="M0 160h56v28H0z" fill="url(#logo-icon)" opacity="0.9" />
+  </g>
+
+  <path d="M216 256l56-40 40 56" fill="none" stroke="#22d3ee" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" filter="url(#logo-glow-icon)" />
+
+  <circle cx="256" cy="256" r="14" fill="#22d3ee" opacity="0.8" filter="url(#logo-glow-icon)" />
+</svg>

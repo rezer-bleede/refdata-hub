@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="270" height="270" viewBox="0 0 270 270">
+  <defs>
+    <linearGradient id="win-tile" x1="0" y1="0" x2="270" y2="270">
+      <stop offset="0%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+
+  <rect width="270" height="270" rx="36" fill="#0f172a" />
+  <rect width="270" height="270" rx="36" fill="url(#win-tile)" opacity="0.15" />
+
+  <g transform="translate(45, 45)">
+    <rect x="0" y="0" width="180" height="180" rx="32" fill="#020617" />
+    <rect x="0" y="0" width="180" height="180" rx="32" fill="none" stroke="url(#win-tile)" stroke-width="5" />
+
+    <g transform="translate(30, 30)">
+      <circle cx="12" cy="12" r="5" fill="#6366f1" opacity="0.8" />
+      <circle cx="30" cy="6" r="4" fill="#6366f1" opacity="0.6" />
+      <circle cx="18" cy="30" r="6" fill="#6366f1" opacity="0.9" />
+      <circle cx="36" cy="24" r="3" fill="#6366f1" opacity="0.5" />
+      <circle cx="12" cy="42" r="4" fill="#6366f1" opacity="0.7" />
+      <circle cx="30" cy="36" r="5" fill="#6366f1" opacity="0.8" />
+    </g>
+
+    <g transform="translate(72, 72)">
+      <rect x="0" y="0" width="36" height="7" rx="3.5" fill="url(#win-tile)" opacity="0.7" />
+      <rect x="0" y="14" width="36" height="7" rx="3.5" fill="url(#win-tile)" opacity="0.8" />
+      <rect x="0" y="28" width="27" height="7" rx="3.5" fill="url(#win-tile)" opacity="0.9" />
+    </g>
+
+    <circle cx="90" cy="90" r="7" fill="#22d3ee" opacity="0.9" />
+  </g>
+</svg>
