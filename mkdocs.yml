@@ -16,6 +16,7 @@ theme:
     - search.highlight
     - search.share
     - content.code.copy
+    - navigation.tracking
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -44,17 +45,33 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - admonition
   - pymdownx.details
   - attr_list
   - md_in_html
   - tables
+  - toc:
+      permalink: true
 
 nav:
   - Home: index.md
   - Getting Started:
       - Quickstart: quickstart.md
-  - Features: features.md
-  - Canonical Library: canonical-library.md
-  - API Reference: api.md
-  - Troubleshooting: troubleshooting.md
+  - Documentation:
+      - Architecture: architecture.md
+      - Database Schema: database-schema.md
+      - API Reference: api.md
+      - Configuration: configuration.md
+  - Developer Guide:
+      - Development: development.md
+      - Testing: testing.md
+      - Deployment: deployment.md
+  - Features:
+      - Features Overview: features.md
+      - Canonical Library: canonical-library.md
+      - Troubleshooting: troubleshooting.md
+  - Community:
+      - Contributing: ../CONTRIBUTING.md
+      - Changelog: ../CHANGELOG.md

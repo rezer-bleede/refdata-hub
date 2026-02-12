@@ -1,50 +1,107 @@
 # RefData Hub
 
-A semi-automated reference data and standardization service for global projects. The platform harmonizes common reference dimensions (marital status, education, nationality, employment status, and more) by semantically matching new raw values, routing them to reviewers for approval, and adding them to a central mapping.
+A semi-automated reference data and standardization service for global projects. The platform harmonizes common reference dimensions (marital status, education, nationality, employment status, and more) by semantically matching new raw values, routing them to reviewers for approval, and maintaining a central mapping repository.
+
+## What is RefData Hub?
+
+RefData Hub solves the problem of inconsistent reference data across multiple systems. It provides:
+
+- **Centralized Reference Library** – Single source of truth for canonical values
+- **Semantic Matching** – AI-powered suggestions for standardizing raw data
+- **Reviewer Workflow** – Curate, approve, and manage mappings through a modern UI
+- **Source Integration** – Connect to upstream systems and profile data in real time
+- **Analytics & Insights** – Track harmonization health and match rates
 
 ## Key Features
 
-- **Semantic Matching** – Use NLP and embedding models to suggest standardized values for new raw inputs, with configurable confidence thresholds
-- **Reviewer UI** – Modern, theme-switchable interface for approving suggestions and managing the canonical library
-- **Source Connections** – Connect to upstream systems, inspect schemas, and profile data in real time
-- **Field Mappings** – Align source tables/fields to reference dimensions with automated sampling
-- **Match Insights** – Visualize match rates per mapping, track overall harmonization health
-- **Dimension Relations** – Model parent/child hierarchies (e.g., regions to districts)
-- **Bulk Import/Export** – Import tabular data in bulk and export the library to CSV or Excel
+- **Semantic Matching** – Use NLP and embedding models to suggest standardized values
+- **Reviewer UI** – Modern, theme-switchable interface with dark/light/midnight modes
+- **Source Connections** – Connect to upstream systems, test connections, inspect schemas
+- **Field Mappings** – Align source tables/fields to reference dimensions
+- **Match Insights** – Visualize match rates, track harmonization health
+- **Dimension Relations** – Model parent/child hierarchies (e.g., regions → districts)
+- **Bulk Operations** – Import/export canonical values and mappings via CSV/Excel
 
 ## Quick Start
 
-The fastest way to get started is with Docker. With Docker and Docker Compose installed, run:
+Get RefData Hub running in under 5 minutes with Docker:
 
 ```bash
 docker compose up --build
 ```
 
-This command starts:
+Access the application:
+- **Reviewer UI:** http://localhost:5173
+- **API Documentation:** http://localhost:8000/docs
 
-- **PostgreSQL** (`db`) seeded with example canonical values and configuration defaults
-- **Target Demo Postgres** (`targetdb`) populated with a realistic customer, order, and product warehouse
-- **FastAPI backend** (`api`) exposing REST endpoints under `http://localhost:8000`
-- **Reviewer UI** (`reviewer-ui`) served from `http://localhost:5173` with a Tailwind-powered design system
-- **Ollama llama3 runtime** (`ollama`) delivering an offline LLM endpoint for semantic matching experiments
+This command starts:
+- **PostgreSQL** database with example canonical values
+- **FastAPI backend** with REST API endpoints
+- **Reviewer UI** React dashboard
+- **Ollama LLM** runtime for offline semantic matching
 
 For detailed setup instructions, see the [Quickstart Guide](quickstart.md).
 
 ## Documentation
 
+### Getting Started
 - **[Quickstart Guide](quickstart.md)** – Get up and running with Docker
-- **[Features](features.md)** – Detailed feature overview and capabilities
+- **[Deployment Guide](deployment.md)** – Production deployment strategies
+
+### Understanding the System
+- **[Architecture](architecture.md)** – System design and component interactions
+- **[Database Schema](database-schema.md)** – Complete data model documentation
+- **[Features Overview](features.md)** – Detailed feature capabilities
+
+### Developer Resources
+- **[Developer Guide](development.md)** – Local development setup and workflow
+- **[API Reference](api.md)** – REST endpoints and integration examples
+- **[Testing Guide](testing.md)** – Test strategies and execution
+- **[Configuration Reference](configuration.md)** – System settings and environment variables
+
+### User Guides
 - **[Canonical Library Guide](canonical-library.md)** – Managing curated reference values
-- **[API Reference](api.md)** – REST endpoints and integration options
 - **[Troubleshooting](troubleshooting.md)** – Common issues and solutions
+
+### Community
+- **[Contributing](../CONTRIBUTING.md)** – Guidelines for contributing
+- **[Changelog](../CHANGELOG.md)** – Version history and changes
 
 ## Tech Stack
 
-- **Backend:** FastAPI (Python)
-- **Database:** PostgreSQL with audit/versioning tables
-- **Frontend:** React with Tailwind CSS
-- **Matching:** TF-IDF embeddings with optional LLM orchestrator (Ollama/OpenAI-compatible)
+- **Backend:** FastAPI (Python) with SQLModel/PostgreSQL
+- **Frontend:** React 18 + Vite + Tailwind CSS
+- **Matching:** TF-IDF embeddings + OpenAI/Ollama LLM support
+- **Testing:** Pytest (backend) + Vitest (frontend)
+- **Infrastructure:** Docker Compose / Kubernetes
+
+## Architecture Overview
+
+```mermaid
+graph LR
+    A[Source Systems] -->|Raw Data| B[RefData Hub]
+    B --> C[Semantic Matcher]
+    B --> D[Canonical Library]
+    D -->|Approved Mappings| E[Downstream Systems]
+    C -->|Suggestions| B
+```
+
+RefData Hub sits between source systems and downstream consumers, providing intelligent harmonization of reference data through semantic matching and human curation.
+
+## Use Cases
+
+- **Data Warehousing** – Harmonize reference data from multiple source systems
+- **Data Quality** – Detect and fix inconsistent reference values
+- **Analytics** – Ensure consistent dimensions across reporting systems
+- **Data Migration** – Map legacy reference values to new standards
+- **Compliance** – Maintain auditable reference data mappings
+
+## Support
+
+- 📖 [Documentation](https://rezer-bleede.github.io/refdata-hub/)
+- 🐛 [Issue Tracker](https://github.com/rezer-bleede/refdata-hub/issues)
+- 💬 [Discussions](https://github.com/rezer-bleede/refdata-hub/discussions)
 
 ## License
 
-This project is released under the [MIT License](https://github.com/rezer-bleede/refdata-hub/blob/main/LICENSE).
+This project is released under the [MIT License](../LICENSE).
