@@ -217,32 +217,49 @@ const AppScaffold = ({
                 aria-label="RefData Hub logo"
                 className="app-sidebar__brand-logo"
               >
-                <rect x="8" y="8" width="48" height="48" rx="10" fill="currentColor" opacity="0.12" />
-                <rect x="8" y="8" width="48" height="48" rx="10" fill="none" stroke="url(#logo-gradient)" strokeWidth="2.5" />
-                <g transform="translate(16, 16)">
-                  <circle cx="8" cy="8" r="3" fill="url(#logo-primary)" opacity="0.8" />
-                  <circle cx="20" cy="4" r="2.5" fill="url(#logo-primary)" opacity="0.6" />
-                  <circle cx="12" cy="20" r="4" fill="url(#logo-primary)" opacity="0.9" />
-                  <circle cx="24" cy="16" r="2" fill="url(#logo-primary)" opacity="0.5" />
-                  <circle cx="8" cy="28" r="2.5" fill="url(#logo-primary)" opacity="0.7" />
-                  <circle cx="20" cy="24" r="3.5" fill="url(#logo-primary)" opacity="0.8" />
-                </g>
-                <g transform="translate(24, 24)">
-                  <rect x="0" y="0" width="16" height="3" rx="1.5" fill="url(#logo-gradient)" opacity="0.7" />
-                  <rect x="0" y="6" width="16" height="3" rx="1.5" fill="url(#logo-gradient)" opacity="0.8" />
-                  <rect x="0" y="12" width="12" height="3" rx="1.5" fill="url(#logo-gradient)" opacity="0.9" />
-                </g>
-                <circle cx="32" cy="32" r="3.5" fill="#22d3ee" opacity="0.9" />
                 <defs>
-                  <linearGradient id="logo-gradient" x1="0" y1="0" x2="64" y2="64">
-                    <stop offset="0%" stop-color="#6366f1" />
-                    <stop offset="100%" stop-color="#22d3ee" />
+                  <linearGradient id="logo-grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0ea5e9" />
+                    <stop offset="100%" stop-color="#6366f1" />
                   </linearGradient>
-                  <linearGradient id="logo-primary" x1="0" y1="0" x2="48" y2="48">
-                    <stop offset="0%" stop-color="#6366f1" />
-                    <stop offset="100%" stop-color="#8b5cf6" />
+                  <linearGradient id="logo-grad-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#22d3ee" />
+                    <stop offset="100%" stop-color="#0ea5e9" />
                   </linearGradient>
+                  <filter id="logo-glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
                 </defs>
+                
+                <rect width="64" height="64" rx="14" fill="#0f172a"/>
+                <rect width="64" height="64" rx="14" fill="none" stroke="url(#logo-grad-primary)" strokeWidth="2"/>
+                
+                {/* Left scattered dots - raw data */}
+                <g fill="#0ea5e9" opacity="0.8">
+                  <circle cx="14" cy="20" r="2.5"/>
+                  <circle cx="22" cy="16" r="2"/>
+                  <circle cx="18" cy="28" r="3"/>
+                  <circle cx="12" cy="36" r="2"/>
+                  <circle cx="20" cy="40" r="2.5"/>
+                </g>
+                
+                {/* Center arrow - transformation */}
+                <path d="M26 32 L34 32 M32 29 L34 32 L32 35" stroke="url(#logo-grad-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" filter="url(#logo-glow)"/>
+                
+                {/* Right organized bars - canonical data */}
+                <g fill="#6366f1" opacity="0.9">
+                  <rect x="38" y="18" width="16" height="3" rx="1.5"/>
+                  <rect x="38" y="25" width="16" height="3" rx="1.5"/>
+                  <rect x="38" y="32" width="12" height="3" rx="1.5"/>
+                  <rect x="38" y="39" width="8" height="3" rx="1.5"/>
+                </g>
+                
+                {/* Center point - unification */}
+                <circle cx="32" cy="32" r="4" fill="#22d3ee" filter="url(#logo-glow)"/>
               </svg>
             </span>
             <span className="app-sidebar__brand-text">

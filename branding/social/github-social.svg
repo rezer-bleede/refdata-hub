@@ -1,40 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640">
   <defs>
-    <linearGradient id="social-og" x1="0" y1="0" x2="1280" y2="640">
-      <stop offset="0%" stop-color="#6366f1" />
-      <stop offset="50%" stop-color="#8b5cf6" />
-      <stop offset="100%" stop-color="#22d3ee" />
+    <linearGradient id="og-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#8b5cf6" />
     </linearGradient>
+    <filter id="og-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-
-  <rect width="1280" height="640" rx="24" fill="#0f172a" />
-  <rect width="1280" height="640" rx="24" fill="url(#social-og)" opacity="0.08" />
-
+  
+  <!-- Background -->
+  <rect width="1280" height="640" rx="32" fill="#0f172a"/>
+  <rect width="1280" height="640" rx="32" fill="url(#og-grad)" opacity="0.05"/>
+  
+  <!-- Main Icon -->
   <g transform="translate(160, 120)">
-    <rect x="0" y="0" width="400" height="400" rx="64" fill="#020617" />
-    <rect x="0" y="0" width="400" height="400" rx="64" fill="none" stroke="url(#social-og)" stroke-width="8" />
-
-    <g transform="translate(80, 80)">
-      <circle cx="40" cy="40" r="14" fill="#6366f1" opacity="0.8" />
-      <circle cx="96" cy="20" r="12" fill="#6366f1" opacity="0.6" />
-      <circle cx="60" cy="100" r="20" fill="#6366f1" opacity="0.9" />
-      <circle cx="116" cy="80" r="10" fill="#6366f1" opacity="0.5" />
-      <circle cx="40" cy="140" r="12" fill="#6366f1" opacity="0.7" />
-      <circle cx="96" cy="120" r="16" fill="#6366f1" opacity="0.8" />
+    <rect width="400" height="400" rx="64" fill="#020617"/>
+    <rect width="400" height="400" rx="64" fill="none" stroke="url(#og-grad)" stroke-width="12"/>
+    
+    <g fill="#0ea5e9" opacity="0.8">
+      <circle cx="62" cy="94" r="12"/>
+      <circle cx="109" cy="70" r="9"/>
+      <circle cx="86" cy="133" r="15"/>
+      <circle cx="54" cy="172" r="10"/>
+      <circle cx="102" cy="203" r="13"/>
     </g>
-
-    <g transform="translate(160, 160)">
-      <rect x="0" y="0" width="80" height="14" rx="7" fill="url(#social-og)" opacity="0.7" />
-      <rect x="0" y="28" width="80" height="14" rx="7" fill="url(#social-og)" opacity="0.8" />
-      <rect x="0" y="56" width="60" height="14" rx="7" fill="url(#social-og)" opacity="0.9" />
+    
+    <path d="M156 200 L219 200 M208 184 L219 200 L208 216" stroke="#22d3ee" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" filter="url(#og-glow)"/>
+    
+    <g fill="#8b5cf6" opacity="0.9">
+      <rect x="250" y="78" width="108" height="19" rx="9.5"/>
+      <rect x="250" y="116" width="108" height="19" rx="9.5"/>
+      <rect x="250" y="154" width="108" height="19" rx="9.5"/>
+      <rect x="250" y="192" width="86" height="19" rx="9.5"/>
+      <rect x="250" y="230" width="62" height="19" rx="9.5"/>
     </g>
-
-    <circle cx="200" cy="200" r="16" fill="#22d3ee" opacity="0.9" />
+    
+    <circle cx="200" cy="200" r="25" fill="#22d3ee" filter="url(#og-glow)"/>
   </g>
-
-  <text x="640" y="200" font-family="Space Grotesk, Inter, sans-serif" font-size="64" font-weight="700" fill="url(#social-og)" text-anchor="middle">RefData Hub</text>
-  <text x="640" y="260" font-family="Inter, sans-serif" font-size="24" font-weight="400" fill="#94a3b8" text-anchor="middle">Data Harmonization Platform</text>
-  <text x="640" y="320" font-family="Inter, sans-serif" font-size="20" font-weight="400" fill="#64748b" text-anchor="middle">Transform messy reference data into canonical standards</text>
-  <text x="640" y="380" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="#22d3ee" letter-spacing="0.1em" text-anchor="middle">OPEN SOURCE • SEMANTIC MATCHING • AI-POWERED</text>
-  <text x="640" y="480" font-family="Inter, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">github.com/rezer-bleede/refdata-hub</text>
+  
+  <!-- Text Content -->
+  <text x="640" y="260" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="72" font-weight="700" fill="white" text-anchor="middle" letter-spacing="-2">RefData Hub</text>
+  <text x="640" y="310" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="500" fill="#94a3b8" text-anchor="middle">Data Harmonization Platform</text>
+  <text x="640" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="400" fill="#64748b" text-anchor="middle">Transform messy reference data into canonical standards with AI-powered matching</text>
+  
+  <!-- Tags -->
+  <g transform="translate(640, 420)" text-anchor="middle">
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#0ea5e9" letter-spacing="3">OPEN SOURCE • SEMANTIC MATCHING • AI-POWERED</text>
+  </g>
+  
+  <!-- URL -->
+  <text x="640" y="540" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="400" fill="#475569" text-anchor="middle">github.com/rezer-bleede/refdata-hub</text>
 </svg>
