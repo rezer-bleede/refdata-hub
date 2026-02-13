@@ -1,0 +1,67 @@
+/* Screenshot and Image Styling */
+
+img {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem auto;
+}
+
+figure {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+figcaption {
+  color: var(--md-typeset-color);
+  font-size: 0.85em;
+  margin-top: 0.75em;
+  font-style: italic;
+}
+
+/* Responsive image sizing */
+img[width="1920"] {
+  max-width: 100%;
+  height: auto;
+}
+
+img[width="1200"] {
+  max-width: 80%;
+  height: auto;
+}
+
+img[width="1000"] {
+  max-width: 70%;
+  height: auto;
+}
+
+img[width="800"] {
+  max-width: 60%;
+  height: auto;
+}
+
+/* Lightbox-like hover effect */
+img:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+/* Center aligned images with custom sizing */
+.md-typeset img.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Screenshot captions with special styling */
+.screenshot-caption {
+  font-family: var(--md-text-font-family);
+  color: var(--md-typeset-color);
+  font-size: 0.9em;
+  margin-top: 1em;
+  padding: 0.5em 1em;
+  background-color: var(--md-code-bg-color);
+  border-radius: 4px;
+  display: inline-block;
+}

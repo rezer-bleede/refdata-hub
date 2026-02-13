@@ -72,7 +72,7 @@ services:
       api:
         condition: service_started
     ports:
-      - '5173:80'
+      - '5274:80'
 
 volumes:
   db_data:

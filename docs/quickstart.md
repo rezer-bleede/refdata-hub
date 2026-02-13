@@ -56,6 +56,11 @@ Once all services are running:
 2. Navigate to `http://localhost:5173`
 3. You'll see the RefData Hub Reviewer UI
 
+<figure>
+  <img src="../screenshots/dashboard/overview.png" alt="Dashboard First Look" width="1200">
+  <figcaption>First view of the RefData Hub dashboard</figcaption>
+</figure>
+
 ## First Steps
 
 ### 1. Explore the Dashboard
@@ -70,11 +75,21 @@ Navigate to **Settings** to configure:
 - Embedding defaults
 - LLM connectivity (switch between offline Ollama and hosted API)
 
+<figure>
+  <img src="../screenshots/settings/matcher-config.png" alt="Settings Page" width="1000">
+  <figcaption>Configure matcher thresholds and LLM settings</figcaption>
+</figure>
+
 ### 3. Browse Canonical Library
 The Canonical Library contains:
 - Curated reference values organized by dimension
 - Filters for dimension and keyword search
 - Bulk import capabilities for CSV/TSV/Excel files
+
+<figure>
+  <img src="../screenshots/canonical-library/library-grid.png" alt="Canonical Library" width="1200">
+  <figcaption>Browse and manage canonical reference values</figcaption>
+</figure>
 
 ### 4. Connect a Source
 Try the demo connection:
@@ -82,6 +97,16 @@ Try the demo connection:
 - You'll find a demo connection to the bundled `targetdb` database
 - Click **Test connection** to verify connectivity
 - Explore tables and fields in the connection detail view
+
+<figure>
+  <img src="../screenshots/connections/connections-grid.png" alt="Source Connections Grid" width="1200">
+  <figcaption>View and manage source system connections</figcaption>
+</figure>
+
+<figure>
+  <img src="../screenshots/connections/schema-explorer.png" alt="Schema Explorer" width="1200">
+  <figcaption>Explore database schemas and field metadata</figcaption>
+</figure>
 
 ### 5. Create a Field Mapping
 To practice mapping:

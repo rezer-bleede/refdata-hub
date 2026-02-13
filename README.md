@@ -20,6 +20,16 @@ Access the application:
 - **Reviewer UI:** http://localhost:5173
 - **API Documentation:** http://localhost:8000/docs
 
+<figure>
+  <img src="docs/screenshots/dashboard/overview.png" alt="RefData Hub Dashboard Overview" width="1200">
+  <figcaption>Dashboard overview showing coverage metrics and semantic matching playground</figcaption>
+</figure>
+
+<figure>
+  <img src="docs/screenshots/dashboard/semantic-playground.png" alt="Semantic Matching Playground" width="1000">
+  <figcaption>Semantic matching playground for testing value suggestions</figcaption>
+</figure>
+
 The stack includes PostgreSQL databases, a FastAPI backend, React frontend, and an offline Ollama LLM for semantic matching.
 
 ## Key Features
@@ -31,6 +41,23 @@ The stack includes PostgreSQL databases, a FastAPI backend, React frontend, and 
 - **Match Insights** – Visualize match rates and track harmonization health
 - **Bulk Operations** – Import/export canonical values and mappings via CSV/Excel
 - **Dimension Relations** – Model parent/child hierarchies (e.g., regions → districts)
+
+## Interface Preview
+
+<figure>
+  <img src="docs/screenshots/canonical-library/library-grid.png" alt="Canonical Library" width="1200">
+  <figcaption>Canonical library showing reference values organized by dimension</figcaption>
+</figure>
+
+<figure>
+  <img src="docs/screenshots/connections/connections-grid.png" alt="Source Connections" width="1200">
+  <figcaption>Source connections grid for managing upstream systems</figcaption>
+</figure>
+
+<figure>
+  <img src="docs/screenshots/field-mappings/mapping-grid.png" alt="Field Mappings" width="1200">
+  <figcaption>Field mappings grid showing source-to-dimension alignments</figcaption>
+</figure>
 
 ## Documentation
 

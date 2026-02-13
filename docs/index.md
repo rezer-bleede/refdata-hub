@@ -34,6 +34,16 @@ Access the application:
 - **Reviewer UI:** http://localhost:5173
 - **API Documentation:** http://localhost:8000/docs
 
+<figure>
+  <img src="screenshots/dashboard/overview.png" alt="RefData Hub Dashboard" width="1200">
+  <figcaption>Main dashboard with coverage metrics and semantic matching playground</figcaption>
+</figure>
+
+<figure>
+  <img src="screenshots/dashboard/semantic-playground.png" alt="Semantic Matching Playground" width="1000">
+  <figcaption>Test semantic matching with real-time confidence scores</figcaption>
+</figure>
+
 This command starts:
 - **PostgreSQL** database with example canonical values
 - **FastAPI backend** with REST API endpoints

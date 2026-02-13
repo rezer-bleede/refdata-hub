@@ -17,6 +17,7 @@ theme:
     - search.share
     - content.code.copy
     - navigation.tracking
+    - content.tabs.link
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -33,6 +34,8 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   language: en
+  extra_css:
+    - stylesheets/extra.css
 
 plugins:
   - search

@@ -24,27 +24,58 @@
 - Route low-confidence matches for manual review to ensure data quality.
 - Operate in offline mode via the bundled Ollama llama3 runtime or switch to a hosted OpenAI-compatible endpoint from the dedicated settings workspace, which centralises matcher thresholds, embedding defaults, and credential inputs.
 
+<figure>
+  <img src="../screenshots/dashboard/semantic-playground.png" alt="Semantic Playground" width="1000">
+  <figcaption>Test semantic matching with real-time confidence scores and suggestions</figcaption>
+</figure>
+
 ## 3. Review & Approval Workflow
 - Offer UI and API pathways for reviewers to approve or reject suggestions.
 - Enable reviewers to add new mappings, merge duplicates, and maintain a clean catalog.
 - Track an auditable history recording who approved each change and when it happened.
 - Provide an observability-inspired reviewer console with a persistent navigation rail, glassmorphism cards, and multiple
-  responsive themes for comfortable accessibility in varied environments, now implemented with a Tailwind CSS design system
-  behind a React-Bootstrap-compatible component shim so existing screens retain their ergonomic JSX structure.
-  The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
-  widescreen monitors. A custom RefData helix mark sits in the top-left brand lockup so the workspace always shows a
-  recognizable identity even when the sidebar collapses to icon-only mode.
+   responsive themes for comfortable accessibility in varied environments, now implemented with a Tailwind CSS design system
+   behind a React-Bootstrap-compatible component shim so existing screens retain their ergonomic JSX structure.
+   The navigation rail now stays pinned on scroll and supports a collapsible layout for dense reconciliation sessions on
+   widescreen monitors. A custom RefData helix mark sits in the top-left brand lockup so the workspace always shows a
+   recognizable identity even when the sidebar collapses to icon-only mode.
 - Match Insights cards clearly call out when no samples have been ingested yet, preventing misleading 0/0 match readouts, stay
-  visible by falling back to configured field mappings when statistics are empty, and automatically refresh their samples when
-  mappings are created, edited, or the global sync action runs.
+   visible by falling back to configured field mappings when statistics are empty, and automatically refresh their samples when
+   mappings are created, edited, or the global sync action runs.
+
+<figure>
+  <img src="../screenshots/suggestions/review-suggestions.png" alt="Review Suggestions" width="1200">
+  <figcaption>Review and approve semantic match suggestions</figcaption>
+</figure>
+
+### Analytics & Insights
+- Visualize match coverage rates across dimensions and field mappings
+- Track top matched values with confidence scores
+- Identify unmatched values requiring manual review
+- Monitor harmonization health over time
+
+<figure>
+  <img src="../screenshots/match-insights/coverage-progress.png" alt="Match Coverage" width="1000">
+  <figcaption>Track match coverage rates across dimensions</figcaption>
+</figure>
+
+<figure>
+  <img src="../screenshots/match-insights/matched-values.png" alt="Top Matched Values" width="1200">
+  <figcaption>View top matched values with confidence scores</figcaption>
+</figure>
 
 ## 4. Integration & Access
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.
 - Ship SDK clients (Python, Java, JavaScript) for streamlined integration into applications and pipelines.
 - Emit webhooks when mappings change to keep dependent systems synchronized automatically.
 - Bundle a seeded Postgres `targetdb` with a multi-table warehouse—departments, employees,
-  globally diverse customers, loyalty tiers, addresses, products, orders, and line items—so
-  analysts can rehearse field mappings and semantic match flows without external dependencies.
+   globally diverse customers, loyalty tiers, addresses, products, orders, and line items—so
+   analysts can rehearse field mappings and semantic match flows without external dependencies.
+
+<figure>
+  <img src="../screenshots/connections/connections-grid.png" alt="Source Connections" width="1200">
+  <figcaption>Manage source system connections and test connectivity</figcaption>
+</figure>
 
 ## 5. Admin & Governance
 - Support role-based access control profiles for reviewers, administrators, and consumers.

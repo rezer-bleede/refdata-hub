@@ -18,6 +18,11 @@ The library page offers five key capabilities:
 5. **Export** – Download the filtered table to CSV for auditing or offline collaboration. The export includes attribute columns
    so downstream tools can preserve the additional metadata.
 
+<figure>
+  <img src="../screenshots/canonical-library/library-grid.png" alt="Canonical Library Grid" width="1200">
+  <figcaption>Browse and filter canonical values organized by dimension</figcaption>
+</figure>
+
 All changes are persisted via the `/api/reference/canonical` endpoints exposed by the FastAPI backend.
 
 ## Adding or editing records
@@ -28,6 +33,11 @@ All changes are persisted via the `/api/reference/canonical` endpoints exposed b
 3. To edit a row, choose **Edit** in the table. Adjust any field and save to persist the change.
 4. Use **Delete** to remove records that are no longer valid. A confirmation modal protects against accidental deletions.
 
+<figure>
+  <img src="../screenshots/canonical-library/edit-modal.png" alt="Edit Canonical Value" width="1000">
+  <figcaption>Edit canonical values with dimension-specific attributes</figcaption>
+</figure>
+
 ## Bulk import walkthrough
 
 The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column; the preview step inspects the
@@ -37,10 +47,20 @@ backend now scans every worksheet, discards prefatory rows until it finds the fi
 below it even when earlier cells are merged. When the dataset targets a brand-new dimension, you can capture the dimension label
 and optional description inline—the backend will create the dimension and its attribute schema automatically during the import.
 
+<figure>
+  <img src="../screenshots/canonical-library/bulk-import-modal.png" alt="Bulk Import Modal" width="1000">
+  <figcaption>Upload and preview files before importing canonical values</figcaption>
+</figure>
+
+<figure>
+  <img src="../screenshots/canonical-library/column-mapping.png" alt="Column Mapping" width="1000">
+  <figcaption>Map file columns to canonical value fields</figcaption>
+</figure>
+
 - If an Excel workbook contains multiple sheets, the preview step now lists every sheet so you can choose which one to import.
-  Work through larger templates one tab at a time without having to split the workbook manually.
+   Work through larger templates one tab at a time without having to split the workbook manually.
 - Every import now performs a dry run before committing rows. The UI highlights any canonical values that already exist and lets
-  you decide whether to update those entries or skip the duplicates entirely.
+   you decide whether to update those entries or skip the duplicates entirely.
 
 * Columns can be separated by commas, tabs, or multiple spaces when pasting raw text.
 * Empty dimension cells inherit the selected target dimension when no dimension column is mapped—helpful for single-dimension
