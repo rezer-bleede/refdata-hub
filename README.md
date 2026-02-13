@@ -17,7 +17,7 @@ docker compose up --build
 ```
 
 Access the application:
-- **Reviewer UI:** http://localhost:5173
+- **Reviewer UI:** http://localhost:5274
 - **API Documentation:** http://localhost:8000/docs
 
 <figure>
@@ -111,10 +111,10 @@ The stack includes PostgreSQL databases, a FastAPI backend, React frontend, and 
    ```
 
 3. **Explore the Demo**
-   - Open http://localhost:5173
-   - Try the semantic matching playground on the Dashboard
-   - Connect to the demo `targetdb` in Source Connections
-   - Create field mappings and review match insights
+    - Open http://localhost:5274
+    - Try the semantic matching playground on the Dashboard
+    - Connect to the demo `targetdb` in Source Connections
+    - Create field mappings and review match insights
 
 ## Development
 

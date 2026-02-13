@@ -38,7 +38,7 @@ The Docker Compose setup includes the following services:
 - Auto-creates schema and seeds default data on first run
 
 ### Reviewer UI (`reviewer-ui`)
-- Modern React-based dashboard served at `http://localhost:5173`
+- Modern React-based dashboard served at `http://localhost:5274`
 - Theme switching (dark, light, midnight modes)
 - Persistent navigation with collapsible rail
 - Pre-configured to connect to the local FastAPI backend
@@ -53,7 +53,7 @@ The Docker Compose setup includes the following services:
 Once all services are running:
 
 1. Open your browser
-2. Navigate to `http://localhost:5173`
+2. Navigate to `http://localhost:5274`
 3. You'll see the RefData Hub Reviewer UI
 
 <figure>
@@ -170,7 +170,7 @@ docker compose logs -f api
 ## Troubleshooting
 
 ### Services Won't Start
-- Check if ports 8000, 5173, 5432, or 5433 are already in use
+- Check if ports 8000, 5274, 5432, or 5433 are already in use
 - Ensure Docker is running: `docker ps`
 - Check logs: `docker compose logs`
 

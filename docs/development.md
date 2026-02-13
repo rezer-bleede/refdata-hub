@@ -34,7 +34,7 @@ cd refdata-hub
 docker compose up --build
 
 # Access services
-# - Reviewer UI: http://localhost:5173
+# - Reviewer UI: http://localhost:5274
 # - API: http://localhost:8000
 # - API Docs: http://localhost:8000/docs
 # - PostgreSQL: localhost:5432
@@ -58,7 +58,7 @@ pip install -r requirements.txt
 
 # Set environment variables
 export REFDATA_DATABASE_URL="postgresql+psycopg://refdata:refdata@localhost:5432/refdata"
-export REFDATA_CORS_ORIGINS="http://localhost:5173"
+export REFDATA_CORS_ORIGINS="http://localhost:5274"
 
 # Start development server
 uvicorn app.main:app --reload --port 8000
@@ -500,7 +500,7 @@ npm run dev
   "name": "Chrome",
   "type": "chrome",
   "request": "launch",
-  "url": "http://localhost:5173",
+  "url": "http://localhost:5274",
   "webRoot": "${workspaceFolder}/reviewer-ui"
 }
 ```

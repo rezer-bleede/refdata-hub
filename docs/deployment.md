@@ -38,7 +38,7 @@ docker compose down
 | PostgreSQL (db) | 5432 | Primary database |
 | PostgreSQL (targetdb) | 5433 | Demo database |
 | FastAPI (api) | 8000 | Backend API |
-| Reviewer UI | 5173 | Frontend UI |
+| Reviewer UI | 5274 | Frontend UI |
 | Ollama | 11434 | LLM service |
 
 ### Environment Configuration
@@ -48,7 +48,7 @@ Create a `.env` file in the project root:
 ```bash
 # Database
 REFDATA_DATABASE_URL=postgresql+psycopg://refdata:refdata@db:5432/refdata
-REFDATA_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+REFDATA_CORS_ORIGINS=http://localhost:5274,http://127.0.0.1:5274
 
 # LLM Configuration
 REFDATA_LLM_MODE=offline

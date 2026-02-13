@@ -31,7 +31,7 @@ docker compose up --build
 ```
 
 Access the application:
-- **Reviewer UI:** http://localhost:5173
+- **Reviewer UI:** http://localhost:5274
 - **API Documentation:** http://localhost:8000/docs
 
 <figure>

@@ -40,7 +40,7 @@ screenshots/
 
 2. **Prepare application:**
    - Run with seeded demo data (`docker compose up --build`)
-   - Verify application is accessible at http://localhost:5173
+   - Verify application is accessible at http://localhost:5274
    - Ensure no error toasts are showing
    - Wait for any loading states to complete
 

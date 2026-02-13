@@ -43,7 +43,7 @@ This guide explains how to capture professional screenshots for RefData Hub docu
 
 ### Prepare Application State
 
-1. Navigate to http://localhost:5173
+1. Navigate to http://localhost:5274
 2. Ensure no error toasts are displaying
 3. Wait for any loading states to complete
 4. Verify the application theme is set to **Dark Mode**

@@ -94,7 +94,7 @@ export REFDATA_DATABASE_URL="postgresql+psycopg://user:pass@host:5432/db?sslmode
 **Examples:**
 ```bash
 # Development
-export REFDATA_CORS_ORIGINS="http://localhost:5173,http://127.0.0.1:5173"
+export REFDATA_CORS_ORIGINS="http://localhost:5274,http://127.0.0.1:5274"
 
 # Production
 export REFDATA_CORS_ORIGINS="https://refdata.example.com,https://app.refdata.com"
@@ -199,7 +199,7 @@ services:
       context: ./api
     environment:
       REFDATA_DATABASE_URL: postgresql+psycopg://refdata:refdata@db:5432/refdata
-      REFDATA_CORS_ORIGINS: http://localhost:5173
+      REFDATA_CORS_ORIGINS: http://localhost:5274
       REFDATA_LLM_MODE: offline
       REFDATA_LLM_MODEL: llama3
       REFDATA_LLM_API_BASE: http://ollama:11434
@@ -427,7 +427,7 @@ spec:
 **Development (.env):**
 ```bash
 REFDATA_DATABASE_URL=postgresql+psycopg://refdata:refdata@localhost:5432/refdata
-REFDATA_CORS_ORIGINS=http://localhost:5173
+REFDATA_CORS_ORIGINS=http://localhost:5274
 LOG_LEVEL=DEBUG
 REFDATA_LLM_MODE=offline
 ```
@@ -521,9 +521,9 @@ curl http://localhost:8000/health
 curl http://localhost:8000/api/config
 
 # Test CORS
-curl -H "Origin: http://localhost:5173" \
-  -H "Access-Control-Request-Method: POST" \
-  -X OPTIONS http://localhost:8000/api/reference/canonical
+curl -H "Origin: http://localhost:5274" \
+   -H "Access-Control-Request-Method: POST" \
+   -X OPTIONS http://localhost:8000/api/reference/canonical
 ```
 
 ---
