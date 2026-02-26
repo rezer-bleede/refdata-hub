@@ -6,6 +6,31 @@ When the Reviewer UI displays a toast such as:
 
 follow these steps to diagnose and resolve the issue.
 
+## Cloudflare Pages + Functions specific checks
+
+When deployed on Cloudflare Pages, verify the following first:
+
+1. **SPA deep links** resolve correctly
+   - Confirm `reviewer-ui/public/_redirects` contains `/* /index.html 200`
+   - Reload `/settings` directly; it should not return a 404 page
+
+2. **Same-origin API path** is active
+   - In hosted environments, `VITE_API_BASE_URL` should be `/api`
+   - If unset, the UI now falls back to same-origin `/api` on non-localhost domains
+
+3. **Pages Functions env vars** are set
+   - `COMPANION_API_BASE_URL`
+   - `COMPANION_API_TOKEN` (secret)
+   - optional timeout/retry/circuit-breaker values
+
+4. **Companion service reachability**
+   - If companion calls fail repeatedly, the API opens a temporary circuit breaker and returns `503`
+   - Wait for cooldown or restore companion availability
+
+5. **Database binding**
+   - Prefer Hyperdrive binding `HYPERDRIVE`
+   - If Hyperdrive is not configured, set `DATABASE_URL` for fallback
+
 ## 1. Confirm the browser can reach the API
 
 The UI now logs the resolved API base URL during requests. Open the browser developer tools and check the **Console** tab for debug entries such as:

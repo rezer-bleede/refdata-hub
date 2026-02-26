@@ -1,0 +1,19 @@
+name = "refdata-hub-reviewer-ui"
+compatibility_date = "2026-02-26"
+pages_build_output_dir = "dist"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+VITE_API_BASE_URL = "/api"
+COMPANION_TIMEOUT_MS = "20000"
+COMPANION_RETRIES = "2"
+COMPANION_CIRCUIT_BREAKER_THRESHOLD = "3"
+COMPANION_CIRCUIT_BREAKER_COOLDOWN_MS = "30000"
+
+# Set via `wrangler secret put` in each environment:
+# - COMPANION_API_TOKEN
+
+# Configure with a real Hyperdrive ID:
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "<HYPERDRIVE_ID>"

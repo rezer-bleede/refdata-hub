@@ -39,11 +39,13 @@ const fallbackBaseUrl = () => {
     return 'http://localhost:8000';
   }
 
-  if (window.location.port) {
-    return `${window.location.protocol}//${window.location.hostname}:8000`;
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
   }
 
-  return `${window.location.origin}:8000`;
+  console.warn('[api] VITE_API_BASE_URL is not set; defaulting to same-origin /api');
+  return '/api';
 };
 
 const configuredBaseUrl =
@@ -60,6 +62,25 @@ const truncate = (value: string, limit = 500) => {
 
 const normalisePath = (path: string) => (path.startsWith('/') ? path : `/${path}`);
 
+const buildRequestUrl = (baseUrl: string, path: string): string => {
+  const normalizedBase = baseUrl.replace(/\/+$/, '');
+  const normalizedPath = normalisePath(path);
+
+  if (!normalizedBase) {
+    return normalizedPath;
+  }
+
+  if (normalizedBase.endsWith('/api') && normalizedPath.startsWith('/api/')) {
+    return `${normalizedBase}${normalizedPath.slice(4)}`;
+  }
+
+  if (normalizedBase === '/api' && normalizedPath === '/api') {
+    return '/api';
+  }
+
+  return `${normalizedBase}${normalizedPath}`;
+};
+
 interface RequestContext {
   response: Response;
   url: string;
@@ -68,7 +89,7 @@ interface RequestContext {
 
 async function performRequest(path: string, init?: RequestInit): Promise<RequestContext> {
   const method = init?.method ?? 'GET';
-  const url = `${API_BASE_URL}${normalisePath(path)}`;
+  const url = buildRequestUrl(API_BASE_URL, path);
 
   console.debug(`[api] ${method} ${url}`);
 

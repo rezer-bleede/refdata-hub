@@ -38,6 +38,23 @@ describe('api client helpers', () => {
     expect(payload.default_dimension).toBe('general');
   });
 
+  it('supports a relative /api base URL without duplicating path prefixes', async () => {
+    vi.stubGlobal('__API_BASE_URL__', '/api');
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(buildConfigPayload()), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const { fetchConfig, getApiBaseUrl } = await import('./api');
+    await fetchConfig();
+
+    expect(getApiBaseUrl()).toBe('/api');
+    expect(fetchMock).toHaveBeenCalledWith('/api/config', undefined);
+  });
+
   it('logs failure details when the backend responds with an error', async () => {
     vi.stubGlobal('__API_BASE_URL__', '');
     const fetchMock = vi.fn().mockResolvedValue(

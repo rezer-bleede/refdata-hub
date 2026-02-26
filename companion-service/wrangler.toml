@@ -1,0 +1,11 @@
+name = "refdata-hub-companion"
+main = "src/index.ts"
+compatibility_date = "2026-02-26"
+
+[vars]
+STUB_DEFAULT_DB_TYPE = "postgres"
+ALLOW_UNSIGNED_REQUESTS = "false"
+AUTH_WINDOW_SECONDS = "300"
+
+# Configure secret in Cloudflare dashboard or CLI:
+# wrangler secret put COMPANION_API_TOKEN

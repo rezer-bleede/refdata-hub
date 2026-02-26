@@ -1,0 +1,11 @@
+# Cloudflare Pages Functions local vars
+VITE_API_BASE_URL=/api
+DATABASE_URL=postgres://user:password@host:5432/refdata
+# Or use Hyperdrive binding in wrangler.toml instead of DATABASE_URL
+
+COMPANION_API_BASE_URL=https://your-companion.example.com
+COMPANION_API_TOKEN=replace-me
+COMPANION_TIMEOUT_MS=20000
+COMPANION_RETRIES=2
+COMPANION_CIRCUIT_BREAKER_THRESHOLD=3
+COMPANION_CIRCUIT_BREAKER_COOLDOWN_MS=30000

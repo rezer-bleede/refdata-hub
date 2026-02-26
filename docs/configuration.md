@@ -175,6 +175,25 @@ export VITE_API_BASE_URL="https://api.refdata.example.com"
 export VITE_API_BASE_URL="/api"
 ```
 
+### Cloudflare Pages Functions Variables
+
+These variables are used by the `reviewer-ui/functions` backend layer.
+
+| Variable | Required | Default | Description |
+|----------|-----------|----------|-------------|
+| `DATABASE_URL` | Conditional | - | Direct Postgres URL fallback when Hyperdrive binding is not configured |
+| `COMPANION_API_BASE_URL` | Yes (for companion-backed routes) | - | Base URL for heavy/dynamic route proxy |
+| `COMPANION_API_TOKEN` | Yes | - | Shared secret used for bearer auth + request signing |
+| `COMPANION_TIMEOUT_MS` | No | `20000` | Request timeout per companion attempt |
+| `COMPANION_RETRIES` | No | `2` | Number of retry attempts for transient companion failures |
+| `COMPANION_CIRCUIT_BREAKER_THRESHOLD` | No | `3` | Consecutive failures before opening circuit |
+| `COMPANION_CIRCUIT_BREAKER_COOLDOWN_MS` | No | `30000` | Cooldown window while circuit is open |
+
+**Cloudflare binding:**
+
+- Preferred DB integration is a Hyperdrive binding named `HYPERDRIVE` (see `reviewer-ui/wrangler.toml`).
+- If Hyperdrive is unavailable in local/dev workflows, set `DATABASE_URL` directly.
+
 ---
 
 ## Docker Compose Configuration

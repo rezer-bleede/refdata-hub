@@ -12,6 +12,68 @@ This guide covers deployment strategies for RefData Hub, from local Docker Compo
 
 ---
 
+## Cloudflare Pages + Pages Functions (Free Tier)
+
+This repository now supports a Cloudflare-first frontend + API deployment model:
+
+- Static React app from `reviewer-ui/dist` on Cloudflare Pages
+- Same-origin `/api/*` handlers from `reviewer-ui/functions/api/[[path]].ts`
+- Core data routes backed by Postgres (Hyperdrive binding preferred)
+- Heavy and dynamic routes proxied to an external companion service
+
+### Build Settings (Cloudflare Pages)
+
+- **Framework preset:** `None` (Vite custom build)
+- **Root directory:** `reviewer-ui`
+- **Build command:** `npm run build`
+- **Build output directory:** `dist`
+- **Node version:** `20`
+
+### Required Environment Variables
+
+Set these in both **Production** and **Preview** environments:
+
+```bash
+VITE_API_BASE_URL=/api
+COMPANION_API_BASE_URL=https://your-companion-service.example.com
+COMPANION_TIMEOUT_MS=20000
+COMPANION_RETRIES=2
+COMPANION_CIRCUIT_BREAKER_THRESHOLD=3
+COMPANION_CIRCUIT_BREAKER_COOLDOWN_MS=30000
+```
+
+Set this as a secret (not plain env):
+
+```bash
+COMPANION_API_TOKEN=replace-with-strong-secret
+```
+
+### Hyperdrive Binding
+
+Configure a Hyperdrive binding named `HYPERDRIVE` for the Pages project, or provide a fallback `DATABASE_URL`.
+
+Template config is included at `reviewer-ui/wrangler.toml`.
+
+### Routing Notes
+
+- SPA history fallback is handled by `reviewer-ui/public/_redirects`
+- Frontend API client defaults to same-origin `/api` when `VITE_API_BASE_URL` is unset on hosted domains
+- Source-system and heavy-processing routes are proxied to the companion service with retry + circuit-breaker behavior
+
+### Deployment Checklist
+
+1. Create a Pages project connected to this repository.
+2. Apply the build settings above.
+3. Add env vars and secret token.
+4. Add Hyperdrive binding (or `DATABASE_URL`).
+5. Deploy and verify:
+   - UI loads from `https://<project>.pages.dev`
+   - Deep links (for example `/settings`) do not 404
+   - `/api/config` responds from Pages Functions
+   - companion-backed routes return expected responses
+
+---
+
 ## 1. Docker Compose Deployment
 
 ### Quick Start

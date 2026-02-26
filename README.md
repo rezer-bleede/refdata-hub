@@ -32,6 +32,15 @@ Access the application:
 
 The stack includes PostgreSQL databases, a FastAPI backend, React frontend, and an offline Ollama LLM for semantic matching.
 
+## Cloudflare Pages + Functions (Free Tier)
+
+The `reviewer-ui` project now includes:
+- Cloudflare Pages SPA fallback at `reviewer-ui/public/_redirects`
+- Pages Functions API scaffold at `reviewer-ui/functions/api/[[path]].ts`
+- Wrangler config template at `reviewer-ui/wrangler.toml`
+
+See [docs/deployment.md](docs/deployment.md) for full setup (Hyperdrive bindings + companion service env vars).
+
 ## Key Features
 
 - **Semantic Matching** – Auto-suggest canonical values using TF-IDF embeddings or LLM models
