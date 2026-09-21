@@ -22,7 +22,7 @@
 - Use NLP and embedding models to suggest standardized values for new raw inputs.
 - Allow configurable confidence thresholds that determine when to auto-apply suggestions.
 - Route low-confidence matches for manual review to ensure data quality.
-- Operate in offline mode via the bundled Ollama llama3 runtime or switch to a hosted OpenAI-compatible endpoint from the dedicated settings workspace, which centralises matcher thresholds, embedding defaults, and credential inputs.
+- Operate in offline mode via local Ollama runtimes (e.g. `smollm:135m` or `tinyllama`) or switch to a hosted OpenAI-compatible endpoint from the dedicated settings workspace, which centralises matcher thresholds, embedding defaults, and credential inputs.
 
 <figure>
   <img src="../screenshots/dashboard/semantic-playground.png" alt="Semantic Playground" width="1000">

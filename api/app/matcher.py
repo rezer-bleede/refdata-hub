@@ -161,7 +161,7 @@ class SemanticMatcher:
         """Call a local Ollama instance to score candidates."""
 
         base_url = (self.config.llm_api_base or "http://ollama:11434").rstrip("/")
-        model = self.config.llm_model or "llama3"
+        model = self.config.llm_model or "smollm:135m"
         endpoint = f"{base_url}/api/chat"
         payload = {
             "model": model,

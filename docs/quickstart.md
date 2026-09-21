@@ -43,9 +43,9 @@ The Docker Compose setup includes the following services:
 - Persistent navigation with collapsible rail
 - Pre-configured to connect to the local FastAPI backend
 
-### Ollama LLM Runtime (`ollama`)
-- Offline semantic matching using llama3
-- No external credentials required
+### Ollama LLM Runtime (`ollama`, optional profile)
+- Offline semantic matching using compact local models (e.g. `smollm:135m` or `tinyllama`)
+- Optional service enabled via `--profile ollama` (not downloaded by default to save bandwidth and resource usage)
 - Runs on port 11434 (internal to Docker network)
 
 ## Accessing the Application

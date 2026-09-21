@@ -38,7 +38,7 @@ erDiagram
 | matcher_backend | VARCHAR | NO | 'embedding' | Primary matching strategy ('embedding' or 'llm') |
 | embedding_model | VARCHAR | NO | 'tfidf' | Embedding model to use |
 | llm_mode | VARCHAR | NO | 'online' | LLM mode ('online' or 'offline') |
-| llm_model | VARCHAR | YES | NULL | LLM model name (e.g., 'gpt-3.5-turbo', 'llama3') |
+| llm_model | VARCHAR | YES | NULL | LLM model name (e.g., 'gpt-3.5-turbo', 'smollm:135m') |
 | llm_api_base | VARCHAR | YES | NULL | API base URL for LLM service |
 | llm_api_key | VARCHAR | YES | NULL | API key for LLM service (encrypted in production) |
 | top_k | INTEGER | NO | 5 | Number of match candidates to return |
@@ -56,7 +56,7 @@ INSERT INTO systemconfig VALUES (
   'llm',
   'tfidf',
   'offline',
-  'llama3',
+  'smollm:135m',
   'http://ollama:11434',
   NULL,
   10,

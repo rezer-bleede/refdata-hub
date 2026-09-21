@@ -128,7 +128,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   onChange={(event) => handleChange('llm_mode', event.target.value)}
                 >
                   <option value="online">Online API (OpenAI compatible)</option>
-                  <option value="offline">Offline Ollama (llama3)</option>
+                  <option value="offline">Offline Ollama (smollm:135m / local)</option>
                 </Form.Select>
                 <Form.Text className="text-slate-400">
                   Choose between the hosted API endpoint and the bundled Ollama service.
