@@ -15,7 +15,7 @@ The `systemconfig` table stores application-wide settings. These can be modified
 | `matcher_backend` | VARCHAR | 'embedding' | Primary matching strategy: 'embedding' or 'llm' |
 | `embedding_model` | VARCHAR | 'tfidf' | Embedding model: 'tfidf' (currently only option) |
 | `llm_mode` | VARCHAR | 'online' | LLM operation mode: 'online' or 'offline' |
-| `llm_model` | VARCHAR | 'gpt-3.5-turbo' | LLM model name (e.g., 'gpt-3.5-turbo', 'llama3') |
+| `llm_model` | VARCHAR | 'gpt-3.5-turbo' | LLM model name (e.g., 'gpt-3.5-turbo', 'smollm:135m') |
 | `llm_api_base` | VARCHAR | NULL | API endpoint URL for LLM service |
 | `llm_api_key` | VARCHAR | NULL | API key for LLM authentication |
 | `top_k` | INTEGER | 5 | Number of match candidates to return |
@@ -45,7 +45,7 @@ curl -X PUT http://localhost:8000/api/config \
     "match_threshold": 0.75,
     "matcher_backend": "llm",
     "llm_mode": "offline",
-    "llm_model": "llama3",
+    "llm_model": "smollm:135m",
     "top_k": 10
   }'
 ```
@@ -125,7 +125,7 @@ export REFDATA_LLM_API_KEY="sk-your-openai-api-key"
 **Ollama (Offline Mode):**
 ```bash
 export REFDATA_LLM_MODE="offline"
-export REFDATA_LLM_MODEL="llama3"
+export REFDATA_LLM_MODEL="smollm:135m"
 export REFDATA_LLM_API_BASE="http://ollama:11434"
 export REFDATA_LLM_API_KEY=""  # Not needed for Ollama
 ```
@@ -220,7 +220,7 @@ services:
       REFDATA_DATABASE_URL: postgresql+psycopg://refdata:refdata@db:5432/refdata
       REFDATA_CORS_ORIGINS: http://localhost:5274
       REFDATA_LLM_MODE: offline
-      REFDATA_LLM_MODEL: llama3
+      REFDATA_LLM_MODEL: smollm:135m
       REFDATA_LLM_API_BASE: http://ollama:11434
     depends_on:
       - db
@@ -234,7 +234,8 @@ services:
       - api
 
   ollama:
-    image: rezerbleede/ollama-preloaded:llama3
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
     ports:
       - '11434:11434'
 ```
@@ -525,7 +526,7 @@ curl -X POST https://api.openai.com/v1/chat/completions \
 curl -X POST http://localhost:11434/api/chat \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "llama3",
+    "model": "smollm:135m",
     "messages": [{"role": "user", "content": "test"}]
   }'
 ```

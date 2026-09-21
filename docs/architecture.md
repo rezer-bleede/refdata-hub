@@ -115,7 +115,7 @@ graph TB
    - Fallback to lexical matching on failure
 
 2. **LLM-Based Matching** (Optional)
-   - **Offline Mode:** Ollama llama3 (local)
+   - **Offline Mode:** Ollama smollm / tinyllama (local)
    - **Online Mode:** OpenAI-compatible API
    - Ranks candidates using semantic understanding
    - Automatic fallback to embeddings on failure

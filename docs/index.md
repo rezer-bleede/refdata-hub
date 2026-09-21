@@ -48,7 +48,7 @@ This command starts:
 - **PostgreSQL** database with example canonical values
 - **FastAPI backend** with REST API endpoints
 - **Reviewer UI** React dashboard
-- **Ollama LLM** runtime for offline semantic matching
+- (Optional) **Ollama LLM** runtime when launched with `docker compose --profile ollama up`
 
 For detailed setup instructions, see the [Quickstart Guide](quickstart.md).
 
