@@ -75,3 +75,18 @@ def test_list_fields_wrapped_inspection_error(monkeypatch: pytest.MonkeyPatch) -
 
     assert "connect failed" in str(excinfo.value)
     assert engine.disposed is True
+
+
+def test_source_table_metadata_schema_field() -> None:
+    import warnings
+    from api.app.schemas import SourceTableMetadata
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        metadata = SourceTableMetadata(name="users", schema="public", type="table")
+        assert metadata.name == "users"
+        assert metadata.schema_ == "public"
+        assert metadata.model_dump(by_alias=True)["schema"] == "public"
+
+        parsed = SourceTableMetadata.model_validate({"name": "orders", "schema": "analytics", "type": "view"})
+        assert parsed.schema_ == "analytics"
