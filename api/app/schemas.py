@@ -140,8 +140,10 @@ class SourceConnectionTestResult(BaseModel):
 
 
 class SourceTableMetadata(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     name: str
-    schema: Optional[str] = None
+    schema_: Optional[str] = Field(default=None, alias="schema")
     type: Literal["table", "view"]
 
 
