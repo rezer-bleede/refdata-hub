@@ -766,14 +766,14 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
             <div className="modal-actions">
               <button
                 type="button"
-                className="rounded-full border border-slate-700/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-slate-500 hover:text-white"
+                className="button-secondary"
                 onClick={() => setEditing(null)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="neon-button"
+                className="button-primary"
                 onClick={() => void handleUpdate()}
                 disabled={updating}
               >
@@ -815,14 +815,14 @@ const FieldMappingsPage = ({ onToast }: FieldMappingsPageProps) => {
             <div className="modal-actions">
               <button
                 type="button"
-                className="rounded-full border border-slate-700/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-slate-500 hover:text-white"
+                className="button-secondary"
                 onClick={() => setDeleteTarget(null)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-full border border-red-500/60 bg-red-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-red-200 transition hover:border-red-400 hover:text-red-100 disabled:opacity-50"
+                className="button-danger"
                 onClick={() => void handleDelete()}
                 disabled={deleting}
               >

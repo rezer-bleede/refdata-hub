@@ -39,13 +39,15 @@ describe('ConnectionsPage', () => {
     });
   });
 
-  it('submits new connection details', async () => {
+  it('submits new connection details via provider modal', async () => {
     const onToast = vi.fn();
     render(
       <MemoryRouter>
         <ConnectionsPage onToast={onToast} />
       </MemoryRouter>,
     );
+
+    fireEvent.click(screen.getByRole('button', { name: /PostgreSQL/i }));
 
     fireEvent.change(screen.getByLabelText('Connection name'), { target: { value: 'Warehouse' } });
     fireEvent.change(screen.getByLabelText('Host'), { target: { value: 'warehouse.internal' } });
@@ -109,8 +111,12 @@ describe('ConnectionsPage', () => {
 
     await waitFor(() => expect(apiMocks.fetchSourceConnections).toHaveBeenCalled());
 
+    fireEvent.click(screen.getByRole('button', { name: /PostgreSQL/i }));
+
     expect(screen.getByLabelText('Port')).toHaveClass('form-input');
     expect(screen.getByLabelText('Password')).toHaveClass('form-input');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
 
