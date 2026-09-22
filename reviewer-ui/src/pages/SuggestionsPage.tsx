@@ -127,7 +127,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
               <Card.Title as="h1" className="text-2xl mb-1">
                 Triage unmatched values
               </Card.Title>
-              <Card.Text className="text-slate-400 mb-0">
+              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Review low-confidence matches and confirm the appropriate canonical record. Suggestions are ranked using the semantic matcher.
               </Card.Text>
             </div>
@@ -161,14 +161,14 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
                   <Card.Title as="h2" className="text-lg mb-1">
                     {record.raw_value}
                   </Card.Title>
-                  <Card.Text className="text-slate-400 mb-0">
+                  <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                     {record.source_table}.{record.source_field} · {record.ref_dimension}
                   </Card.Text>
-                  <Card.Text className="text-slate-400 text-xs">
+                  <Card.Text className="text-slate-600 dark:text-slate-400 text-xs">
                     {record.occurrence_count} occurrences
                   </Card.Text>
                 </div>
-                <Badge bg="warning" text="dark">
+                <Badge bg="warning">
                   Needs review
                 </Badge>
               </div>
@@ -236,7 +236,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
       {!unmatched.length && !loading && (
         <Card className="card-section">
           <Card.Body>
-            <p className="text-slate-400 mb-0">All recent values are matched for this connection.</p>
+            <p className="text-slate-600 dark:text-slate-400 mb-0">All recent values are matched for this connection.</p>
           </Card.Body>
         </Card>
       )}

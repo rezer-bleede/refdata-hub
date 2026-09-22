@@ -221,7 +221,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
     if (!mappings.length) {
       return (
         <tr>
-          <td colSpan={7} className="text-center text-slate-400 py-4">
+          <td colSpan={7} className="text-center text-slate-600 dark:text-slate-400 py-4">
             No mappings available for the selected scope.
           </td>
         </tr>
@@ -261,7 +261,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
               <Card.Title as="h1" className="text-2xl mb-1">
                 Mapping history
               </Card.Title>
-              <Card.Text className="text-slate-400 mb-0">
+              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Review every approved mapping and ensure canonical assignments stay current.
               </Card.Text>
             </div>
@@ -345,7 +345,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
           <Modal.Title>Import mappings</Modal.Title>
         </Modal.Header>
         <Modal.Body className="flex flex-col gap-3">
-          <p className="mb-0 text-slate-500">
+          <p className="mb-0 text-slate-600 dark:text-slate-400">
             Upload a CSV or Excel file containing mapping rows. Required columns are{' '}
             <code>source_table</code>, <code>source_field</code>, <code>raw_value</code>, and{' '}
             <code>canonical_id</code>. When importing from this page, the selected connection will
@@ -363,13 +363,13 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
             />
           </Form.Group>
           {importResult && (
-            <div className="flex flex-col gap-2 rounded border border-slate-200 p-3 bg-slate-50">
-              <div className="font-semibold">Summary</div>
-              <div className="text-sm text-slate-600">
+            <div className="flex flex-col gap-2 rounded border border-[var(--color-border-muted)] p-3 bg-[var(--color-surface-soft)]">
+              <div className="font-semibold text-[var(--color-text-primary)]">Summary</div>
+              <div className="text-sm text-[var(--color-text-secondary)]">
                 Created {importResult.created} • Updated {importResult.updated}
               </div>
               {importResult.errors.length > 0 && (
-                <div className="text-sm text-amber-600">
+                <div className="text-sm text-amber-800 dark:text-amber-300">
                   <div className="font-semibold">Warnings</div>
                   <ul className="list-disc pl-5 mt-1 mb-0 space-y-1">
                     {importResult.errors.map((error, index) => (

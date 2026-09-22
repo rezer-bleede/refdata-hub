@@ -298,7 +298,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
               <Card.Title as="h1" className="text-2xl mb-1">
                 Dimension relationships
               </Card.Title>
-              <Card.Text className="text-slate-400 mb-0">
+              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Model parent-child relationships between dimensions—for example, regions and their districts. Maintain
                 canonical value pairings to power drill-downs and validation rules.
               </Card.Text>
@@ -313,7 +313,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
               <Spinner animation="border" role="status" aria-hidden="true" />
             </div>
           ) : relations.length === 0 ? (
-            <div className="text-center text-slate-400 py-5">
+            <div className="text-center text-slate-600 dark:text-slate-400 py-5">
               <p className="mb-0">No relations defined yet. Create a relation to begin linking canonical values.</p>
             </div>
           ) : (
@@ -322,7 +322,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                 <Col key={relation.id} md={6} xl={4}>
                   <Card
                     className={`h-full ${
-                      relation.id === selectedRelationId ? 'border-aurora border-2 shadow-glow-sm' : 'border-0 shadow-glow-sm'
+                      relation.id === selectedRelationId ? 'border-aurora border-2 shadow-glow-sm' : 'border border-[var(--color-border-muted)] shadow-glow-sm'
                     }`}
                     onClick={() => setSelectedRelationId(relation.id)}
                     role="button"
@@ -334,7 +334,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                           <Card.Title as="h2" className="text-lg mb-1">
                             {relation.label}
                           </Card.Title>
-                          <Card.Text className="text-slate-400 mb-0">
+                          <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                             {relation.description || 'No description provided.'}
                           </Card.Text>
                         </div>
@@ -344,18 +344,18 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                       </div>
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                          <Badge bg="info" text="dark">
+                          <Badge bg="info">
                             Parent
                           </Badge>
-                          <span>
+                          <span className="text-[var(--color-text-primary)]">
                             {relation.parent_dimension.label} ({relation.parent_dimension.code})
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge bg="warning" text="dark">
+                          <Badge bg="warning">
                             Child
                           </Badge>
-                          <span>
+                          <span className="text-[var(--color-text-primary)]">
                             {relation.child_dimension.label} ({relation.child_dimension.code})
                           </span>
                         </div>
@@ -385,15 +385,15 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                 <Card.Title as="h2" className="text-xl mb-1">
                   {selectedRelation.label}
                 </Card.Title>
-                <Card.Text className="text-slate-400 mb-0">
+                <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                   {selectedRelation.parent_dimension.label} ➝ {selectedRelation.child_dimension.label}
                 </Card.Text>
               </div>
             </div>
 
-            <Card className="border-0 shadow-glow-sm">
+            <Card className="border border-[var(--color-border-muted)] shadow-glow-sm">
               <Card.Body className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400 mb-0">Add link</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400 mb-0">Add link</h3>
                 <Row className="gap-3 items-end">
                   <Col md={6}>
                     <Form.Group controlId="relation-parent-select">
@@ -415,7 +415,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                         ))}
                       </Form.Select>
                       {parentCandidates.length === 0 && (
-                        <Form.Text className="text-slate-400">
+                        <Form.Text className="text-slate-600 dark:text-slate-400">
                           No canonical values found for {selectedRelation.parent_dimension.label}. Add values first.
                         </Form.Text>
                       )}
@@ -441,7 +441,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                         ))}
                       </Form.Select>
                       {childCandidates.length === 0 && (
-                        <Form.Text className="text-slate-400">
+                        <Form.Text className="text-slate-600 dark:text-slate-400">
                           No canonical values found for {selectedRelation.child_dimension.label}. Add values first.
                         </Form.Text>
                       )}
@@ -485,7 +485,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                     </tr>
                   ) : currentLinks.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="text-center text-slate-400 py-4">
+                      <td colSpan={3} className="text-center text-slate-600 dark:text-slate-400 py-4">
                         No links defined yet for this relation.
                       </td>
                     </tr>

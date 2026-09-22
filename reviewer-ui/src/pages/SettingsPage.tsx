@@ -71,7 +71,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
             <Card.Title as="h1" className="section-heading text-xl mb-2">
               System configuration
             </Card.Title>
-            <Card.Text className="text-slate-400 mb-0">
+            <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
               Fine-tune matcher defaults, LLM integrations, and semantic controls. Changes apply immediately after saving.
             </Card.Text>
           </div>
@@ -130,7 +130,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   <option value="online">Online API (OpenAI compatible)</option>
                   <option value="offline">Offline Ollama (smollm:135m / local)</option>
                 </Form.Select>
-                <Form.Text className="text-slate-400">
+                <Form.Text className="text-slate-600 dark:text-slate-400">
                   Choose between the hosted API endpoint and the bundled Ollama service.
                 </Form.Text>
               </Form.Group>
@@ -166,7 +166,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
               </Col>
             </Form>
           ) : (
-            <p className="text-slate-400 mb-0">Configuration is still loading.</p>
+            <p className="text-slate-600 dark:text-slate-400 mb-0">Configuration is still loading.</p>
           )}
         </Card.Body>
       </Card>

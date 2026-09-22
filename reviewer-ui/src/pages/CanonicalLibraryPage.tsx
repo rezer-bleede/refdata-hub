@@ -876,7 +876,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
               <Card.Title as="h1" className="text-2xl mb-1">
                 Canonical library
               </Card.Title>
-              <Card.Text className="text-slate-400 mb-0">
+              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Curate golden records across every dimension. Use filters to focus on a single taxonomy, manage
                 dimension-specific attributes, or search by keyword.
               </Card.Text>
@@ -938,7 +938,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
               <tbody>
                 {filteredValues.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="text-center text-slate-400 py-4">
+                    <td colSpan={5} className="text-center text-slate-600 dark:text-slate-400 py-4">
                       No canonical values match the current filters.
                     </td>
                   </tr>
@@ -950,7 +950,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                     <tr key={value.id}>
                       <td className="font-semibold">{value.canonical_label}</td>
                       <td>
-                        <Badge bg="info" className="bg-aurora/20 text-aurora">
+                        <Badge bg="info">
                           {dimension ? `${dimension.label} (${dimension.code})` : value.dimension}
                         </Badge>
                       </td>
@@ -961,7 +961,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                         ) : (
                           <div className="flex flex-col gap-1">
                             {attributeEntries.map((field) => (
-                              <div key={field.key} className="text-xs text-slate-400">
+                              <div key={field.key} className="text-xs text-slate-600 dark:text-slate-400">
                                 <strong>{field.label}:</strong> {formatAttributeValue(value.attributes?.[field.key])}
                               </div>
                             ))}
@@ -1047,10 +1047,10 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
             {selectedDimension && selectedDimension.extra_fields.length > 0 && (
               <div className="flex flex-col gap-3">
                 <div>
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400 mb-1">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400 mb-1">
                     Dimension attributes
                   </h2>
-                  <p className="text-slate-400 mb-0">
+                  <p className="text-slate-600 dark:text-slate-400 mb-0">
                     Capture additional metadata unique to the {selectedDimension.label.toLowerCase()} dimension.
                   </p>
                 </div>
@@ -1084,7 +1084,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                       />
                     )}
                     {field.description && (
-                      <Form.Text className="text-slate-400">{field.description}</Form.Text>
+                      <Form.Text className="text-slate-600 dark:text-slate-400">{field.description}</Form.Text>
                     )}
                   </Form.Group>
                 ))}
@@ -1141,7 +1141,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
         <Modal.Body className="flex flex-col gap-3">
           {bulkStep === 'upload' && (
             <>
-              <p className="mb-0 text-slate-400">
+              <p className="mb-0 text-slate-600 dark:text-slate-400">
                 Upload a CSV or Excel file, or paste tabular rows. After analysing the headers you can map each column to the
                 canonical fields used by Reviewer.
               </p>
@@ -1155,7 +1155,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                     setBulkFile(file);
                   }}
                 />
-                <Form.Text className="text-slate-400">
+                <Form.Text className="text-slate-600 dark:text-slate-400">
                   Provide CSV, TSV, or Excel documents. When both a file and pasted rows are supplied, the file takes
                   precedence.
                 </Form.Text>
@@ -1181,8 +1181,8 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
               </Form.Group>
               {bulkErrors.length > 0 && (
                 <div className="alert alert-warning mb-0" role="alert">
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Import issues</h2>
-                  <ul className="mb-0">
+                  <h2 className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-800 dark:text-amber-200">Import issues</h2>
+                  <ul className="mb-0 text-amber-800 dark:text-amber-200">
                     {bulkErrors.map((error, index) => (
                       <li key={`${error}-${index}`}>{error}</li>
                     ))}
@@ -1193,7 +1193,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
           )}
           {bulkStep === 'map' && bulkPreview && (
             <>
-              <p className="mb-0 text-slate-400">
+              <p className="mb-0 text-slate-600 dark:text-slate-400">
                 Confirm how the uploaded columns should map to canonical fields. Assign at least one column to the canonical
                 label and select the target dimension.
               </p>
@@ -1211,7 +1211,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                       </option>
                     ))}
                   </Form.Select>
-                  <Form.Text className="text-slate-400">
+                  <Form.Text className="text-slate-600 dark:text-slate-400">
                     Choose which sheet to analyse. Imports process one sheet at a time.
                   </Form.Text>
                 </Form.Group>
@@ -1232,7 +1232,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                     </option>
                   ))}
                 </datalist>
-                <Form.Text className="text-slate-400">
+                <Form.Text className="text-slate-600 dark:text-slate-400">
                   Choose an existing dimension or enter a new code to create one during import.
                 </Form.Text>
               </Form.Group>
@@ -1324,7 +1324,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                                       })
                                     }
                                   />
-                                  <Form.Text className="text-slate-400">
+                                  <Form.Text className="text-slate-600 dark:text-slate-400">
                                     Keys should match the dimension schema. New dimensions will create attributes using these keys.
                                   </Form.Text>
                                 </Form.Group>
@@ -1363,13 +1363,13 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                                     </Col>
                                   </Row>
                                 ) : attributeSchema ? (
-                                  <div className="text-slate-400 text-xs">
+                                  <div className="text-slate-600 dark:text-slate-400 text-xs">
                                     Maps to <strong>{attributeSchema.label}</strong> ({attributeSchema.key})
                                   </div>
                                 ) : null}
                               </div>
                             ) : (
-                              <span className="text-slate-400">{column.suggested_role ? `Suggested: ${column.suggested_role}` : '—'}</span>
+                              <span className="text-slate-600 dark:text-slate-400">{column.suggested_role ? `Suggested: ${column.suggested_role}` : '—'}</span>
                             )}
                           </td>
                         </tr>
@@ -1448,7 +1448,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
           <Modal.Title>Resolve duplicate canonical values</Modal.Title>
         </Modal.Header>
         <Modal.Body className="flex flex-col gap-3">
-          <p className="mb-0 text-slate-400">
+          <p className="mb-0 text-slate-600 dark:text-slate-400">
             {duplicateReview ? `${duplicateReview.length} record${duplicateReview.length === 1 ? '' : 's'}` : 'Records'}
             {' '}already exist in the selected dimension. Choose how the importer should handle them before continuing.
           </p>
@@ -1505,7 +1505,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                           ) : (
                             <div className="flex flex-col gap-1">
                               {existingAttributes.map(([key, value]) => (
-                                <span key={key} className="text-xs text-slate-400">
+                                <span key={key} className="text-xs text-slate-600 dark:text-slate-400">
                                   <strong>{key}:</strong> {formatAttributeValue(value)}
                                 </span>
                               ))}
@@ -1518,7 +1518,7 @@ const CanonicalLibraryPage = ({ onToast }: CanonicalLibraryPageProps) => {
                           ) : (
                             <div className="flex flex-col gap-1">
                               {incomingAttributes.map(([key, value]) => (
-                                <span key={key} className="text-xs text-slate-400">
+                                <span key={key} className="text-xs text-slate-600 dark:text-slate-400">
                                   <strong>{key}:</strong> {formatAttributeValue(value)}
                                 </span>
                               ))}

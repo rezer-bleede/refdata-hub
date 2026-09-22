@@ -181,7 +181,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
               <h1 className="section-heading text-2xl">Semantic dimensions</h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
                 Curate reusable data domains with consistent canonical attributes and governance metadata.
               </p>
             </div>
@@ -204,7 +204,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                 <tbody>
                   {sortedDimensions.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
                         No dimensions defined yet.
                       </td>
                     </tr>
@@ -212,13 +212,13 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                   {sortedDimensions.map((dimension) => (
                     <tr
                       key={dimension.code}
-                      className="cursor-pointer bg-slate-900/40 transition hover:bg-slate-800/60"
+                      className="cursor-pointer transition hover:bg-[var(--color-table-row-hover)]"
                       onClick={() => navigate(`/dimensions/${encodeURIComponent(dimension.code)}`)}
                     >
-                      <td className="px-4 py-3 font-mono text-sm text-aurora">{dimension.code}</td>
-                      <td className="px-4 py-3 text-slate-100">{dimension.label}</td>
-                      <td className="px-4 py-3 text-sm text-slate-400">{dimension.description || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-slate-300">
+                      <td className="px-4 py-3 font-mono text-sm text-indigo-600 dark:text-aurora">{dimension.code}</td>
+                      <td className="px-4 py-3 text-[var(--color-text-primary)]">{dimension.label}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{dimension.description || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--color-text-secondary)]">
                         {dimension.extra_fields.length === 0 ? (
                           <span className="text-slate-500">—</span>
                         ) : (
@@ -277,7 +277,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
             <div className="mt-4 flex flex-col gap-6">
               <div className="grid gap-4 lg:grid-cols-3">
                 <label htmlFor="dimension-code" className="flex flex-col gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Code</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Code</span>
                   <input
                     id="dimension-code"
                     type="text"
@@ -286,12 +286,12 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                     placeholder="e.g. region"
                     disabled={Boolean(editing)}
                   />
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-600 dark:text-slate-500">
                     Immutable identifier used by canonical values and mappings.
                   </span>
                 </label>
                 <label htmlFor="dimension-label" className="flex flex-col gap-2 lg:col-span-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Label</span>
+                  <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Label</span>
                   <input
                     id="dimension-label"
                     type="text"
@@ -302,7 +302,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                 </label>
               </div>
               <label htmlFor="dimension-description" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Description</span>
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Description</span>
                 <textarea
                   id="dimension-description"
                   rows={3}
@@ -315,10 +315,10 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
               <div className="space-y-4">
                 <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">
+                    <h4 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400">
                       Additional attributes
                     </h4>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-600 dark:text-slate-500">
                       Define custom fields captured for canonical values in this dimension.
                     </p>
                   </div>
@@ -336,7 +336,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                     <div key={field.id} className="surface-card surface-card--accent flex flex-col gap-4">
                       <div className="grid gap-4 lg:grid-cols-4">
                         <label htmlFor={`field-key-${field.id}`} className="flex flex-col gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Key</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Key</span>
                           <input
                             id={`field-key-${field.id}`}
                             type="text"
@@ -346,7 +346,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                           />
                         </label>
                         <label htmlFor={`field-label-${field.id}`} className="flex flex-col gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Label</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Label</span>
                           <input
                             id={`field-label-${field.id}`}
                             type="text"
@@ -356,7 +356,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                           />
                         </label>
                         <label htmlFor={`field-type-${field.id}`} className="flex flex-col gap-2">
-                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Type</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Type</span>
                           <select
                             id={`field-type-${field.id}`}
                             value={field.data_type}
@@ -382,7 +382,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                       </div>
                       <div className="grid gap-4 lg:grid-cols-4">
                         <label htmlFor={`field-description-${field.id}`} className="flex flex-col gap-2 lg:col-span-3">
-                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Description</span>
+                          <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Description</span>
                           <input
                             id={`field-description-${field.id}`}
                             type="text"
@@ -391,7 +391,7 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
                             placeholder="Optional guidance for reviewers"
                           />
                         </label>
-                        <label className="flex items-center gap-3 text-sm text-slate-300">
+                        <label className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                           <input
                             type="checkbox"
                             checked={field.required}
@@ -441,8 +441,8 @@ const DimensionsPage = ({ onToast }: DimensionsPageProps) => {
             >
               ×
             </button>
-            <p className="mt-4 text-sm text-slate-300">
-              Are you sure you want to delete the dimension <strong className="text-white">{deleteTarget.label}</strong> (
+            <p className="mt-4 text-sm text-[var(--color-text-secondary)]">
+              Are you sure you want to delete the dimension <strong className="text-[var(--color-text-primary)]">{deleteTarget.label}</strong> (
               {deleteTarget.code})? Canonical values linked to this dimension must be removed first.
             </p>
             <div className="modal-actions">
