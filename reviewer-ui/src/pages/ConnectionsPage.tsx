@@ -9,6 +9,7 @@ import {
   testSourceConnection,
   updateSourceConnection,
 } from '../api';
+import { DB_PROVIDERS, DbLogoIcon, type DbProviderInfo } from '../components/DbLogos';
 import type {
   SourceConnection,
   SourceConnectionCreatePayload,
@@ -63,6 +64,8 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
   const [connections, setConnections] = useState<SourceConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<SourceConnectionCreatePayload>(emptyForm);
+  const [selectedProvider, setSelectedProvider] = useState<DbProviderInfo>(DB_PROVIDERS[0]);
+  const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<SourceConnection | null>(null);
   const [editForm, setEditForm] = useState<SourceConnectionUpdatePayload>({});
@@ -86,6 +89,16 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
   useEffect(() => {
     void loadConnections();
   }, [loadConnections]);
+
+  const openProviderRegistration = (provider: DbProviderInfo) => {
+    setSelectedProvider(provider);
+    setForm({
+      ...emptyForm,
+      db_type: provider.db_type,
+      port: provider.defaultPort,
+    });
+    setIsRegistrationModalOpen(true);
+  };
 
   const handleFormChange = (key: keyof SourceConnectionCreatePayload, value: string) => {
     setForm((prev) => ({ ...prev, [key]: key === 'port' ? Number(value) : value }));
@@ -158,6 +171,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
       const created = await createSourceConnection(payload);
       setConnections((prev) => [...prev, created]);
       setForm({ ...emptyForm });
+      setIsRegistrationModalOpen(false);
       onToast({ type: 'success', content: 'Connection added.' });
     } catch (error: unknown) {
       console.error(error);
@@ -243,6 +257,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <thead>
                   <tr>
                     <th className="px-4 py-3 text-left">Name</th>
+                    <th className="px-4 py-3 text-left">Type</th>
                     <th className="px-4 py-3 text-left">Database</th>
                     <th className="px-4 py-3 text-left">Host</th>
                     <th className="px-4 py-3 text-left">Updated</th>
@@ -252,68 +267,82 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
+                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
                         Loading connections…
                       </td>
                     </tr>
                   )}
                   {!loading && sortedConnections.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
-                        No connections registered yet.
+                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
+                        No connections registered yet. Select a database engine below to register one.
                       </td>
                     </tr>
                   )}
                   {!loading &&
-                    sortedConnections.map((connection) => (
-                      <tr key={connection.id}>
-                        <td className="px-4 py-3 font-semibold text-[var(--color-text-primary)]">{connection.name}</td>
-                        <td className="px-4 py-3 text-[var(--color-text-secondary)]">{connection.database}</td>
-                        <td className="px-4 py-3 text-[var(--color-text-secondary)]">{connection.host}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                          {new Date(connection.updated_at).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap justify-end gap-2">
-                            <Link to={`/connections/${connection.id}`} className="button-primary text-xs">
-                              View
-                            </Link>
-                            <button
-                              type="button"
-                              className="button-secondary text-xs"
-                              onClick={() => void handleTestExistingConnection(connection.id)}
-                              disabled={testingExistingId === connection.id}
-                            >
-                              {testingExistingId === connection.id ? (
-                                <span className="flex items-center gap-2">
-                                  <span
-                                    className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
-                                    aria-hidden="true"
-                                  />
-                                  Testing…
-                                </span>
-                              ) : (
-                                'Test'
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="button-secondary text-xs"
-                              onClick={() => openEdit(connection)}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="button-danger text-xs"
-                              onClick={() => setDeleteTarget(connection)}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    sortedConnections.map((connection) => {
+                      const matchedProvider = DB_PROVIDERS.find(
+                        (p) => p.db_type === connection.db_type || p.id === connection.db_type,
+                      );
+                      const providerId = matchedProvider?.id || 'generic';
+                      return (
+                        <tr key={connection.id}>
+                          <td className="px-4 py-3 font-semibold text-[var(--color-text-primary)]">
+                            <div className="flex items-center gap-3">
+                              <DbLogoIcon id={providerId} className="h-6 w-6 shrink-0" />
+                              <span>{connection.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-xs uppercase text-slate-600 dark:text-slate-400">
+                            {connection.db_type}
+                          </td>
+                          <td className="px-4 py-3 text-[var(--color-text-secondary)]">{connection.database}</td>
+                          <td className="px-4 py-3 text-[var(--color-text-secondary)]">{connection.host}</td>
+                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                            {new Date(connection.updated_at).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex flex-wrap justify-end gap-2">
+                              <Link to={`/connections/${connection.id}`} className="button-primary text-xs">
+                                View
+                              </Link>
+                              <button
+                                type="button"
+                                className="button-secondary text-xs"
+                                onClick={() => void handleTestExistingConnection(connection.id)}
+                                disabled={testingExistingId === connection.id}
+                              >
+                                {testingExistingId === connection.id ? (
+                                  <span className="flex items-center gap-2">
+                                    <span
+                                      className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                                      aria-hidden="true"
+                                    />
+                                    Testing…
+                                  </span>
+                                ) : (
+                                  'Test'
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                className="button-secondary text-xs"
+                                onClick={() => openEdit(connection)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="button-danger text-xs"
+                                onClick={() => setDeleteTarget(connection)}
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
@@ -324,132 +353,196 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
           <div className="space-y-2">
             <h2 className="section-heading text-xl">Register a source connection</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Store connection metadata for sampling, mapping, and reconciliation workflows.
+              Select a database provider below to configure connection parameters and integrate with RefData Hub.
             </p>
           </div>
 
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleCreate();
-            }}
-            className="grid gap-4 lg:grid-cols-4"
-          >
-            <label htmlFor="connection-name" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Connection name</span>
-              <input
-                id="connection-name"
-                className="form-input"
-                value={form.name}
-                onChange={(event) => handleFormChange('name', event.target.value)}
-                required
-              />
-            </label>
-            <label htmlFor="connection-type" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database type</span>
-              <input
-                id="connection-type"
-                className="form-input"
-                value={form.db_type}
-                onChange={(event) => handleFormChange('db_type', event.target.value)}
-              />
-            </label>
-            <label htmlFor="connection-host" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Host</span>
-              <input
-                id="connection-host"
-                className="form-input"
-                value={form.host}
-                onChange={(event) => handleFormChange('host', event.target.value)}
-                required
-              />
-            </label>
-            <label htmlFor="connection-port" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Port</span>
-              <input
-                id="connection-port"
-                className="form-input"
-                type="number"
-                value={form.port}
-                onChange={(event) => handleFormChange('port', event.target.value)}
-              />
-            </label>
-            <label htmlFor="connection-database" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database</span>
-              <input
-                id="connection-database"
-                className="form-input"
-                value={form.database}
-                onChange={(event) => handleFormChange('database', event.target.value)}
-                required
-              />
-            </label>
-            <label htmlFor="connection-username" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Username</span>
-              <input
-                id="connection-username"
-                className="form-input"
-                value={form.username}
-                onChange={(event) => handleFormChange('username', event.target.value)}
-                required
-              />
-            </label>
-            <label htmlFor="connection-password" className="flex flex-col gap-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Password</span>
-              <input
-                id="connection-password"
-                className="form-input"
-                type="password"
-                value={form.password ?? ''}
-                onChange={(event) => handleFormChange('password', event.target.value)}
-              />
-            </label>
-            <label htmlFor="connection-options" className="flex flex-col gap-2 lg:col-span-4">
-              <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Options (JSON)</span>
-              <input
-                id="connection-options"
-                className="form-input"
-                placeholder='{"sslmode":"require"}'
-                value={form.options ?? ''}
-                onChange={(event) => handleFormChange('options', event.target.value)}
-              />
-            </label>
-            <div className="flex flex-col gap-2 lg:col-span-4 lg:flex-row lg:justify-end">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {DB_PROVIDERS.map((provider) => (
               <button
+                key={provider.id}
                 type="button"
-                className="button-secondary"
-                onClick={() => void handleTestNewConnection()}
-                disabled={testingNewConnection || submitting}
+                onClick={() => openProviderRegistration(provider)}
+                className="group flex flex-col items-center justify-between rounded-2xl border border-[var(--color-border-muted)] bg-[var(--color-surface-soft)] p-5 text-center transition hover:-translate-y-0.5 hover:border-indigo-500 hover:bg-[var(--color-surface-strong)] hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
               >
-                {testingNewConnection ? (
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
-                      aria-hidden="true"
-                    />
-                    Testing…
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900/40 p-2 shadow-inner transition group-hover:scale-110">
+                  <DbLogoIcon id={provider.id} className="h-9 w-9" />
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-semibold text-[var(--color-text-primary)]">{provider.name}</span>
+                  <span className="text-[0.65rem] uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    {provider.category}
                   </span>
-                ) : (
-                  'Test connection'
-                )}
+                </div>
+                <span className="mt-3 inline-flex items-center rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-[0.65rem] font-medium text-indigo-700 dark:text-indigo-300">
+                  {provider.defaultPort > 0 ? `Port ${provider.defaultPort}` : 'Embedded'}
+                </span>
               </button>
-              <button type="submit" className="button-primary" disabled={submitting || testingNewConnection}>
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
-                      aria-hidden="true"
-                    />
-                    Adding…
-                  </span>
-                ) : (
-                  'Add connection'
-                )}
-              </button>
-            </div>
-          </form>
+            ))}
+          </div>
         </section>
       </div>
+
+      {isRegistrationModalOpen && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="register-connection-title">
+          <div className="modal-panel relative max-w-2xl">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900/60 p-2">
+                <DbLogoIcon id={selectedProvider.id} className="h-9 w-9" />
+              </div>
+              <div>
+                <h3 id="register-connection-title" className="modal-title">
+                  Register {selectedProvider.name} Connection
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  Configure connection parameters for {selectedProvider.name} ({selectedProvider.category}).
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="modal-close"
+              onClick={() => setIsRegistrationModalOpen(false)}
+              aria-label="Close dialog"
+            >
+              ×
+            </button>
+
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleCreate();
+              }}
+              className="mt-6 grid gap-4 lg:grid-cols-2"
+            >
+              <label htmlFor="connection-name" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Connection name</span>
+                <input
+                  id="connection-name"
+                  className="form-input"
+                  placeholder={`e.g. ${selectedProvider.name} Production`}
+                  value={form.name}
+                  onChange={(event) => handleFormChange('name', event.target.value)}
+                  required
+                />
+              </label>
+              <label htmlFor="connection-type" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database type</span>
+                <input
+                  id="connection-type"
+                  className="form-input"
+                  value={form.db_type}
+                  onChange={(event) => handleFormChange('db_type', event.target.value)}
+                />
+              </label>
+              <label htmlFor="connection-host" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Host</span>
+                <input
+                  id="connection-host"
+                  className="form-input"
+                  placeholder="e.g. localhost or db.internal"
+                  value={form.host}
+                  onChange={(event) => handleFormChange('host', event.target.value)}
+                  required
+                />
+              </label>
+              <label htmlFor="connection-port" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Port</span>
+                <input
+                  id="connection-port"
+                  className="form-input"
+                  type="number"
+                  value={form.port}
+                  onChange={(event) => handleFormChange('port', event.target.value)}
+                />
+              </label>
+              <label htmlFor="connection-database" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database</span>
+                <input
+                  id="connection-database"
+                  className="form-input"
+                  placeholder="e.g. analytics"
+                  value={form.database}
+                  onChange={(event) => handleFormChange('database', event.target.value)}
+                  required
+                />
+              </label>
+              <label htmlFor="connection-username" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Username</span>
+                <input
+                  id="connection-username"
+                  className="form-input"
+                  placeholder="e.g. postgres"
+                  value={form.username}
+                  onChange={(event) => handleFormChange('username', event.target.value)}
+                  required
+                />
+              </label>
+              <label htmlFor="connection-password" className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Password</span>
+                <input
+                  id="connection-password"
+                  className="form-input"
+                  type="password"
+                  value={form.password ?? ''}
+                  onChange={(event) => handleFormChange('password', event.target.value)}
+                />
+              </label>
+              <label htmlFor="connection-options" className="flex flex-col gap-2 lg:col-span-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Options (JSON)</span>
+                <input
+                  id="connection-options"
+                  className="form-input"
+                  placeholder='{"sslmode":"require"}'
+                  value={form.options ?? ''}
+                  onChange={(event) => handleFormChange('options', event.target.value)}
+                />
+              </label>
+
+              <div className="mt-4 flex justify-end gap-3 lg:col-span-2">
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={() => setIsRegistrationModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="button-secondary"
+                  onClick={() => void handleTestNewConnection()}
+                  disabled={testingNewConnection || submitting}
+                >
+                  {testingNewConnection ? (
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                        aria-hidden="true"
+                      />
+                      Testing…
+                    </span>
+                  ) : (
+                    'Test connection'
+                  )}
+                </button>
+                <button type="submit" className="button-primary" disabled={submitting || testingNewConnection}>
+                  {submitting ? (
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                        aria-hidden="true"
+                      />
+                      Adding…
+                    </span>
+                  ) : (
+                    'Add connection'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {editing && (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-connection-title">

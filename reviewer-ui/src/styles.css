@@ -320,7 +320,7 @@
   }
 
   .neon-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-aurora to-indigo-500 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-white shadow-glow-sm transition hover:shadow-glow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-aurora to-indigo-500 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white shadow-glow-sm transition hover:shadow-glow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neon disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .button-primary {
@@ -328,14 +328,23 @@
   }
 
   .button-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border px-5 py-2 text-sm font-semibold uppercase tracking-wide shadow-inner-border transition hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wider shadow-inner-border transition hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-aurora disabled:cursor-not-allowed disabled:opacity-50;
     background-color: var(--color-surface-soft);
     border-color: var(--color-border-strong);
     color: var(--color-text-primary);
   }
 
   .button-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-200 transition hover:border-red-600 dark:hover:border-red-400 hover:text-red-800 dark:hover:text-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-200 transition hover:border-red-600 dark:hover:border-red-400 hover:text-red-800 dark:hover:text-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .button-sm {
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    letter-spacing: normal;
+    font-weight: 500;
+    text-transform: none;
   }
 
   .surface-card {

@@ -1,59 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0ea5e9" />
-      <stop offset="50%" stop-color="#6366f1" />
-      <stop offset="100%" stop-color="#8b5cf6" />
+    <linearGradient id="b-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="100%" stop-color="#111827" />
     </linearGradient>
-    <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+
+    <linearGradient id="b-grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#22d3ee" />
-      <stop offset="100%" stop-color="#0ea5e9" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#a855f7" />
     </linearGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+
+    <linearGradient id="b-grad-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
   </defs>
-  
-  <!-- Background -->
-  <rect width="512" height="512" rx="64" fill="#0f172a"/>
-  
-  <!-- Main Icon Container -->
-  <g transform="translate(128, 128)">
-    <!-- Outer ring -->
-    <rect x="0" y="0" width="256" height="256" rx="48" fill="none" stroke="url(#grad-primary)" stroke-width="8"/>
-    
-    <!-- Data transformation visualization -->
-    <!-- Left side - raw data (scattered) -->
-    <g fill="#0ea5e9" opacity="0.8">
-      <circle cx="40" cy="60" r="8"/>
-      <circle cx="70" cy="45" r="6"/>
-      <circle cx="55" cy="85" r="10"/>
-      <circle cx="35" cy="110" r="7"/>
-      <circle cx="65" cy="130" r="9"/>
-      <circle cx="45" cy="160" r="6"/>
-    </g>
-    
-    <!-- Center - transformation arrow -->
-    <path d="M100 128 L140 128 M130 118 L140 128 L130 138" stroke="url(#grad-accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
-    
-    <!-- Right side - structured data (organized rows) -->
-    <g fill="#8b5cf6" opacity="0.9">
-      <rect x="160" y="50" width="70" height="12" rx="6"/>
-      <rect x="160" y="75" width="70" height="12" rx="6"/>
-      <rect x="160" y="100" width="70" height="12" rx="6"/>
-      <rect x="160" y="125" width="55" height="12" rx="6"/>
-      <rect x="160" y="150" width="40" height="12" rx="6"/>
-    </g>
-    
-    <!-- Center node - unification point -->
-    <circle cx="128" cy="128" r="16" fill="url(#grad-accent)" filter="url(#glow)"/>
+
+  <rect width="512" height="512" rx="72" fill="url(#b-bg)" />
+  <rect width="512" height="512" rx="72" fill="none" stroke="url(#b-grad-primary)" stroke-width="3" stroke-opacity="0.3" />
+
+  <g transform="translate(136, 96)">
+    <path d="M120 40 L120 120" stroke="url(#b-grad-accent)" stroke-width="4" stroke-dasharray="6 6" opacity="0.6"/>
+    <path d="M120 120 L40 180" stroke="url(#b-grad-accent)" stroke-width="4" opacity="0.5"/>
+    <path d="M120 120 L200 180" stroke="url(#b-grad-accent)" stroke-width="4" opacity="0.5"/>
+    <path d="M40 180 L200 180" stroke="url(#b-grad-primary)" stroke-width="3" opacity="0.4"/>
+
+    <path d="M120 45 L190 85 L190 165 L120 205 L50 165 L50 85 Z"
+          fill="none" stroke="url(#b-grad-primary)" stroke-width="8" stroke-linejoin="round"/>
+
+    <path d="M120 75 L165 100 L165 150 L120 175 L75 150 L75 100 Z"
+          fill="url(#b-grad-primary)" opacity="0.25"/>
+
+    <circle cx="120" cy="45" r="10" fill="#22d3ee"/>
+    <circle cx="190" cy="85" r="8" fill="#6366f1"/>
+    <circle cx="190" cy="165" r="8" fill="#a855f7"/>
+    <circle cx="120" cy="205" r="10" fill="#38bdf8"/>
+    <circle cx="50" cy="165" r="8" fill="#6366f1"/>
+    <circle cx="50" cy="85" r="8" fill="#22d3ee"/>
+
+    <circle cx="120" cy="125" r="14" fill="url(#b-grad-accent)"/>
+    <circle cx="120" cy="125" r="6" fill="#ffffff"/>
   </g>
-  
-  <!-- Text -->
-  <text x="256" y="440" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="42" font-weight="700" fill="white" text-anchor="middle" letter-spacing="-1">RefData Hub</text>
-  <text x="256" y="475" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="500" fill="#64748b" text-anchor="middle" letter-spacing="3">DATA HARMONIZATION</text>
+
+  <text x="256" y="415" font-family="system-ui, -apple-system, sans-serif" font-size="44" font-weight="800" fill="#f8fafc" text-anchor="middle" letter-spacing="-0.5">
+    RefData <tspan fill="#38bdf8">Hub</tspan>
+  </text>
+  <text x="256" y="452" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#94a3b8" text-anchor="middle" letter-spacing="4">
+    REFERENCE DATA HARMONIZATION
+  </text>
 </svg>
