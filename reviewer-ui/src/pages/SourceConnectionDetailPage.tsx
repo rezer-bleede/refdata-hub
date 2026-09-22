@@ -208,7 +208,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
             <Card.Title as="h1" className="text-2xl mb-2">
               {connection?.name ?? 'Loading connection…'}
             </Card.Title>
-            <Card.Text className="text-slate-400 mb-0">
+            <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
               Review ingested metadata, field statistics, and profiling samples for this data source.
             </Card.Text>
           </div>
@@ -217,7 +217,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
               <Col>
                 <Card className="h-full">
                   <Card.Body>
-                    <Card.Subtitle className="text-slate-400 mb-1">Database type</Card.Subtitle>
+                    <Card.Subtitle className="text-slate-600 dark:text-slate-400 mb-1">Database type</Card.Subtitle>
                     <Card.Title className="text-base font-semibold uppercase tracking-[0.3em]">
                       {connection.db_type}
                     </Card.Title>
@@ -229,7 +229,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
               <Col>
                 <Card className="h-full">
                   <Card.Body>
-                    <Card.Subtitle className="text-slate-400 mb-1">Catalog</Card.Subtitle>
+                    <Card.Subtitle className="text-slate-600 dark:text-slate-400 mb-1">Catalog</Card.Subtitle>
                     <Card.Title className="text-lg">{connection.database}</Card.Title>
                     <Card.Text className="mb-0">Schemas discovered: {schemaSummary.schemaCount}</Card.Text>
                     <Card.Text className="mb-0">Tables &amp; views: {schemaSummary.tableCount}</Card.Text>
@@ -239,7 +239,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
               <Col>
                 <Card className="h-full">
                   <Card.Body>
-                    <Card.Subtitle className="text-slate-400 mb-1">Credentials</Card.Subtitle>
+                    <Card.Subtitle className="text-slate-600 dark:text-slate-400 mb-1">Credentials</Card.Subtitle>
                     <Card.Text className="mb-0">User: {connection.username}</Card.Text>
                     <Card.Text className="mb-0">Updated: {new Date(connection.updated_at).toLocaleString()}</Card.Text>
                     <Card.Text className="mb-0">Created: {new Date(connection.created_at).toLocaleString()}</Card.Text>
@@ -248,7 +248,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
               </Col>
             </Row>
           ) : (
-            <div className="flex items-center gap-2 text-slate-400">
+            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
               <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
               Loading connection…
             </div>
@@ -264,7 +264,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                 <Card.Title as="h2" className="text-lg mb-1">
                   Schemas &amp; objects
                 </Card.Title>
-                <Card.Text className="text-slate-400 mb-0">
+                <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                   Select a table or view to inspect field metadata and profiles.
                 </Card.Text>
               </div>
@@ -287,14 +287,14 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                           <Badge bg={table.type === 'view' ? 'info' : 'secondary'}>{table.type}</Badge>
                         </div>
                         {table.schema ? (
-                          <small className="text-slate-400">Schema: {table.schema}</small>
+                          <small className="text-slate-600 dark:text-slate-400">Schema: {table.schema}</small>
                         ) : null}
                       </ListGroup.Item>
                     );
                   })}
                 </ListGroup>
               ) : (
-                <div className="flex items-center gap-2 text-slate-400">
+                <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                   Discovering tables…
                 </div>
@@ -311,18 +311,18 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                     Field catalogue
                   </Card.Title>
                   {selectedTable ? (
-                    <Card.Text className="text-slate-400 mb-0">
+                    <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                       {selectedTable.schema ? `${selectedTable.schema}.` : ''}
                       {selectedTable.name}
                     </Card.Text>
                   ) : (
-                    <Card.Text className="text-slate-400 mb-0">Select an object to continue.</Card.Text>
+                    <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">Select an object to continue.</Card.Text>
                   )}
                 </div>
               </div>
               {selectedTable ? (
                 loadingFields && fieldsForSelectedTable.length === 0 ? (
-                  <div className="flex items-center gap-2 text-slate-400">
+                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                     <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                     Loading fields…
                   </div>
@@ -347,7 +347,7 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                           <tr
                             key={field.name}
                             role="button"
-                            className={isSelected ? 'bg-aurora/10 text-white' : ''}
+                            className={isSelected ? 'bg-aurora/10 text-indigo-900 dark:text-white font-medium' : ''}
                             onClick={() => void handleFieldSelect(field)}
                           >
                             <td>{field.name}</td>
@@ -368,10 +368,10 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                     </tbody>
                   </Table>
                 ) : (
-                  <p className="text-slate-400 mb-0">No fields were discovered for this object.</p>
+                  <p className="text-slate-600 dark:text-slate-400 mb-0">No fields were discovered for this object.</p>
                 )
               ) : (
-                <p className="text-slate-400 mb-0">Select a table or view to see its fields.</p>
+                <p className="text-slate-600 dark:text-slate-400 mb-0">Select a table or view to see its fields.</p>
               )}
             </Card.Body>
           </Card>
@@ -385,14 +385,14 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
               <Card.Title as="h2" className="text-lg mb-1">
                 Distinct sample values
               </Card.Title>
-              <Card.Text className="text-slate-400 mb-0">
+              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Click a field above to preview distinct raw values stored for profiling and reconciliation.
               </Card.Text>
             </div>
           </div>
           {selectedFieldKey ? (
             loadingSamples && selectedSamples.length === 0 ? (
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                 <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
                 Loading samples…
               </div>
@@ -416,10 +416,10 @@ const SourceConnectionDetailPage = ({ onToast }: SourceConnectionDetailPageProps
                 </tbody>
               </Table>
             ) : (
-              <p className="text-slate-400 mb-0">No samples captured for this field yet.</p>
+              <p className="text-slate-600 dark:text-slate-400 mb-0">No samples captured for this field yet.</p>
             )
           ) : (
-            <p className="text-slate-400 mb-0">Select a field to view its distinct values.</p>
+            <p className="text-slate-600 dark:text-slate-400 mb-0">Select a field to view its distinct values.</p>
           )}
         </Card.Body>
       </Card>

@@ -137,9 +137,9 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
   }, [mappingsForDimension]);
 
   const renderAttributes = (value: CanonicalValue, extraFields: DimensionExtraFieldDefinition[]) => {
-    if (extraFields.length === 0) return <span className="text-slate-500">No additional attributes</span>;
+    if (extraFields.length === 0) return <span className="text-slate-600 dark:text-slate-500">No additional attributes</span>;
     return (
-      <div className="flex flex-wrap gap-2 text-xs text-slate-200">
+      <div className="flex flex-wrap gap-2 text-xs text-[var(--color-text-primary)]">
         {extraFields.map((field) => {
           const attributeValue = value.attributes?.[field.key];
           const displayValue =
@@ -147,8 +147,8 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
               ? '—'
               : `${attributeValue}`;
           return (
-            <span key={field.key} className="badge-pill bg-slate-800/70">
-              <span className="text-slate-400">{field.label}:</span> {displayValue}
+            <span key={field.key} className="badge-pill">
+              <span className="text-slate-600 dark:text-slate-400">{field.label}:</span> {displayValue}
             </span>
           );
         })}
@@ -162,23 +162,23 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
 
   return (
     <div className="flex flex-col gap-8">
-      <nav aria-label="Breadcrumb" className="text-sm text-slate-400">
-        <Link to="/dimensions" className="text-aurora hover:underline">
+      <nav aria-label="Breadcrumb" className="text-sm text-slate-600 dark:text-slate-400">
+        <Link to="/dimensions" className="text-indigo-600 dark:text-aurora hover:underline">
           Dimensions
         </Link>
         <span className="px-2">/</span>
-        <span className="text-slate-200">{dimension.label}</span>
+        <span className="text-[var(--color-text-primary)]">{dimension.label}</span>
       </nav>
 
       <header className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Dimension overview</p>
-          <h1 className="section-heading text-3xl text-white">{dimension.label}</h1>
-          <p className="text-sm text-slate-300">{dimension.description || 'No description provided.'}</p>
-          <div className="flex flex-wrap gap-2 text-xs text-slate-400">
-            <span className="badge-pill bg-slate-800">Code: {dimension.code}</span>
-            <span className="badge-pill bg-slate-800">Created {formatDate(dimension.created_at)}</span>
-            <span className="badge-pill bg-slate-800">Updated {formatDate(dimension.updated_at)}</span>
+          <p className="text-xs uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400">Dimension overview</p>
+          <h1 className="section-heading text-3xl text-[var(--color-text-primary)]">{dimension.label}</h1>
+          <p className="text-sm text-[var(--color-text-secondary)]">{dimension.description || 'No description provided.'}</p>
+          <div className="flex flex-wrap gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <span className="badge-pill">Code: {dimension.code}</span>
+            <span className="badge-pill">Created {formatDate(dimension.created_at)}</span>
+            <span className="badge-pill">Updated {formatDate(dimension.updated_at)}</span>
           </div>
         </div>
         <button type="button" className="button-secondary" onClick={() => navigate('/dimensions')}>
@@ -188,24 +188,24 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="surface-card surface-card--accent border border-aurora/40">
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Canonical values</p>
-          <p className="mt-2 text-3xl font-semibold text-white">{canonicalForDimension.length}</p>
-          <p className="text-xs text-slate-400">Distinct canonical records curated for this dimension.</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Canonical values</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{canonicalForDimension.length}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">Distinct canonical records curated for this dimension.</p>
         </div>
         <div className="surface-card surface-card--accent border border-sky-400/40">
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Documented entries</p>
-          <p className="mt-2 text-3xl font-semibold text-white">{canonicalWithDescriptions}</p>
-          <p className="text-xs text-slate-400">Canonical values with reviewer-provided descriptions.</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Documented entries</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{canonicalWithDescriptions}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">Canonical values with reviewer-provided descriptions.</p>
         </div>
         <div className="surface-card surface-card--accent border border-emerald-400/40">
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Attribute keys</p>
-          <p className="mt-2 text-3xl font-semibold text-white">{uniqueAttributeKeys.size}</p>
-          <p className="text-xs text-slate-400">Custom fields available across canonical values.</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Attribute keys</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{uniqueAttributeKeys.size}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">Custom fields available across canonical values.</p>
         </div>
         <div className="surface-card surface-card--accent border border-indigo-400/40">
-          <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Value mappings</p>
-          <p className="mt-2 text-3xl font-semibold text-white">{mappingsForDimension.length}</p>
-          <p className="text-xs text-slate-400">Approved or pending links from raw values.</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Value mappings</p>
+          <p className="mt-2 text-3xl font-semibold text-[var(--color-text-primary)]">{mappingsForDimension.length}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400">Approved or pending links from raw values.</p>
         </div>
       </section>
 
@@ -214,11 +214,11 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="section-heading text-xl">Canonical coverage</h2>
-              <p className="text-sm text-slate-400">Labels, descriptions, and attribute completeness.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Labels, descriptions, and attribute completeness.</p>
             </div>
-            <span className="text-xs text-slate-500">{canonicalForDimension.length} records</span>
+            <span className="text-xs text-slate-600 dark:text-slate-500">{canonicalForDimension.length} records</span>
           </div>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800/70">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--color-border-strong)]">
             <div className="overflow-x-auto">
               <table className="data-table">
                 <thead>
@@ -231,15 +231,15 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
                 <tbody>
                   {canonicalForDimension.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-4 py-6 text-center text-sm text-slate-400">
+                      <td colSpan={3} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
                         No canonical values captured yet.
                       </td>
                     </tr>
                   )}
                   {canonicalForDimension.map((value) => (
-                    <tr key={value.id} className="bg-slate-900/40">
-                      <td className="px-4 py-3 text-slate-100">{value.canonical_label}</td>
-                      <td className="px-4 py-3 text-sm text-slate-400">{value.description || '—'}</td>
+                    <tr key={value.id}>
+                      <td className="px-4 py-3 text-[var(--color-text-primary)]">{value.canonical_label}</td>
+                      <td className="px-4 py-3 text-sm text-[var(--color-text-secondary)]">{value.description || '—'}</td>
                       <td className="px-4 py-3">{renderAttributes(value, dimension.extra_fields)}</td>
                     </tr>
                   ))}
@@ -251,21 +251,21 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
 
         <div className="surface-card">
           <h3 className="section-heading text-lg">Attribute fill rate</h3>
-          <p className="text-sm text-slate-400">Population of each required and optional field.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Population of each required and optional field.</p>
           <div className="mt-4 space-y-3">
             {attributeFillRates.length === 0 && (
-              <p className="text-sm text-slate-400">No additional attributes defined for this dimension.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">No additional attributes defined for this dimension.</p>
             )}
             {attributeFillRates.map((field) => (
-              <div key={field.key} className="rounded-2xl border border-slate-800/80 p-4">
+              <div key={field.key} className="rounded-2xl border border-[var(--color-border-strong)] p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold text-slate-100">{field.label}</p>
-                    <p className="text-xs text-slate-500">{field.description || 'No description'}</p>
+                    <p className="font-semibold text-[var(--color-text-primary)]">{field.label}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-500">{field.description || 'No description'}</p>
                   </div>
                   <span className="badge-pill text-xs">{field.required ? 'Required' : 'Optional'}</span>
                 </div>
-                <p className="mt-3 text-sm text-slate-300">
+                <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
                   {field.populatedCount} of {canonicalForDimension.length || 1} canonical values populated
                 </p>
               </div>
@@ -278,11 +278,11 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h3 className="section-heading text-lg">Mapping health</h3>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Aggregated value mappings grouped by status and source coverage.
             </p>
           </div>
-          <div className="text-right text-sm text-slate-400">
+          <div className="text-right text-sm text-slate-600 dark:text-slate-400">
             {loadingMappings ? 'Loading mappings…' : `${uniqueConnectionCount} connections, ${uniqueSourceFields.size} source fields`}
             <br />
             {mostRecentMapping ? `Last update ${formatDate(mostRecentMapping.updated_at)}` : 'No mappings yet'}
@@ -290,14 +290,14 @@ const DimensionDetailPage = ({ onToast }: DimensionDetailPageProps) => {
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {Array.from(mappingsByStatus.entries()).map(([status, count]) => (
-            <div key={status} className="rounded-2xl border border-slate-800/80 p-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{status}</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{count}</p>
-              <p className="text-xs text-slate-500">Value mappings in this state.</p>
+            <div key={status} className="rounded-2xl border border-[var(--color-border-strong)] p-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400">{status}</p>
+              <p className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">{count}</p>
+              <p className="text-xs text-slate-600 dark:text-slate-500">Value mappings in this state.</p>
             </div>
           ))}
           {!mappingsByStatus.size && (
-            <p className="text-sm text-slate-400">No mappings have been created for this dimension yet.</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">No mappings have been created for this dimension yet.</p>
           )}
         </div>
       </section>

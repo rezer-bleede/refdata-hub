@@ -11,7 +11,7 @@ interface MatchInsightsPageProps {
 
 const renderSuggestions = (suggestions: MatchCandidate[]) => {
   if (!suggestions.length) {
-    return <p className="text-slate-400 mb-0">No suggestions above the relaxed threshold.</p>;
+    return <p className="text-slate-600 dark:text-slate-400 mb-0">No suggestions above the relaxed threshold.</p>;
   }
 
   return (
@@ -35,21 +35,21 @@ const renderMatchedValueCard = (matched: FieldMatchStats['top_matched'][number])
   const badgeVariant = matched.match_type === 'mapping' ? 'success' : 'secondary';
 
   return (
-    <Card key={`${matched.raw_value}-${matched.canonical_label}`} body className="border-0 bg-slate-900/70">
+    <Card key={`${matched.raw_value}-${matched.canonical_label}`} body className="border border-[var(--color-border-muted)] bg-[var(--color-surface-soft)]">
       <div className="flex justify-between items-start gap-4">
         <div className="min-w-0">
           <div className="font-semibold truncate" title={matched.raw_value}>
             {matched.raw_value}
           </div>
-          <div className="text-slate-400 text-xs">{matched.occurrence_count} occurrences</div>
+          <div className="text-slate-600 dark:text-slate-400 text-xs">{matched.occurrence_count} occurrences</div>
         </div>
         <Badge bg={badgeVariant}>{badgeLabel}</Badge>
       </div>
-      <div className="mt-2 text-sm text-slate-200">
-        <span className="font-semibold text-slate-100">Canonical:</span>{' '}
+      <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
+        <span className="font-semibold text-[var(--color-text-primary)]">Canonical:</span>{' '}
         <span>{matched.canonical_label}</span>
         {confidence !== null && (
-          <span className="ml-2 text-xs text-slate-400">{`Confidence ${(confidence * 100).toFixed(0)}%`}</span>
+          <span className="ml-2 text-xs text-slate-600 dark:text-slate-400">{`Confidence ${(confidence * 100).toFixed(0)}%`}</span>
         )}
       </div>
     </Card>
@@ -157,7 +157,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
               <Card.Title as="h1" className="text-2xl mb-1">
                 Match Insights
               </Card.Title>
-              <Card.Text className="text-slate-400 mb-0">
+              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Monitor alignment between raw values and canonical records. Use the insights below to prioritise review efforts.
               </Card.Text>
             </div>
@@ -180,12 +180,12 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
           </div>
           <div className="flex items-center gap-3">
             <div>
-              <p className="text-slate-400 mb-1">Overall match rate</p>
+              <p className="text-slate-600 dark:text-slate-400 mb-1">Overall match rate</p>
               <h2 className="text-3xl font-semibold mb-0">
                 {overallTotals.total ? `${(overallTotals.rate * 100).toFixed(1)}%` : '—'}
               </h2>
               {!overallTotals.total && (
-                <p className="text-slate-400 mb-0">No samples captured yet.</p>
+                <p className="text-slate-600 dark:text-slate-400 mb-0">No samples captured yet.</p>
               )}
             </div>
             <div className="grow">
@@ -208,7 +208,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
                 <Card.Title as="h2" className="text-lg mb-1">
                   {item.source_table}.{item.source_field}
                 </Card.Title>
-                <Card.Text className="text-slate-400 mb-0">
+                <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                   Dimension: {item.ref_dimension}
                 </Card.Text>
               </div>
@@ -216,7 +216,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
                 <div className="text-3xl font-semibold">
                   {item.total_values ? `${(item.match_rate * 100).toFixed(1)}%` : '—'}
                 </div>
-                <div className="text-slate-400">
+                <div className="text-slate-600 dark:text-slate-400">
                   {item.total_values
                     ? `${item.matched_values} / ${item.total_values} matched`
                     : 'No samples captured yet.'}
@@ -225,22 +225,22 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400 mb-2">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400 mb-2">
                 Top unmatched values
               </h3>
               <div className="flex flex-col gap-2">
                 {item.total_values ? (
                   item.top_unmatched.length ? (
                     item.top_unmatched.map((unmatched) => (
-                      <Card key={unmatched.raw_value} body className="border-0 bg-slate-900/70">
+                      <Card key={unmatched.raw_value} body className="border border-[var(--color-border-muted)] bg-[var(--color-surface-soft)]">
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="font-semibold">{unmatched.raw_value}</div>
-                            <div className="text-slate-400 text-xs">
+                            <div className="text-slate-600 dark:text-slate-400 text-xs">
                               {unmatched.occurrence_count} occurrences
                             </div>
                           </div>
-                          <Badge bg="warning" text="dark">
+                          <Badge bg="warning">
                             Needs review
                           </Badge>
                         </div>
@@ -248,12 +248,12 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
                       </Card>
                     ))
                   ) : (
-                    <p className="text-slate-400 mb-0">
+                    <p className="text-slate-600 dark:text-slate-400 mb-0">
                       Every sampled value met the configured threshold.
                     </p>
                   )
                 ) : (
-                  <p className="text-slate-400 mb-0">
+                  <p className="text-slate-600 dark:text-slate-400 mb-0">
                     No samples have been captured for this mapping yet.
                   </p>
                 )}
@@ -261,23 +261,23 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
             </div>
 
             <details
-              className="group rounded-2xl border border-slate-800/60 bg-slate-900/50 px-4 py-3"
+              className="group rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] px-4 py-3"
               data-testid={`matched-section-${item.mapping_id}`}
             >
-              <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-300">
+              <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-slate-700 dark:text-slate-300">
                 Matched values
-                <span className="text-xs text-slate-500 group-open:hidden">Expand</span>
-                <span className="hidden text-xs text-slate-500 group-open:inline">Collapse</span>
+                <span className="text-xs text-slate-600 dark:text-slate-500 group-open:hidden">Expand</span>
+                <span className="hidden text-xs text-slate-600 dark:text-slate-500 group-open:inline">Collapse</span>
               </summary>
               <div className="mt-3 flex flex-col gap-2">
                 {item.total_values ? (
                   item.top_matched.length ? (
                     item.top_matched.map((matched) => renderMatchedValueCard(matched))
                   ) : (
-                    <p className="text-slate-400 mb-0">No matched values recorded yet.</p>
+                    <p className="text-slate-600 dark:text-slate-400 mb-0">No matched values recorded yet.</p>
                   )
                 ) : (
-                  <p className="text-slate-400 mb-0">No samples have been captured for this mapping yet.</p>
+                  <p className="text-slate-600 dark:text-slate-400 mb-0">No samples have been captured for this mapping yet.</p>
                 )}
               </div>
             </details>
@@ -288,7 +288,7 @@ const MatchInsightsPage = ({ onToast }: MatchInsightsPageProps) => {
       {!stats.length && !loading && (
         <Card className="card-section">
           <Card.Body>
-            <p className="text-slate-400 mb-0">No mappings available for the selected connection yet.</p>
+            <p className="text-slate-600 dark:text-slate-400 mb-0">No mappings available for the selected connection yet.</p>
           </Card.Body>
         </Card>
       )}

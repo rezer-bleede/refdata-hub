@@ -188,8 +188,8 @@ const AppScaffold = ({
   }, [location.pathname]);
 
   const toastAccentClass = toast?.type === 'error'
-    ? 'border-red-500/50 bg-red-500/10 text-red-100'
-    : 'border-emerald-400/50 bg-emerald-400/10 text-emerald-100';
+    ? 'border-red-500/50 bg-red-100 dark:bg-red-500/10 text-red-900 dark:text-red-100'
+    : 'border-emerald-500/50 bg-emerald-100 dark:bg-emerald-400/10 text-emerald-900 dark:text-emerald-100';
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -219,12 +219,12 @@ const AppScaffold = ({
               >
                 <defs>
                   <linearGradient id="logo-grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#0ea5e9" />
-                    <stop offset="100%" stop-color="#6366f1" />
+                    <stop offset="0%" stopColor="#0ea5e9" />
+                    <stop offset="100%" stopColor="#6366f1" />
                   </linearGradient>
                   <linearGradient id="logo-grad-accent" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#22d3ee" />
-                    <stop offset="100%" stop-color="#0ea5e9" />
+                    <stop offset="0%" stopColor="#22d3ee" />
+                    <stop offset="100%" stopColor="#0ea5e9" />
                   </linearGradient>
                   <filter id="logo-glow" x="-50%" y="-50%" width="200%" height="200%">
                     <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
@@ -303,7 +303,7 @@ const AppScaffold = ({
             </NavLink>
           ))}
         </nav>
-        <div className="app-sidebar__footer text-slate-400">
+        <div className="app-sidebar__footer text-slate-600 dark:text-slate-400">
           <p className="mb-0 text-xs">Curate canonical dimensions with confidence and audit-ready lineage.</p>
         </div>
       </aside>
@@ -401,18 +401,18 @@ const AppScaffold = ({
               role="status"
               className={`surface-card surface-card--accent border ${toastAccentClass} backdrop-blur`}
             >
-              <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-400">
+              <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400">
                 <span>Notification</span>
                 <button
                   type="button"
-                  className="text-slate-400 transition hover:text-white"
+                  className="text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                   onClick={onCloseToast}
                   aria-label="Dismiss notification"
                 >
                   ×
                 </button>
               </div>
-              <p className="text-sm text-slate-100">{toast.content}</p>
+              <p className="text-sm text-[var(--color-text-primary)]">{toast.content}</p>
             </div>
           )}
         </div>

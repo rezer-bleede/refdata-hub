@@ -50,7 +50,7 @@
     --color-table-header-bg: #e2e8f0;
     --color-table-row: #f8fafc;
     --color-table-row-hover: #e2e8f0;
-    --color-nav-indicator: #a5b4fc;
+    --color-nav-indicator: #4f46e5;
   }
 
   body.theme-midnight {
@@ -179,7 +179,8 @@
   }
 
   .app-nav-link.active .app-nav-indicator {
-    @apply bg-white shadow-[0_0_0_6px_rgba(99,102,241,0.25)];
+    @apply shadow-[0_0_0_6px_rgba(99,102,241,0.25)];
+    background-color: var(--color-nav-indicator);
   }
 
   .app-nav-link .app-nav-label {
@@ -334,7 +335,7 @@
   }
 
   .button-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-red-200 transition hover:border-red-400 hover:text-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-500/60 bg-red-500/10 px-5 py-2 text-sm font-semibold uppercase tracking-wide text-red-700 dark:text-red-200 transition hover:border-red-600 dark:hover:border-red-400 hover:text-red-800 dark:hover:text-red-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .surface-card {
@@ -353,7 +354,6 @@
   }
 
   .data-table thead {
-    @apply text-slate-300;
     background: var(--color-table-header-bg);
     color: var(--color-text-secondary);
   }
@@ -365,7 +365,7 @@
   }
 
   .badge-pill {
-    @apply inline-flex items-center rounded-full border border-aurora/30 bg-aurora/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-aurora;
+    @apply inline-flex items-center rounded-full border border-aurora/30 bg-aurora/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-aurora;
   }
 
   .form-input,
@@ -389,8 +389,8 @@
   .form-input:-webkit-autofill,
   .form-input:-webkit-autofill:hover,
   .form-input:-webkit-autofill:focus {
-    -webkit-text-fill-color: rgb(226 232 240);
-    box-shadow: 0 0 0 1000px rgba(3, 7, 18, 0.9) inset;
+    -webkit-text-fill-color: var(--color-text-primary);
+    box-shadow: 0 0 0 1000px var(--color-control-bg) inset;
     transition: background-color 9999s ease-in-out 0s;
   }
 

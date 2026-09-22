@@ -57,7 +57,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
 
   const renderMatches = (matches: MatchCandidate[]) => {
     if (!matches.length) {
-      return <p className="text-sm text-slate-400">No matches returned for the supplied value.</p>;
+      return <p className="text-sm text-slate-600 dark:text-slate-400">No matches returned for the supplied value.</p>;
     }
 
     return (
@@ -73,13 +73,13 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
           </thead>
           <tbody>
             {matches.map((match) => (
-              <tr key={`${match.canonical_id}-${match.score}`} className="bg-slate-900/40">
-                <td className="px-4 py-3 font-medium text-slate-100">{match.canonical_label}</td>
+              <tr key={`${match.canonical_id}-${match.score}`}>
+                <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{match.canonical_label}</td>
                 <td className="px-4 py-3">
                   <span className="badge-pill">{match.dimension}</span>
                 </td>
-                <td className="px-4 py-3 text-slate-300">{match.description || '—'}</td>
-                <td className="px-4 py-3 text-right font-mono text-sm text-slate-200">
+                <td className="px-4 py-3 text-[var(--color-text-secondary)]">{match.description || '—'}</td>
+                <td className="px-4 py-3 text-right font-mono text-sm text-[var(--color-text-primary)]">
                   {(match.score * 100).toFixed(1)}%
                 </td>
               </tr>
@@ -113,7 +113,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
       <section className="surface-card flex flex-col gap-6">
         <div className="space-y-2">
           <h2 className="section-heading">Semantic match playground</h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Experiment with raw inputs to validate canonical coverage and scoring across dimensions.
           </p>
         </div>
@@ -125,7 +125,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
           className="flex flex-col gap-4"
         >
           <label htmlFor="match-raw-value" className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Raw value</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Raw value</span>
             <textarea
               id="match-raw-value"
               rows={3}
@@ -136,7 +136,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
             />
           </label>
           <label htmlFor="match-dimension" className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Dimension (optional)</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Dimension (optional)</span>
             <select
               id="match-dimension"
               value={matchDimension}
@@ -169,7 +169,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
         </form>
         {matchResults && (
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-white">Matches for “{matchResults.raw_text}”</h3>
+            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Matches for “{matchResults.raw_text}”</h3>
             {renderMatches(matchResults.matches)}
           </div>
         )}
