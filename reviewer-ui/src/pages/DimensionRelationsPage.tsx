@@ -10,6 +10,7 @@ import {
   Spinner,
   Table,
 } from '../components/ui';
+import { Network, LayoutGrid, Plus, Trash2, Edit2, Link, Layers } from 'lucide-react';
 
 import {
   createDimensionRelation,
@@ -21,6 +22,7 @@ import {
   updateDimensionRelation,
 } from '../api';
 import { useAppState } from '../state/AppStateContext';
+import DimensionRelationsGraph from '../components/DimensionRelationsGraph';
 import type {
   DimensionRelationCreatePayload,
   DimensionRelationLink,
@@ -58,6 +60,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
   const [linkDraft, setLinkDraft] = useState<LinkDraft>({ parentId: '', childId: '' });
   const [deleteRelationTarget, setDeleteRelationTarget] = useState<DimensionRelationSummary | null>(null);
   const [deleteLinkTarget, setDeleteLinkTarget] = useState<{ relationId: number; linkId: number } | null>(null);
+  const [viewMode, setViewMode] = useState<'graph' | 'grid'>('graph');
 
   const dimensionOptions = useMemo(
     () => dimensions.map((dimension) => ({ code: dimension.code, label: dimension.label })),
@@ -295,18 +298,58 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
         <Card.Body className="flex flex-col gap-4">
           <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
             <div>
-              <Card.Title as="h1" className="text-2xl mb-1">
-                Dimension relationships
+              <Card.Title as="h1" className="text-2xl mb-1 flex items-center gap-2">
+                <Network className="w-6 h-6 text-indigo-400" />
+                <span>Dimension relationships</span>
               </Card.Title>
               <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
                 Model parent-child relationships between dimensions—for example, regions and their districts. Maintain
                 canonical value pairings to power drill-downs and validation rules.
               </Card.Text>
             </div>
-            <Button variant="primary" onClick={openCreateModal}>
-              New relation
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center bg-slate-900/80 border border-slate-700/80 rounded-xl p-1 gap-1">
+                <button
+                  onClick={() => setViewMode('graph')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                    viewMode === 'graph'
+                      ? 'bg-indigo-600 text-white shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Network className="w-4 h-4" />
+                  <span>Graph View</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                    viewMode === 'grid'
+                      ? 'bg-indigo-600 text-white shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                  <span>Card Grid</span>
+                </button>
+              </div>
+
+              <Button variant="primary" onClick={openCreateModal} className="flex items-center gap-1.5">
+                <Plus className="w-4 h-4" />
+                <span>New relation</span>
+              </Button>
+            </div>
           </div>
+
+          {viewMode === 'graph' && relations.length > 0 && (
+            <div className="mt-2">
+              <DimensionRelationsGraph
+                relations={relations}
+                linksByRelation={linksByRelation}
+                selectedRelationId={selectedRelationId}
+                onSelectRelation={(id) => setSelectedRelationId(id)}
+              />
+            </div>
+          )}
 
           {isLoading ? (
             <div className="flex justify-center py-5">
