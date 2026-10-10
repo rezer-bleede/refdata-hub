@@ -17,6 +17,13 @@
 
 ---
 
+<figure align="center">
+  <img src="docs/screenshots/demo.gif" alt="RefData Hub Interactive Demo" width="1200">
+  <figcaption><em>Interactive Demo: Harmonizing unstandardized reference data with automated AI matching and human curation.</em></figcaption>
+</figure>
+
+---
+
 </div>
 
 ## 📌 Overview
