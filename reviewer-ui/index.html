@@ -6,7 +6,34 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/svg+xml" sizes="16x16" href="/favicon-16x16.svg" />
     <link rel="icon" type="image/svg+xml" sizes="32x32" href="/favicon-32x32.svg" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#4f46e5" />
+
+    <!-- Inline Anti-Flash Script -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('refdata-hub:theme-choice');
+          var theme = stored || 'light';
+          var resolvedId = theme;
+          var isDark = false;
+          if (theme === 'system') {
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            resolvedId = isDark ? 'dark' : 'light';
+          } else {
+            var darkThemes = ['dark', 'midnight-marina', 'burj-gold', 'aurora', 'classic-dark', 'midnight'];
+            isDark = darkThemes.indexOf(theme) !== -1;
+          }
+          var root = document.documentElement;
+          root.setAttribute('data-theme', resolvedId);
+          if (isDark) {
+            root.classList.add('dark');
+          } else {
+            root.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <title>RefData Hub — Data Harmonization Platform</title>
   </head>
   <body>

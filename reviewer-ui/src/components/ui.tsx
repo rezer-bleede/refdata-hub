@@ -63,19 +63,21 @@ const cx = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(' ');
 
 const baseButtonClass =
-  'inline-flex items-center justify-center gap-2 rounded-full border border-transparent transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
-const primaryButtonClass =
-  'neon-button shadow-glow-sm hover:shadow-glow-md focus-visible:outline-neon';
-const secondaryButtonClass = 'button-secondary';
+  'inline-flex items-center justify-center gap-2 rounded-xl border border-transparent font-semibold transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
+const primaryButtonClass = 'bg-brand-primary text-brand-accent-contrast hover:bg-brand-primary-hover shadow-xs';
+const successButtonClass = 'bg-brand-success text-white hover:brightness-110 shadow-xs';
+const secondaryButtonClass =
+  'bg-widget-bg border border-widget-border text-text-primary hover:bg-bg-hover shadow-2xs';
 const outlineButtonClass =
-  'border border-slate-300 dark:border-slate-600/60 bg-transparent text-slate-700 dark:text-slate-200 hover:border-aurora hover:text-slate-900 dark:hover:text-white focus-visible:outline-aurora';
+  'bg-transparent border border-border-secondary text-text-secondary hover:border-brand-primary hover:text-brand-primary';
 const outlineSuccessButtonClass =
-  'border border-emerald-500/50 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 hover:border-emerald-600 dark:hover:border-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-100 focus-visible:outline-emerald-400';
-const dangerButtonClass = 'button-danger';
+  'bg-brand-success/10 border border-brand-success/30 text-brand-success hover:bg-brand-success/20 hover:border-brand-success/60';
+const dangerButtonClass =
+  'bg-brand-danger/10 border border-brand-danger/30 text-brand-danger hover:bg-brand-danger/20 hover:border-brand-danger/60';
 
 const buttonVariantClass: Record<Variant, string> = {
   primary: primaryButtonClass,
-  success: primaryButtonClass,
+  success: successButtonClass,
   secondary: secondaryButtonClass,
   'outline-primary': outlineButtonClass,
   'outline-light': outlineButtonClass,
@@ -86,9 +88,9 @@ const buttonVariantClass: Record<Variant, string> = {
 };
 
 const buttonSizeClass: Record<ButtonSize, string> = {
-  sm: 'px-3.5 py-1.5 text-xs font-semibold tracking-normal',
-  md: 'px-4 py-2 text-xs uppercase tracking-wider font-semibold',
-  lg: 'px-6 py-2.5 text-sm uppercase tracking-wider font-semibold',
+  sm: 'px-3 py-1.5 text-xs',
+  md: 'px-4 py-2 text-xs',
+  lg: 'px-5 py-2.5 text-sm',
 };
 
 export const Button = ({ variant = 'primary', size = 'md', className, children, ...props }: ButtonProps) => (
@@ -110,7 +112,7 @@ export const Spinner = ({ className, size = 'md', ...props }: SpinnerProps) => {
   return (
     <span
       className={cx(
-        'inline-block animate-spin rounded-full border-2 border-white/40 border-t-white align-middle',
+        'inline-block animate-spin rounded-full border-2 border-brand-primary/30 border-t-brand-primary align-middle',
         dimension,
         className,
       )}
@@ -128,20 +130,20 @@ interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
 }
 
 const badgeVariantClass: Record<BadgeVariant, string> = {
-  info: 'bg-indigo-50 dark:bg-aurora/10 border border-indigo-200 dark:border-aurora/40 text-indigo-700 dark:text-aurora',
-  primary: 'bg-indigo-50 dark:bg-aurora/10 border border-indigo-200 dark:border-aurora/40 text-indigo-700 dark:text-aurora',
-  secondary: 'bg-slate-100 dark:bg-slate-800/70 border border-slate-300 dark:border-slate-700/60 text-slate-700 dark:text-slate-200',
-  dark: 'bg-slate-800 dark:bg-slate-950/80 border border-slate-700 text-slate-100 dark:text-slate-200',
-  success: 'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-400/40 text-emerald-800 dark:text-emerald-200',
-  warning: 'bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-400/40 text-amber-800 dark:text-amber-200',
+  info: 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20',
+  primary: 'bg-brand-primary/10 text-brand-primary border border-brand-primary/20',
+  secondary: 'bg-bg-tertiary text-text-secondary border border-border-primary',
+  dark: 'bg-widget-header-bg text-text-primary border border-border-secondary',
+  success: 'bg-brand-success/10 text-brand-success border border-brand-success/20',
+  warning: 'bg-brand-warning/10 text-brand-warning border border-brand-warning/20',
 };
 
 export const Badge = ({ bg = 'info', text, pill, className, children, ...props }: BadgeProps) => (
   <span
     className={cx(
-      'inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.3em]',
+      'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider',
       badgeVariantClass[bg],
-      text === 'dark' && 'text-slate-900',
+      text === 'dark' && 'text-text-primary',
       pill && 'rounded-full',
       className,
     )}
@@ -152,22 +154,24 @@ export const Badge = ({ bg = 'info', text, pill, className, children, ...props }
 );
 
 export const Card = Object.assign(
-  ({ className, body: _body, ...props }: CardProps) => <div className={cx('surface-card', className)} {...props} />,
+  ({ className, body: _body, ...props }: CardProps) => (
+    <div className={cx('bg-widget-bg border border-widget-border rounded-xl shadow-2xs p-5', className)} {...props} />
+  ),
   {
     Body: ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
       <div className={cx('flex flex-col gap-4', className)} {...props} />
     ),
     Header: ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div className={cx('flex items-center justify-between', className)} {...props} />
+      <div className={cx('flex items-center justify-between gap-2', className)} {...props} />
     ),
     Title: ({ className, as: Component = 'h3', ...props }: any) => (
-      <Component className={cx('section-heading text-xl', className)} {...props} />
+      <Component className={cx('text-sm font-bold text-text-primary', className)} {...props} />
     ),
     Subtitle: ({ className, as: Component = 'h4', ...props }: any) => (
-      <Component className={cx('text-sm font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400', className)} {...props} />
+      <Component className={cx('text-[11px] font-bold uppercase tracking-wider text-text-tertiary', className)} {...props} />
     ),
     Text: ({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) => (
-      <p className={cx('text-sm text-slate-600 dark:text-slate-400', className)} {...props} />
+      <p className={cx('text-xs text-text-tertiary', className)} {...props} />
     ),
   },
 );
@@ -182,7 +186,7 @@ export const InputGroup = Object.assign(
   ),
   {
     Text: ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
-      <span className={cx('inline-flex items-center px-3 text-sm text-slate-600 dark:text-slate-400', className)} {...props} />
+      <span className={cx('inline-flex items-center rounded-xl border border-border-primary bg-bg-tertiary px-3 text-sm text-text-tertiary', className)} {...props} />
     ),
   },
 ) as InputGroupComponent;
@@ -364,7 +368,7 @@ type FormComponent = ((props: React.FormHTMLAttributes<HTMLFormElement>) => JSX.
 };
 
 const inputBaseClass =
-  'rounded-2xl border border-[var(--color-control-border)] bg-[var(--color-control-bg)] px-4 py-3 text-sm text-[var(--color-text-primary)] shadow-inner-border transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-aurora/60 focus:ring-2 focus:ring-aurora/40';
+  'w-full rounded-xl border border-border-primary/60 bg-bg-tertiary/80 px-3.5 py-2.5 text-sm text-text-primary shadow-2xs transition placeholder:text-text-tertiary focus:bg-bg-secondary focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 focus:outline-none';
 
 export const Form = Object.assign(
   ({ className, ...props }: React.FormHTMLAttributes<HTMLFormElement>) => (
@@ -380,7 +384,7 @@ export const Form = Object.assign(
       const controlId = useContext(FormContext);
       return (
         <label
-          className={cx('text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400', className)}
+          className={cx('text-xs font-bold uppercase tracking-wider text-text-secondary', className)}
           htmlFor={htmlFor ?? controlId}
           {...props}
         />
@@ -417,11 +421,11 @@ export const Form = Object.assign(
       );
     },
     Text: ({ className, ...props }: React.HTMLAttributes<HTMLElement>) => (
-      <small className={cx('text-xs text-slate-600 dark:text-slate-400', className)} {...props} />
+      <small className={cx('text-xs text-text-tertiary', className)} {...props} />
     ),
     Check: ({ id, label, type = 'checkbox', className, ...props }: FormCheckProps) => (
-      <label htmlFor={id} className={cx('flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300', className)}>
-        <input id={id} type={type === 'radio' ? 'radio' : 'checkbox'} className="h-4 w-4" {...props} />
+      <label htmlFor={id} className={cx('flex items-center gap-3 text-sm text-text-secondary', className)}>
+        <input id={id} type={type === 'radio' ? 'radio' : 'checkbox'} className="h-4 w-4 rounded-md border border-border-secondary bg-bg-secondary accent-[var(--color-brand-primary)]" {...props} />
         {label}
       </label>
     ),
@@ -438,11 +442,10 @@ interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
 
 export const Table = ({ striped, bordered, hover, responsive, size, className, children, ...props }: TableProps) => {
   const tableClass = cx(
-    'data-table',
-    striped && 'data-table--striped',
-    bordered && 'data-table--bordered',
-    hover && 'data-table--hover',
-    size === 'sm' && 'data-table--compact',
+    'pi-table w-full',
+    striped && 'pi-table--striped',
+    hover && 'pi-table--hover',
+    size === 'sm' && 'pi-table--compact',
     className,
   );
   const table = (
@@ -450,20 +453,27 @@ export const Table = ({ striped, bordered, hover, responsive, size, className, c
       {children}
     </table>
   );
-  if (responsive) {
-    return <div className="overflow-x-auto">{table}</div>;
-  }
-  return table;
+  return (
+    <div
+      className={cx(
+        'bg-widget-bg border border-widget-border rounded-xl overflow-hidden',
+        bordered && 'pi-table--bordered',
+        responsive && 'overflow-x-auto',
+      )}
+    >
+      {table}
+    </div>
+  );
 };
 
 type ProgressVariant = 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 
 const progressVariantClass: Record<ProgressVariant, string> = {
-  primary: 'from-aurora to-neon',
-  secondary: 'from-slate-500 to-slate-400',
-  success: 'from-emerald-400 to-emerald-300',
-  warning: 'from-amber-400 to-amber-300',
-  danger: 'from-rose-500 to-rose-400',
+  primary: 'bg-brand-primary',
+  secondary: 'bg-chart-2',
+  success: 'bg-brand-success',
+  warning: 'bg-brand-warning',
+  danger: 'bg-brand-danger',
 };
 
 export const ProgressBar = ({
@@ -477,9 +487,9 @@ export const ProgressBar = ({
   variant?: ProgressVariant;
   style?: CSSProperties;
 }) => (
-  <div className={cx('h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800/60', className)}>
+  <div className={cx('h-2 w-full overflow-hidden rounded-full bg-bg-tertiary border border-border-primary/40', className)}>
     <div
-      className={cx('h-full rounded-full bg-gradient-to-r', progressVariantClass[variant])}
+      className={cx('h-full rounded-full transition-all', progressVariantClass[variant])}
       style={{ width: `${Math.min(100, Math.max(0, now))}%`, ...style }}
     />
   </div>
@@ -513,7 +523,7 @@ export const Modal = Object.assign(
     return (
       <ModalContext.Provider value={{ onHide }}>
         <div className="modal-backdrop" role="dialog" aria-modal="true">
-          <div className={cx('modal-panel relative', modalSizeClass[size] ?? 'max-w-2xl')}>{children}</div>
+          <div className={cx('modal-panel', modalSizeClass[size] ?? 'max-w-2xl')}>{children}</div>
         </div>
       </ModalContext.Provider>
     );
@@ -552,7 +562,7 @@ export const Modal = Object.assign(
 export const Breadcrumb = Object.assign(
   ({ className, children }: { className?: string; children: ReactNode }) => (
     <nav className={className} aria-label="Breadcrumb">
-      <ol className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400">
+      <ol className="flex flex-wrap items-center gap-2 text-xs font-medium text-text-tertiary">
         {children}
       </ol>
     </nav>
@@ -573,17 +583,17 @@ export const Breadcrumb = Object.assign(
     }) => (
       <li className="flex items-center gap-2">
         {!active && (linkAs === 'button' || onClick) ? (
-          <button type="button" onClick={onClick} className="text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
+          <button type="button" onClick={onClick} className="text-text-secondary transition hover:text-brand-primary">
             {children}
           </button>
         ) : href && !active ? (
-          <a href={href} className="text-slate-600 transition hover:text-slate-900 dark:text-slate-300 dark:hover:text-white">
+          <a href={href} className="text-text-secondary transition hover:text-brand-primary">
             {children}
           </a>
         ) : (
-          <span className={active ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'}>{children}</span>
+          <span className={active ? 'text-text-primary font-bold' : 'text-text-tertiary'}>{children}</span>
         )}
-        <span aria-hidden="true" className="text-slate-400 dark:text-slate-600">
+        <span aria-hidden="true" className="text-text-tertiary">
           ›
         </span>
       </li>
@@ -614,9 +624,9 @@ export const ListGroup = Object.assign(
     } & React.HTMLAttributes<HTMLElement>) => (
       <Component
         className={cx(
-          'rounded-2xl border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-4 py-3 text-[var(--color-text-primary)] transition',
-          action && 'cursor-pointer hover:border-aurora/40 hover:text-indigo-900 dark:hover:text-white',
-          active && 'border-aurora/50 bg-aurora/10 text-indigo-900 dark:text-white shadow-glow-sm',
+          'rounded-xl border border-widget-border bg-widget-bg px-4 py-3 text-sm text-text-primary transition-colors',
+          action && 'cursor-pointer hover:bg-bg-hover hover:border-border-secondary',
+          active && 'border-brand-primary/40 bg-brand-primary/10 text-brand-primary font-semibold',
           className,
         )}
         style={style}

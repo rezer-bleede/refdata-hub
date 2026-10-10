@@ -36,6 +36,7 @@ import {
   X,
 } from 'lucide-react';
 import type { DimensionRelationSummary, DimensionRelationLink } from '../types';
+import { readChartTokens, useThemeVersion } from '../utils/themeColors';
 
 export type LayoutMode = 'hierarchical-tb' | 'hierarchical-lr' | 'star' | 'snowflake';
 
@@ -70,31 +71,31 @@ const DimensionNodeComponent: React.FC<NodeProps<Node<CustomDimensionData>>> = (
     <div
       className={`px-4 py-3 rounded-2xl shadow-lg border transition-all duration-300 min-w-[200px] ${
         data.isSelected
-          ? 'bg-indigo-950/90 border-indigo-400 shadow-indigo-500/30 ring-2 ring-indigo-400/50 text-white'
-          : 'bg-slate-900/85 border-slate-700/80 hover:border-slate-500 text-slate-100'
+          ? 'bg-brand-primary-light/90 border-brand-primary shadow-brand-primary/30 ring-2 ring-brand-primary/50 text-text-primary'
+          : 'bg-widget-bg/90 border-border-secondary hover:border-border-secondary text-text-primary'
       }`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-indigo-400 !w-3 !h-3 !-top-1.5" />
-      <Handle type="target" position={Position.Left} className="!bg-indigo-400 !w-3 !h-3 !-left-1.5" />
+      <Handle type="target" position={Position.Top} className="!bg-brand-primary !w-3 !h-3 !-top-1.5" />
+      <Handle type="target" position={Position.Left} className="!bg-brand-primary !w-3 !h-3 !-left-1.5" />
 
       <div className="flex items-center justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1.5 text-indigo-400 font-semibold text-xs tracking-wider uppercase">
+        <div className="flex items-center gap-1.5 text-brand-primary font-semibold text-xs tracking-wider uppercase">
           <Database className="w-3.5 h-3.5" />
           <span>{data.code}</span>
         </div>
-        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand-primary/20 text-brand-primary border border-brand-primary/30">
           {data.relationCount} rel{data.relationCount === 1 ? '' : 's'}
         </span>
       </div>
 
-      <div className="font-bold text-sm text-slate-100 truncate mb-1">{data.label}</div>
+      <div className="font-bold text-sm text-text-primary truncate mb-1">{data.label}</div>
 
       {data.description && (
-        <div className="text-xs text-slate-400 line-clamp-1">{data.description}</div>
+        <div className="text-xs text-text-tertiary line-clamp-1">{data.description}</div>
       )}
 
-      <Handle type="source" position={Position.Bottom} className="!bg-indigo-400 !w-3 !h-3 !-bottom-1.5" />
-      <Handle type="source" position={Position.Right} className="!bg-indigo-400 !w-3 !h-3 !-right-1.5" />
+      <Handle type="source" position={Position.Bottom} className="!bg-brand-primary !w-3 !h-3 !-bottom-1.5" />
+      <Handle type="source" position={Position.Right} className="!bg-brand-primary !w-3 !h-3 !-right-1.5" />
     </div>
   );
 };
@@ -105,21 +106,21 @@ const ValueLinkNodeComponent: React.FC<NodeProps<Node<CustomLinkData>>> = ({ dat
     <div
       className={`px-3 py-2 rounded-xl shadow-md border text-xs transition-all ${
         data.isSelected
-          ? 'bg-teal-950/90 border-teal-400 text-teal-100 ring-2 ring-teal-400/40'
-          : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-600'
+          ? 'bg-brand-secondary/20 border-brand-secondary text-brand-secondary ring-2 ring-brand-secondary/40'
+          : 'bg-widget-bg/90 border-border-primary text-text-secondary hover:border-border-secondary'
       }`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-teal-400 !w-2.5 !h-2.5" />
-      <Handle type="target" position={Position.Left} className="!bg-teal-400 !w-2.5 !h-2.5" />
+      <Handle type="target" position={Position.Top} className="!bg-brand-secondary !w-2.5 !h-2.5" />
+      <Handle type="target" position={Position.Left} className="!bg-brand-secondary !w-2.5 !h-2.5" />
 
       <div className="flex items-center gap-1.5 font-medium">
-        <span className="text-teal-300 font-semibold">{data.parentLabel}</span>
-        <ArrowRight className="w-3 h-3 text-slate-400 shrink-0" />
-        <span className="text-emerald-300 font-semibold">{data.childLabel}</span>
+        <span className="text-brand-secondary font-semibold">{data.parentLabel}</span>
+        <ArrowRight className="w-3 h-3 text-text-tertiary shrink-0" />
+        <span className="text-brand-success font-semibold">{data.childLabel}</span>
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="!bg-teal-400 !w-2.5 !h-2.5" />
-      <Handle type="source" position={Position.Right} className="!bg-teal-400 !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Bottom} className="!bg-brand-secondary !w-2.5 !h-2.5" />
+      <Handle type="source" position={Position.Right} className="!bg-brand-secondary !w-2.5 !h-2.5" />
     </div>
   );
 };
@@ -274,9 +275,11 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { fitView, zoomIn, zoomOut } = useReactFlow();
+  const themeVersion = useThemeVersion();
 
   // Calculate raw nodes and edges from relations and links
   useEffect(() => {
+    const tokens = readChartTokens();
     const rawNodes: Node[] = [];
     const rawEdges: Edge[] = [];
     const dimensionMap = new Map<string, { label: string; count: number; description?: string }>();
@@ -342,14 +345,18 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
         type: 'smoothstep',
         animated: isSelected,
         style: {
-          stroke: isSelected ? '#818cf8' : '#475569',
+          stroke: isSelected ? tokens.brandPrimary : tokens.textTertiary,
           strokeWidth: isSelected ? 3 : 1.5,
         },
-        labelStyle: { fill: isSelected ? '#a5b4fc' : '#94a3b8', fontSize: 11, fontWeight: 600 },
-        labelBgStyle: { fill: '#0f172a' },
+        labelStyle: {
+          fill: isSelected ? tokens.brandPrimary : tokens.textTertiary,
+          fontSize: 11,
+          fontWeight: 600,
+        },
+        labelBgStyle: { fill: tokens.widgetBg },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: isSelected ? '#818cf8' : '#475569',
+          color: isSelected ? tokens.brandPrimary : tokens.textTertiary,
         },
       });
 
@@ -374,7 +381,7 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
             id: `edge-link-p-${link.id}`,
             source: `dim-${rel.parent_dimension_code}`,
             target: linkNodeId,
-            style: { stroke: '#2dd4bf', strokeWidth: 1, strokeDasharray: '4 4' },
+            style: { stroke: tokens.brandSecondary, strokeWidth: 1, strokeDasharray: '4 4' },
             type: 'default',
           });
 
@@ -382,7 +389,7 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
             id: `edge-link-c-${link.id}`,
             source: linkNodeId,
             target: `dim-${rel.child_dimension_code}`,
-            style: { stroke: '#2dd4bf', strokeWidth: 1, strokeDasharray: '4 4' },
+            style: { stroke: tokens.brandSecondary, strokeWidth: 1, strokeDasharray: '4 4' },
             type: 'default',
           });
         });
@@ -392,7 +399,7 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
     const layouted = getLayoutedElements(rawNodes, rawEdges, layoutMode, selectedRelationId);
     setNodes(layouted.nodes);
     setEdges(layouted.edges);
-  }, [relations, linksByRelation, selectedRelationId, layoutMode, searchTerm, showLinks, setNodes, setEdges]);
+  }, [relations, linksByRelation, selectedRelationId, layoutMode, searchTerm, showLinks, themeVersion, setNodes, setEdges]);
 
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -424,7 +431,7 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
   }, [fitView]);
 
   return (
-    <div className="relative w-full h-[580px] rounded-3xl border border-slate-800 bg-slate-950/90 overflow-hidden shadow-2xl">
+    <div className="relative w-full h-[580px] rounded-xl border border-border-primary bg-bg-secondary overflow-hidden shadow-2xl">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -434,32 +441,44 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
         onNodeClick={handleNodeClick}
         onEdgeClick={handleEdgeClick}
         fitView
-        colorMode="dark"
+        colorMode={
+          typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
+            ? 'dark'
+            : 'light'
+        }
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#334155" gap={20} size={1} />
+        <Background color={readChartTokens().grid} gap={24} size={1} />
         <MiniMap
-          nodeColor={(n) => (n.type === 'dimensionNode' ? '#6366f1' : '#14b8a6')}
-          maskColor="rgba(15, 23, 42, 0.7)"
-          className="!bg-slate-900/90 !border-slate-800 !rounded-xl !shadow-lg"
+          nodeColor={(n) => {
+            const tokens = readChartTokens();
+            return n.type === 'dimensionNode' ? tokens.brandPrimary : tokens.brandSecondary;
+          }}
+          maskColor={
+            (() => {
+              const tokens = readChartTokens();
+              return tokens.widgetBg.startsWith('#') ? `${tokens.widgetBg}b3` : 'rgba(0, 0, 0, 0.7)';
+            })()
+          }
+          className="!bg-widget-bg/90 !border-border-primary !rounded-xl !shadow-lg"
         />
 
         {/* Custom Toolbar Controls */}
         <Panel position="top-left" className="m-3 flex flex-wrap items-center gap-2">
           {/* Search Bar */}
-          <div className="relative flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-md">
-            <Search className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+          <div className="relative flex items-center bg-widget-bg/90 border border-border-secondary rounded-xl px-3 py-1.5 shadow-md">
+            <Search className="w-4 h-4 text-text-tertiary mr-2 shrink-0" />
             <input
               type="text"
               placeholder="Search dimensions…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="bg-transparent border-none text-xs text-slate-100 placeholder-slate-500 focus:outline-none w-36 md:w-48"
+              className="bg-transparent border-none text-xs text-text-primary placeholder:text-text-tertiary focus:outline-none w-36 md:w-48"
             />
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="text-slate-400 hover:text-slate-200 ml-1"
+                className="text-text-tertiary hover:text-text-primary ml-1"
                 aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -468,14 +487,14 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
           </div>
 
           {/* Layout Mode Buttons */}
-          <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl p-1 shadow-md gap-1">
+          <div className="flex items-center bg-widget-bg/90 border border-border-secondary rounded-xl p-1 shadow-md gap-1">
             <button
               onClick={() => setLayoutMode('hierarchical-lr')}
               title="Hierarchical Left-Right"
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 font-medium transition ${
                 layoutMode === 'hierarchical-lr'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-brand-primary text-brand-accent-contrast shadow-sm'
+                  : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
               }`}
             >
               <GitFork className="w-3.5 h-3.5 rotate-90" />
@@ -487,8 +506,8 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
               title="Hierarchical Top-Bottom"
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 font-medium transition ${
                 layoutMode === 'hierarchical-tb'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-brand-primary text-brand-accent-contrast shadow-sm'
+                  : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
               }`}
             >
               <GitFork className="w-3.5 h-3.5" />
@@ -500,8 +519,8 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
               title="Star Radial Layout"
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 font-medium transition ${
                 layoutMode === 'star'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-brand-primary text-brand-accent-contrast shadow-sm'
+                  : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
               }`}
             >
               <Sun className="w-3.5 h-3.5" />
@@ -513,8 +532,8 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
               title="Snowflake Layout"
               className={`p-1.5 rounded-lg text-xs flex items-center gap-1 font-medium transition ${
                 layoutMode === 'snowflake'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? 'bg-brand-primary text-brand-accent-contrast shadow-sm'
+                  : 'text-text-tertiary hover:text-text-primary hover:bg-bg-hover'
               }`}
             >
               <Snowflake className="w-3.5 h-3.5" />
@@ -524,24 +543,24 @@ const InnerGraph: React.FC<DimensionRelationsGraphProps> = ({
         </Panel>
 
         {/* Bottom Right Zoom Controls */}
-        <Panel position="bottom-right" className="m-3 flex items-center gap-1.5 bg-slate-900/90 border border-slate-700/80 rounded-xl p-1.5 shadow-md">
+        <Panel position="bottom-right" className="m-3 flex items-center gap-1.5 bg-widget-bg/90 border border-border-secondary rounded-xl p-1.5 shadow-md">
           <button
             onClick={() => zoomIn({ duration: 300 })}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+            className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={() => zoomOut({ duration: 300 })}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+            className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
           <button
             onClick={triggerFitView}
-            className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+            className="p-1.5 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition"
             title="Fit View"
           >
             <Maximize2 className="w-4 h-4" />

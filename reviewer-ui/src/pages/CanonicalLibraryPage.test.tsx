@@ -56,7 +56,7 @@ describe('CanonicalLibraryPage bulk import', () => {
 
     const badge = screen.getByText('Region (region)', { selector: 'span' });
 
-    expect(badge.className).toContain('text-aurora');
+    expect(badge.className).toContain('text-brand-primary');
     expect(badge.className).not.toContain('text-slate-900');
   });
 });

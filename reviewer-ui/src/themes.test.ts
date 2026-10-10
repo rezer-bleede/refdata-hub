@@ -1,13 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { THEME_STORAGE_KEY, applyTheme, persistTheme, resolveInitialTheme, type ThemeChoice } from './themes';
+import {
+  THEME_STORAGE_KEY,
+  applyTheme,
+  persistTheme,
+  resolveInitialTheme,
+  resolveTheme,
+  themeDefinitions,
+  themeOrder,
+  type ThemeChoice,
+} from './themes';
 
 describe('theme utilities', () => {
   beforeEach(() => {
-    document.body.className = '';
-    // Vitest keeps dataset properties as strings; ensure a clean slate.
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete (document.body as HTMLElement & { dataset: DOMStringMap }).dataset.bsTheme;
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
     window.localStorage.clear();
   });
 
@@ -16,31 +23,65 @@ describe('theme utilities', () => {
     vi.unstubAllGlobals();
   });
 
-  it('applies the correct body class and bootstrap theme data attribute', () => {
+  it('applies the correct data-theme attribute and dark class', () => {
     applyTheme('light');
 
-    expect(document.body.dataset.bsTheme).toBe('light');
-    expect(document.body).toHaveClass('theme-light');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+    applyTheme('midnight-marina');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'midnight-marina');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+
+    applyTheme('light');
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
+
+  it('keeps legacy RefData palettes available as additional options', () => {
+    for (const legacy of ['classic-dark', 'classic-light', 'midnight'] as ThemeChoice[]) {
+      expect(themeDefinitions[legacy]).toBeDefined();
+      expect(themeOrder).toContain(legacy);
+    }
 
     applyTheme('midnight');
-    expect(document.body.dataset.bsTheme).toBe('dark');
-    expect(document.body).toHaveClass('theme-midnight');
-    expect(document.body).not.toHaveClass('theme-light');
+    expect(document.documentElement).toHaveAttribute('data-theme', 'midnight');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+  });
+
+  it('updates the meta theme-color when the palette changes', () => {
+    const meta = document.createElement('meta');
+    meta.setAttribute('name', 'theme-color');
+    document.head.appendChild(meta);
+
+    applyTheme('burj-gold');
+    expect(meta.getAttribute('content')).toBe('#d4af37');
+
+    document.head.removeChild(meta);
   });
 
   it('persists the selected theme in local storage', () => {
-    persistTheme('light');
+    persistTheme('oasis');
 
-    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('oasis');
   });
 
   it('restores the stored theme when available', () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, 'midnight');
 
-    expect(resolveInitialTheme('dark')).toBe('midnight');
+    expect(resolveInitialTheme()).toBe('midnight');
   });
 
-  it('uses the preferred color scheme when no stored theme is present', () => {
+  it('defaults to the light palette when nothing is stored', () => {
+    expect(resolveInitialTheme()).toBe<ThemeChoice>('light');
+  });
+
+  it('ignores unknown stored values and falls back to the provided default', () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'not-a-theme');
+
+    expect(resolveInitialTheme('harbour-blue')).toBe<ThemeChoice>('harbour-blue');
+  });
+
+  it('resolves the system choice from the preferred color scheme', () => {
     const matchMediaMock = vi.fn().mockReturnValue({
       matches: true,
       media: '',
@@ -52,15 +93,21 @@ describe('theme utilities', () => {
       dispatchEvent: vi.fn(),
     } satisfies MediaQueryList);
 
-    const originalMatchMedia = window.matchMedia;
-    vi.stubGlobal('matchMedia', matchMediaMock as unknown as typeof originalMatchMedia);
+    vi.stubGlobal('matchMedia', matchMediaMock as unknown as typeof window.matchMedia);
 
-    expect(resolveInitialTheme('dark')).toBe<'light'>('light');
-  });
+    expect(resolveTheme('system')).toEqual({ resolvedId: 'dark', mode: 'dark' });
 
-  it('falls back to the provided default when storage and media queries are unavailable', () => {
-    vi.stubGlobal('matchMedia', undefined);
+    matchMediaMock.mockReturnValue({
+      matches: false,
+      media: '',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    } as unknown as MediaQueryList);
 
-    expect(resolveInitialTheme('dark')).toBe<ThemeChoice>('dark');
+    expect(resolveTheme('system')).toEqual({ resolvedId: 'light', mode: 'light' });
   });
 });

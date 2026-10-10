@@ -57,12 +57,12 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
 
   const renderMatches = (matches: MatchCandidate[]) => {
     if (!matches.length) {
-      return <p className="text-sm text-slate-600 dark:text-slate-400">No matches returned for the supplied value.</p>;
+      return <p className="text-sm text-text-tertiary">No matches returned for the supplied value.</p>;
     }
 
     return (
       <div className="mt-4 overflow-x-auto">
-        <table className="data-table">
+        <table className="pi-table w-full">
           <thead>
             <tr>
               <th className="px-4 py-3 text-left">Canonical Label</th>
@@ -74,12 +74,12 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
           <tbody>
             {matches.map((match) => (
               <tr key={`${match.canonical_id}-${match.score}`}>
-                <td className="px-4 py-3 font-medium text-[var(--color-text-primary)]">{match.canonical_label}</td>
+                <td className="px-4 py-3 font-medium text-text-primary">{match.canonical_label}</td>
                 <td className="px-4 py-3">
                   <span className="badge-pill">{match.dimension}</span>
                 </td>
                 <td className="px-4 py-3 text-[var(--color-text-secondary)]">{match.description || '—'}</td>
-                <td className="px-4 py-3 text-right font-mono text-sm text-[var(--color-text-primary)]">
+                <td className="px-4 py-3 text-right font-mono text-sm text-text-primary">
                   {(match.score * 100).toFixed(1)}%
                 </td>
               </tr>
@@ -113,7 +113,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
       <section className="surface-card flex flex-col gap-6">
         <div className="space-y-2">
           <h2 className="section-heading">Semantic match playground</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-text-tertiary">
             Experiment with raw inputs to validate canonical coverage and scoring across dimensions.
           </p>
         </div>
@@ -125,7 +125,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
           className="flex flex-col gap-4"
         >
           <label htmlFor="match-raw-value" className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Raw value</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Raw value</span>
             <textarea
               id="match-raw-value"
               rows={3}
@@ -136,7 +136,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
             />
           </label>
           <label htmlFor="match-dimension" className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Dimension (optional)</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Dimension (optional)</span>
             <select
               id="match-dimension"
               value={matchDimension}
@@ -151,11 +151,11 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
             </select>
           </label>
           <div>
-            <button type="submit" className="neon-button" disabled={runningMatch}>
+            <button type="submit" className="button-primary" disabled={runningMatch}>
               {runningMatch ? (
                 <span className="flex items-center gap-2">
                   <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                    className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary/40 border-t-brand-primary"
                     role="status"
                     aria-hidden="true"
                   />
@@ -169,7 +169,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
         </form>
         {matchResults && (
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Matches for “{matchResults.raw_text}”</h3>
+            <h3 className="text-lg font-semibold text-text-primary">Matches for “{matchResults.raw_text}”</h3>
             {renderMatches(matchResults.matches)}
           </div>
         )}

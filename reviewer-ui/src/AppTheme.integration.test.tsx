@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import App from './App';
@@ -47,14 +47,15 @@ describe('App theme integration', () => {
       }),
     );
     window.localStorage.clear();
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
   });
 
   afterEach(() => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
-    document.body.className = '';
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete (document.body as HTMLElement & { dataset: DOMStringMap }).dataset.bsTheme;
+    document.documentElement.className = '';
+    document.documentElement.removeAttribute('data-theme');
   });
 
   it('applies a stored theme preference on initial render', async () => {
@@ -62,20 +63,51 @@ describe('App theme integration', () => {
 
     render(<App />);
 
-    await waitFor(() => expect(document.body).toHaveClass('theme-midnight'));
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('data-theme', 'midnight'),
+    );
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 
-  it('updates the body class and storage when the user switches themes', async () => {
+  it('starts with the light palette when no preference is stored', async () => {
     render(<App />);
 
-    const select = await screen.findByLabelText('Select UI theme');
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('data-theme', 'light'),
+    );
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+  });
 
-    expect(document.body).toHaveClass('theme-dark');
+  it('updates the document palette and storage when the user switches themes', async () => {
+    render(<App />);
 
-    fireEvent.change(select, { target: { value: 'light' } });
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('data-theme', 'light'),
+    );
 
-    await waitFor(() => expect(document.body).toHaveClass('theme-light'));
-    expect(document.body).not.toHaveClass('theme-dark');
-    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+    fireEvent.click(screen.getByRole('button', { name: /Select UI theme/ }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Theme options' });
+    const option = within(dialog).getByRole('radio', { name: /Harbour Blue/ });
+    fireEvent.click(option);
+
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('data-theme', 'harbour-blue'),
+    );
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('harbour-blue');
+  });
+
+  it('supports switching to a dark palette through the theme picker', async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Select UI theme/ }));
+    const dialog = await screen.findByRole('dialog', { name: 'Theme options' });
+    fireEvent.click(within(dialog).getByRole('radio', { name: /Midnight Marina/ }));
+
+    await waitFor(() =>
+      expect(document.documentElement).toHaveAttribute('data-theme', 'midnight-marina'),
+    );
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
 });

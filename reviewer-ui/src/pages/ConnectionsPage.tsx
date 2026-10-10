@@ -247,13 +247,13 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
         <section className="surface-card flex flex-col gap-4">
           <div className="space-y-2">
             <h1 className="section-heading text-2xl">Source connections</h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-text-tertiary">
               Edit or remove existing integrations. Deleting a connection removes associated mappings and samples.
             </p>
           </div>
-          <div className="overflow-hidden rounded-3xl border border-[var(--color-border-strong)]">
+          <div className="overflow-hidden rounded-xl border border-border-secondary">
             <div className="overflow-x-auto">
-              <table className="data-table">
+              <table className="pi-table w-full">
                 <thead>
                   <tr>
                     <th className="px-4 py-3 text-left">Name</th>
@@ -267,14 +267,14 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 <tbody>
                   {loading && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
+                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-text-tertiary">
                         Loading connections…
                       </td>
                     </tr>
                   )}
                   {!loading && sortedConnections.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-600 dark:text-slate-400">
+                      <td colSpan={6} className="px-4 py-6 text-center text-sm text-text-tertiary">
                         No connections registered yet. Select a database engine below to register one.
                       </td>
                     </tr>
@@ -287,18 +287,18 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                       const providerId = matchedProvider?.id || 'generic';
                       return (
                         <tr key={connection.id}>
-                          <td className="px-4 py-3 font-semibold text-[var(--color-text-primary)]">
+                          <td className="px-4 py-3 font-semibold text-text-primary">
                             <div className="flex items-center gap-3">
                               <DbLogoIcon id={providerId} className="h-6 w-6 shrink-0" />
                               <span>{connection.name}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-xs uppercase text-slate-600 dark:text-slate-400">
+                          <td className="px-4 py-3 text-xs uppercase text-text-tertiary">
                             {connection.db_type}
                           </td>
                           <td className="px-4 py-3 text-[var(--color-text-secondary)]">{connection.database}</td>
                           <td className="px-4 py-3 text-[var(--color-text-secondary)]">{connection.host}</td>
-                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                          <td className="px-4 py-3 text-sm text-text-tertiary">
                             {new Date(connection.updated_at).toLocaleString()}
                           </td>
                           <td className="px-4 py-3">
@@ -315,7 +315,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                                 {testingExistingId === connection.id ? (
                                   <span className="flex items-center gap-2">
                                     <span
-                                      className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                                      className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-brand-primary/40 border-t-brand-primary"
                                       aria-hidden="true"
                                     />
                                     Testing…
@@ -352,7 +352,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
         <section className="surface-card flex flex-col gap-6">
           <div className="space-y-2">
             <h2 className="section-heading text-xl">Register a source connection</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-sm text-text-tertiary">
               Select a database provider below to configure connection parameters and integrate with RefData Hub.
             </p>
           </div>
@@ -363,18 +363,18 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 key={provider.id}
                 type="button"
                 onClick={() => openProviderRegistration(provider)}
-                className="group flex flex-col items-center justify-between rounded-2xl border border-[var(--color-border-muted)] bg-[var(--color-surface-soft)] p-5 text-center transition hover:-translate-y-0.5 hover:border-indigo-500 hover:bg-[var(--color-surface-strong)] hover:shadow-glow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500"
+                className="group flex flex-col items-center justify-between rounded-2xl border border-border-primary bg-bg-tertiary p-5 text-center transition hover:-translate-y-0.5 hover:border-brand-primary hover:bg-bg-hover hover:shadow-glow focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-primary"
               >
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900/40 p-2 shadow-inner transition group-hover:scale-110">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-bg-tertiary p-2 shadow-inner transition group-hover:scale-110">
                   <DbLogoIcon id={provider.id} className="h-9 w-9" />
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <span className="text-sm font-semibold text-[var(--color-text-primary)]">{provider.name}</span>
-                  <span className="text-[0.65rem] uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                  <span className="text-sm font-semibold text-text-primary">{provider.name}</span>
+                  <span className="text-[0.65rem] uppercase tracking-wider text-text-tertiary">
                     {provider.category}
                   </span>
                 </div>
-                <span className="mt-3 inline-flex items-center rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-[0.65rem] font-medium text-indigo-700 dark:text-indigo-300">
+                <span className="mt-3 inline-flex items-center rounded-full bg-brand-primary/10 px-2.5 py-0.5 text-[0.65rem] font-medium text-brand-primary">
                   {provider.defaultPort > 0 ? `Port ${provider.defaultPort}` : 'Embedded'}
                 </span>
               </button>
@@ -387,14 +387,14 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="register-connection-title">
           <div className="modal-panel relative max-w-2xl">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-900/60 p-2">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-bg-tertiary p-2">
                 <DbLogoIcon id={selectedProvider.id} className="h-9 w-9" />
               </div>
               <div>
                 <h3 id="register-connection-title" className="modal-title">
                   Register {selectedProvider.name} Connection
                 </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400">
+                <p className="text-xs text-text-tertiary">
                   Configure connection parameters for {selectedProvider.name} ({selectedProvider.category}).
                 </p>
               </div>
@@ -416,7 +416,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
               className="mt-6 grid gap-4 lg:grid-cols-2"
             >
               <label htmlFor="connection-name" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Connection name</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Connection name</span>
                 <input
                   id="connection-name"
                   className="form-input"
@@ -427,7 +427,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-type" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database type</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Database type</span>
                 <input
                   id="connection-type"
                   className="form-input"
@@ -436,7 +436,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-host" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Host</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Host</span>
                 <input
                   id="connection-host"
                   className="form-input"
@@ -447,7 +447,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-port" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Port</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Port</span>
                 <input
                   id="connection-port"
                   className="form-input"
@@ -457,7 +457,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-database" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Database</span>
                 <input
                   id="connection-database"
                   className="form-input"
@@ -468,7 +468,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-username" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Username</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Username</span>
                 <input
                   id="connection-username"
                   className="form-input"
@@ -479,7 +479,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-password" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Password</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Password</span>
                 <input
                   id="connection-password"
                   className="form-input"
@@ -489,7 +489,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="connection-options" className="flex flex-col gap-2 lg:col-span-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Options (JSON)</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Options (JSON)</span>
                 <input
                   id="connection-options"
                   className="form-input"
@@ -516,7 +516,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                   {testingNewConnection ? (
                     <span className="flex items-center gap-2">
                       <span
-                        className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                        className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary/40 border-t-brand-primary"
                         aria-hidden="true"
                       />
                       Testing…
@@ -529,7 +529,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                   {submitting ? (
                     <span className="flex items-center gap-2">
                       <span
-                        className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                        className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary/40 border-t-brand-primary"
                         aria-hidden="true"
                       />
                       Adding…
@@ -555,7 +555,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
             </button>
             <form className="mt-4 grid gap-4 lg:grid-cols-2">
               <label htmlFor="edit-name" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Name</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Name</span>
                 <input
                   id="edit-name"
                   className="form-input"
@@ -564,7 +564,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-db-type" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database type</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Database type</span>
                 <input
                   id="edit-db-type"
                   className="form-input"
@@ -573,7 +573,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-host" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Host</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Host</span>
                 <input
                   id="edit-host"
                   className="form-input"
@@ -582,7 +582,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-port" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Port</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Port</span>
                 <input
                   id="edit-port"
                   className="form-input"
@@ -592,7 +592,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-database" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Database</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Database</span>
                 <input
                   id="edit-database"
                   className="form-input"
@@ -601,7 +601,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-username" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Username</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Username</span>
                 <input
                   id="edit-username"
                   className="form-input"
@@ -610,7 +610,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-password" className="flex flex-col gap-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Password</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Password</span>
                 <input
                   id="edit-password"
                   className="form-input"
@@ -620,7 +620,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 />
               </label>
               <label htmlFor="edit-options" className="flex flex-col gap-2 lg:col-span-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-600 dark:text-slate-400">Options</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Options</span>
                 <input
                   id="edit-options"
                   className="form-input"
@@ -646,7 +646,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 {editing && testingExistingId === editing.id ? (
                   <span className="flex items-center gap-2">
                     <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary/40 border-t-brand-primary"
                       aria-hidden="true"
                     />
                     Testing…
@@ -664,7 +664,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 {submitting ? (
                   <span className="flex items-center gap-2">
                     <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-aurora/40 border-t-aurora"
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary/40 border-t-brand-primary"
                       aria-hidden="true"
                     />
                     Saving…
@@ -712,7 +712,7 @@ const ConnectionsPage = ({ onToast }: ConnectionsPageProps) => {
                 {submitting ? (
                   <span className="flex items-center gap-2">
                     <span
-                      className="h-4 w-4 animate-spin rounded-full border-2 border-red-400/50 border-t-red-300"
+                      className="h-4 w-4 animate-spin rounded-full border-2 border-brand-danger/50 border-t-brand-danger"
                       aria-hidden="true"
                     />
                     Deleting…

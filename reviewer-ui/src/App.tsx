@@ -1,17 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, Link, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
-import {
-  Boxes,
-  GitFork,
-  History,
-  LayoutDashboard,
-  Library,
-  Lightbulb,
-  Plug,
-  Settings,
-  Sparkles,
-  TableProperties,
-} from 'lucide-react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import ConnectionsPage from './pages/ConnectionsPage';
 import DashboardPage from './pages/DashboardPage';
@@ -25,9 +13,23 @@ import DimensionDetailPage from './pages/DimensionDetailPage';
 import DimensionRelationsPage from './pages/DimensionRelationsPage';
 import SettingsPage from './pages/SettingsPage';
 import SourceConnectionDetailPage from './pages/SourceConnectionDetailPage';
+import Sidebar from './components/layout/Sidebar';
+import TopBar from './components/layout/TopBar';
+import { navItems } from './components/layout/navigation';
 import { AppStateProvider, useAppState } from './state/AppStateContext';
-import { applyTheme, persistTheme, resolveInitialTheme, themeDefinitions, themeOrder, ThemeChoice } from './themes';
+import { cn } from './utils/cn';
+import {
+  applyTheme,
+  persistTheme,
+  resolveInitialTheme,
+  resolveTheme,
+  type ThemeChoice,
+} from './themes';
 import type { ToastMessage } from './types';
+
+export { navItems };
+
+const SIDEBAR_STORAGE_KEY = 'refdata-hub:sidebar-collapsed';
 
 interface AppScaffoldProps {
   themeChoice: ThemeChoice;
@@ -38,64 +40,18 @@ interface AppScaffoldProps {
   onCloseToast: () => void;
 }
 
-interface NavItem {
-  path: string;
-  label: string;
-  icon: JSX.Element;
-}
-
-const navItems: NavItem[] = [
-  {
-    path: '/dashboard',
-    label: 'Dashboard',
-    icon: <LayoutDashboard size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/dimensions',
-    label: 'Dimensions',
-    icon: <Boxes size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/canonical-library',
-    label: 'Canonical Library',
-    icon: <Library size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/dimension-relations',
-    label: 'Dimension Relations',
-    icon: <GitFork size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/connections',
-    label: 'Source Connections',
-    icon: <Plug size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/field-mappings',
-    label: 'Field Mappings',
-    icon: <TableProperties size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/match-insights',
-    label: 'Match Insights',
-    icon: <Sparkles size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/suggestions',
-    label: 'Suggestions',
-    icon: <Lightbulb size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/mapping-history',
-    label: 'Mapping History',
-    icon: <History size={20} strokeWidth={1.8} />,
-  },
-  {
-    path: '/settings',
-    label: 'Settings',
-    icon: <Settings size={20} strokeWidth={1.8} />,
-  },
-];
+const pageSubtitles: Record<string, string> = {
+  '/dashboard': 'Operationalise semantic standards with observability inspired by modern data catalogs.',
+  '/dimensions': 'Browse and curate the reference dimensions harmonized across your programs.',
+  '/canonical-library': 'The approved canonical values that raw source data maps into.',
+  '/dimension-relations': 'Visualize how dimensions cross-reference each other.',
+  '/connections': 'Manage source systems and explore their live schemas.',
+  '/field-mappings': 'Connect source fields to canonical dimensions for matching.',
+  '/match-insights': 'Understand semantic match quality and clustering across sources.',
+  '/suggestions': 'Review raw values and route them to approved canonical records.',
+  '/mapping-history': 'Trace every approved, overridden, and reverted value mapping.',
+  '/settings': 'Tune matcher behavior, thresholds, and LLM integration.',
+};
 
 const AppScaffold = ({
   themeChoice,
@@ -107,9 +63,30 @@ const AppScaffold = ({
 }: AppScaffoldProps) => {
   const { config, isLoading, loadError, refresh } = useAppState();
   const location = useLocation();
+  const navigate = useNavigate();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const sidebarId = 'app-primary-navigation';
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const { mode: resolvedMode } = useMemo(() => resolveTheme(themeChoice), [themeChoice]);
+
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((collapsed) => {
+      const next = !collapsed;
+      try {
+        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     const ok = await refresh();
@@ -129,9 +106,9 @@ const AppScaffold = ({
     return navItems.find((item) => location.pathname.startsWith(item.path)) ?? navItems[0];
   }, [location.pathname]);
 
-  const toastAccentClass = toast?.type === 'error'
-    ? 'border-red-500/50 bg-red-100 dark:bg-red-500/10 text-red-900 dark:text-red-100'
-    : 'border-emerald-500/50 bg-emerald-100 dark:bg-emerald-400/10 text-emerald-900 dark:text-emerald-100';
+  useEffect(() => {
+    document.title = `${activeItem.label} | RefData Hub`;
+  }, [activeItem]);
 
   useEffect(() => {
     setIsSidebarOpen(false);
@@ -143,168 +120,89 @@ const AppScaffold = ({
     }
   }, [isSidebarOpen]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'b' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        toggleSidebar();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [toggleSidebar]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024 && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen]);
+
+  const isNavActive = useCallback(
+    (path: string) => location.pathname.startsWith(path),
+    [location.pathname],
+  );
+
+  const toastAccentClass = toast?.type === 'error'
+    ? 'border-brand-danger/30 bg-brand-danger/10 text-brand-danger'
+    : 'border-brand-success/30 bg-brand-success/10 text-brand-success';
+
   return (
-    <div className={`app-shell theme-${themeChoice}`}>
-      <aside
-        id={sidebarId}
-        className={`app-sidebar${isSidebarOpen ? ' is-open' : ''}${isSidebarCollapsed ? ' is-collapsed' : ''}`}
-        aria-label="Primary navigation"
+    <div className="h-screen overflow-hidden bg-bg-primary flex">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-brand-primary focus:text-brand-accent-contrast focus:font-bold focus:rounded-br-xl"
       >
-        <div className="app-sidebar__top">
-          <Link to="/dashboard" className="app-sidebar__brand" onClick={() => setIsSidebarOpen(false)}>
-            <span className="app-sidebar__brand-mark" data-testid="app-logo-mark">
-              <svg
-                viewBox="0 0 64 64"
-                role="img"
-                aria-label="RefData Hub logo"
-                className="app-sidebar__brand-logo"
-              >
-                <defs>
-                  <linearGradient id="sidebar-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#22d3ee" />
-                    <stop offset="50%" stopColor="#6366f1" />
-                    <stop offset="100%" stopColor="#a855f7" />
-                  </linearGradient>
-                  <filter id="sidebar-logo-glow" x="-20%" y="-20%" width="140%" height="140%">
-                    <feGaussianBlur stdDeviation="1" result="blur"/>
-                    <feMerge>
-                      <feMergeNode in="blur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
-                </defs>
+        Skip to main content
+      </a>
 
-                <rect width="64" height="64" rx="16" fill="#0b0f19" />
-                <rect width="64" height="64" rx="16" fill="none" stroke="url(#sidebar-logo-grad)" strokeWidth="2" opacity="0.6"/>
-
-                <path d="M32 10 L50 20 L50 42 L32 52 L14 42 L14 20 Z"
-                      fill="url(#sidebar-logo-grad)" fillOpacity="0.2"
-                      stroke="url(#sidebar-logo-grad)" strokeWidth="2.5" strokeLinejoin="round" />
-
-                <path d="M32 10 L32 31 M50 42 L32 31 M14 42 L32 31" stroke="#38bdf8" strokeWidth="1.8" opacity="0.8"/>
-
-                <circle cx="32" cy="10" r="3" fill="#22d3ee" filter="url(#sidebar-logo-glow)"/>
-                <circle cx="50" cy="20" r="2.5" fill="#6366f1"/>
-                <circle cx="50" cy="42" r="2.5" fill="#a855f7"/>
-                <circle cx="32" cy="52" r="3" fill="#38bdf8" filter="url(#sidebar-logo-glow)"/>
-                <circle cx="14" cy="42" r="2.5" fill="#6366f1"/>
-                <circle cx="14" cy="20" r="2.5" fill="#22d3ee"/>
-
-                <circle cx="32" cy="31" r="4" fill="#38bdf8" filter="url(#sidebar-logo-glow)"/>
-                <circle cx="32" cy="31" r="1.5" fill="#ffffff"/>
-              </svg>
-            </span>
-            <span className="app-sidebar__brand-text">
-              <span className="app-sidebar__brand-title">RefData Hub</span>
-              <span className="app-sidebar__brand-subtitle">Metadata stewardship workspace</span>
-            </span>
-          </Link>
-          <button
-            type="button"
-            className="app-sidebar__collapse-toggle"
-            onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
-            aria-controls={sidebarId}
-            aria-expanded={!isSidebarCollapsed}
-            aria-label={isSidebarCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
-          >
-            <span aria-hidden="true">{isSidebarCollapsed ? '»' : '«'}</span>
-            <span className="visually-hidden">
-              {isSidebarCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
-            </span>
-          </button>
-        </div>
-        <nav className="app-sidebar__nav">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) => `app-nav-link${isActive ? ' active' : ''}`}
-              onClick={() => setIsSidebarOpen(false)}
-              aria-label={item.label}
-              title={item.label}
-            >
-              <span className="app-nav-indicator" aria-hidden />
-              <span
-                className="app-nav-icon"
-                aria-hidden
-                data-testid={`nav-icon-${item.path.replace(/\//g, '-')}`}
-              >
-                {item.icon}
-              </span>
-              <span className="app-nav-label">{item.label}</span>
-            </NavLink>
-          ))}
-        </nav>
-        <div className="app-sidebar__footer text-slate-600 dark:text-slate-400">
-          <p className="mb-0 text-xs">Curate canonical dimensions with confidence and audit-ready lineage.</p>
-        </div>
-      </aside>
-      <button
-        type="button"
-        className={`app-sidebar-overlay lg:hidden${isSidebarOpen ? ' is-visible' : ''}`}
-        aria-hidden={!isSidebarOpen}
-        aria-label="Close navigation"
-        tabIndex={isSidebarOpen ? 0 : -1}
-        onClick={() => setIsSidebarOpen(false)}
+      <Sidebar
+        collapsed={isSidebarCollapsed}
+        mobileOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
+        onCloseMobile={() => setIsSidebarOpen(false)}
+        isActive={isNavActive}
+        onNavigate={(path) => navigate(path)}
       />
-      <div className="app-main">
-        <header className="app-header">
-          <div className="app-header__titles">
-            <button
-              type="button"
-              className="app-sidebar-toggle lg:hidden"
-              onClick={() => setIsSidebarOpen((open) => !open)}
-              aria-label={isSidebarOpen ? 'Hide navigation menu' : 'Show navigation menu'}
-            >
-              Menu
-            </button>
-            <p className="app-header__eyebrow">RefData Hub</p>
-            <h1 className="app-header__title">{activeItem.label}</h1>
-            <p className="app-header__subtitle">
-              Operationalise semantic standards with observability inspired by modern data catalogs.
-            </p>
-          </div>
-          <div className="app-header__actions">
-            {config && (
-              <span className="app-header__badge">
-                Matcher: {config.matcher_backend}
-              </span>
-            )}
-            <select
-              value={themeChoice}
-              aria-label="Select UI theme"
-              className="app-header__select"
-              onChange={(event) => onThemeChange(event.target.value as ThemeChoice)}
-            >
-              {themeOrder.map((choice) => (
-                <option key={choice} value={choice}>
-                  {themeDefinitions[choice].label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              className="app-header__button"
-              onClick={() => void handleRefresh()}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span
-                    className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
-                    role="status"
-                    aria-hidden="true"
-                  />
-                  Syncing…
-                </span>
-              ) : (
-                'Sync data'
-              )}
-            </button>
-          </div>
-        </header>
-        <main className="app-content">
-          <div className="app-content__inner">
+
+      <div
+        className={cn(
+          'flex-1 flex flex-col min-w-0 min-h-0 transition-all duration-300',
+          isSidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]',
+        )}
+      >
+        <TopBar
+          onMenuToggle={() => setIsSidebarOpen((open) => !open)}
+          config={config}
+          isLoading={isLoading}
+          onSync={() => void handleRefresh()}
+          theme={themeChoice}
+          onThemeChange={onThemeChange}
+          resolvedMode={resolvedMode}
+        />
+
+        <main
+          id="main-content"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-8 scrollbar-thin"
+          role="main"
+          tabIndex={-1}
+        >
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-brand-primary">
+                RefData Hub
+              </p>
+              <h1 className="text-2xl font-black text-text-primary tracking-tight mt-1">
+                {activeItem.label}
+              </h1>
+              <p className="text-xs text-text-tertiary mt-1">
+                {pageSubtitles[activeItem.path] ?? pageSubtitles['/dashboard']}
+              </p>
+            </div>
+
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage onToast={onToast} />} />
@@ -326,25 +224,29 @@ const AppScaffold = ({
             </Routes>
           </div>
         </main>
-        <div className="app-toast-container">
+
+        <div className="fixed bottom-6 right-6 z-[10000] flex max-w-md flex-col gap-3">
           {toast && (
             <div
               key={toastKey}
               role="status"
-              className={`surface-card surface-card--accent border ${toastAccentClass} backdrop-blur`}
+              className={cn(
+                'bg-widget-bg border rounded-2xl shadow-lg p-4 backdrop-blur-md',
+                toastAccentClass,
+              )}
             >
-              <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400">
+              <div className="mb-1.5 flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
                 <span>Notification</span>
                 <button
                   type="button"
-                  className="text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                  className="text-text-tertiary transition hover:text-text-primary"
                   onClick={onCloseToast}
                   aria-label="Dismiss notification"
                 >
                   ×
                 </button>
               </div>
-              <p className="text-sm text-[var(--color-text-primary)]">{toast.content}</p>
+              <p className="text-sm font-medium text-text-primary">{toast.content}</p>
             </div>
           )}
         </div>
@@ -354,7 +256,7 @@ const AppScaffold = ({
 };
 
 const App = () => {
-  const [themeChoice, setThemeChoice] = useState<ThemeChoice>(() => resolveInitialTheme('dark'));
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>(() => resolveInitialTheme('light'));
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [toastKey, setToastKey] = useState(0);
 
@@ -368,16 +270,12 @@ const App = () => {
     setToastKey((key) => key + 1);
   }, []);
 
-  const handleThemeChange = useCallback((choice: ThemeChoice) => {
-    setThemeChoice(choice);
-  }, []);
-
   return (
     <BrowserRouter>
       <AppStateProvider>
         <AppScaffold
           themeChoice={themeChoice}
-          onThemeChange={handleThemeChange}
+          onThemeChange={setThemeChoice}
           toast={toast}
           toastKey={toastKey}
           onToast={handleToast}
@@ -389,4 +287,5 @@ const App = () => {
 };
 
 export default App;
-export { AppScaffold, navItems };
+export { AppScaffold };
+export type { AppScaffoldProps };

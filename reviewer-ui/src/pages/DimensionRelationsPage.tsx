@@ -299,22 +299,22 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
           <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-3">
             <div>
               <Card.Title as="h1" className="text-2xl mb-1 flex items-center gap-2">
-                <Network className="w-6 h-6 text-indigo-400" />
+                <Network className="w-6 h-6 text-brand-primary" />
                 <span>Dimension relationships</span>
               </Card.Title>
-              <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
+              <Card.Text className="text-text-tertiary mb-0">
                 Model parent-child relationships between dimensions—for example, regions and their districts. Maintain
                 canonical value pairings to power drill-downs and validation rules.
               </Card.Text>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center bg-slate-900/80 border border-slate-700/80 rounded-xl p-1 gap-1">
+              <div className="flex items-center bg-widget-bg/90 border border-border-secondary rounded-xl p-1 gap-1">
                 <button
                   onClick={() => setViewMode('graph')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                     viewMode === 'graph'
-                      ? 'bg-indigo-600 text-white shadow'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-brand-primary text-brand-accent-contrast shadow'
+                      : 'text-text-tertiary hover:text-text-primary'
                   }`}
                 >
                   <Network className="w-4 h-4" />
@@ -324,8 +324,8 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                   onClick={() => setViewMode('grid')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
                     viewMode === 'grid'
-                      ? 'bg-indigo-600 text-white shadow'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-brand-primary text-brand-accent-contrast shadow'
+                      : 'text-text-tertiary hover:text-text-primary'
                   }`}
                 >
                   <LayoutGrid className="w-4 h-4" />
@@ -356,7 +356,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
               <Spinner animation="border" role="status" aria-hidden="true" />
             </div>
           ) : relations.length === 0 ? (
-            <div className="text-center text-slate-600 dark:text-slate-400 py-5">
+            <div className="text-center text-text-tertiary py-5">
               <p className="mb-0">No relations defined yet. Create a relation to begin linking canonical values.</p>
             </div>
           ) : (
@@ -365,7 +365,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                 <Col key={relation.id} md={6} xl={4}>
                   <Card
                     className={`h-full ${
-                      relation.id === selectedRelationId ? 'border-aurora border-2 shadow-glow-sm' : 'border border-[var(--color-border-muted)] shadow-glow-sm'
+                      relation.id === selectedRelationId ? 'border-2 border-brand-primary/60 shadow-glow' : 'border border-border-primary shadow-glow'
                     }`}
                     onClick={() => setSelectedRelationId(relation.id)}
                     role="button"
@@ -377,7 +377,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                           <Card.Title as="h2" className="text-lg mb-1">
                             {relation.label}
                           </Card.Title>
-                          <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
+                          <Card.Text className="text-text-tertiary mb-0">
                             {relation.description || 'No description provided.'}
                           </Card.Text>
                         </div>
@@ -390,7 +390,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                           <Badge bg="info">
                             Parent
                           </Badge>
-                          <span className="text-[var(--color-text-primary)]">
+                          <span className="text-text-primary">
                             {relation.parent_dimension.label} ({relation.parent_dimension.code})
                           </span>
                         </div>
@@ -398,7 +398,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                           <Badge bg="warning">
                             Child
                           </Badge>
-                          <span className="text-[var(--color-text-primary)]">
+                          <span className="text-text-primary">
                             {relation.child_dimension.label} ({relation.child_dimension.code})
                           </span>
                         </div>
@@ -428,15 +428,15 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                 <Card.Title as="h2" className="text-xl mb-1">
                   {selectedRelation.label}
                 </Card.Title>
-                <Card.Text className="text-slate-600 dark:text-slate-400 mb-0">
+                <Card.Text className="text-text-tertiary mb-0">
                   {selectedRelation.parent_dimension.label} ➝ {selectedRelation.child_dimension.label}
                 </Card.Text>
               </div>
             </div>
 
-            <Card className="border border-[var(--color-border-muted)] shadow-glow-sm">
+            <Card className="border border-border-primary shadow-glow">
               <Card.Body className="flex flex-col gap-3">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-600 dark:text-slate-400 mb-0">Add link</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-text-tertiary mb-0">Add link</h3>
                 <Row className="gap-3 items-end">
                   <Col md={6}>
                     <Form.Group controlId="relation-parent-select">
@@ -458,7 +458,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                         ))}
                       </Form.Select>
                       {parentCandidates.length === 0 && (
-                        <Form.Text className="text-slate-600 dark:text-slate-400">
+                        <Form.Text className="text-text-tertiary">
                           No canonical values found for {selectedRelation.parent_dimension.label}. Add values first.
                         </Form.Text>
                       )}
@@ -484,7 +484,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                         ))}
                       </Form.Select>
                       {childCandidates.length === 0 && (
-                        <Form.Text className="text-slate-600 dark:text-slate-400">
+                        <Form.Text className="text-text-tertiary">
                           No canonical values found for {selectedRelation.child_dimension.label}. Add values first.
                         </Form.Text>
                       )}
@@ -528,7 +528,7 @@ const DimensionRelationsPage = ({ onToast }: DimensionRelationsPageProps) => {
                     </tr>
                   ) : currentLinks.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="text-center text-slate-600 dark:text-slate-400 py-4">
+                      <td colSpan={3} className="text-center text-text-tertiary py-4">
                         No links defined yet for this relation.
                       </td>
                     </tr>

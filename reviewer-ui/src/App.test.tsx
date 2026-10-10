@@ -23,6 +23,7 @@ vi.mock('./state/AppStateContext', () => ({
     refresh: refreshMock,
     updateDimensions: vi.fn(),
   }),
+  AppStateProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 const createProps = (): {
@@ -39,7 +40,7 @@ const createProps = (): {
 
   return {
     props: {
-      themeChoice: 'dark' as ThemeChoice,
+      themeChoice: 'light' as ThemeChoice,
       onThemeChange: (choice) => onThemeChange(choice),
       toast: null,
       toastKey: 0,
@@ -94,6 +95,7 @@ describe('AppScaffold layout', () => {
         return jsonResponse({});
       }),
     );
+    window.localStorage.clear();
   });
 
   afterEach(() => {
@@ -104,12 +106,15 @@ describe('AppScaffold layout', () => {
   it('renders navigation items and highlights the active route', () => {
     const { props } = createProps();
     render(
-      <MemoryRouter initialEntries={["/connections"]}>
+      <MemoryRouter initialEntries={['/connections']}>
         <AppScaffold {...props} />
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: 'Source Connections' })).toHaveClass('active');
+    expect(screen.getByRole('button', { name: 'Source Connections' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     expect(screen.getByRole('heading', { name: 'Source Connections' })).toBeInTheDocument();
   });
 
@@ -171,13 +176,15 @@ describe('AppScaffold layout', () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => expect(mocks.onToast).toHaveBeenCalledWith({
-      type: 'error',
-      content: 'Unable to load configuration',
-    }));
+    await waitFor(() =>
+      expect(mocks.onToast).toHaveBeenCalledWith({
+        type: 'error',
+        content: 'Unable to load configuration',
+      }),
+    );
   });
 
-  it('allows theme changes via the header select control', () => {
+  it('allows theme changes via the theme picker popover', async () => {
     const { props, mocks } = createProps();
     render(
       <MemoryRouter>
@@ -185,9 +192,12 @@ describe('AppScaffold layout', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.change(screen.getByLabelText('Select UI theme'), { target: { value: 'light' } });
+    fireEvent.click(screen.getByRole('button', { name: /Select UI theme/ }));
 
-    expect(mocks.onThemeChange).toHaveBeenCalledWith('light');
+    const dialog = await screen.findByRole('dialog', { name: 'Theme options' });
+    fireEvent.click(within(dialog).getByRole('radio', { name: /Oasis/ }));
+
+    expect(mocks.onThemeChange).toHaveBeenCalledWith('oasis');
   });
 
   it('supports collapsing and expanding the primary navigation', () => {
@@ -198,20 +208,17 @@ describe('AppScaffold layout', () => {
       </MemoryRouter>,
     );
 
-    const sidebar = screen.getByLabelText('Primary navigation');
-    const collapseToggle = screen.getByLabelText('Collapse navigation menu');
+    const sidebar = screen.getByLabelText('Main navigation');
+    expect(sidebar).toHaveClass('w-[280px]');
 
-    expect(sidebar).not.toHaveClass('is-collapsed');
-    fireEvent.click(collapseToggle);
-    expect(sidebar).toHaveClass('is-collapsed');
-    expect(collapseToggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(screen.getByLabelText('Collapse sidebar'));
+    expect(sidebar).toHaveClass('w-[72px]');
 
-    const expandToggle = screen.getByLabelText('Expand navigation menu');
-    fireEvent.click(expandToggle);
-    expect(sidebar).not.toHaveClass('is-collapsed');
+    fireEvent.click(screen.getByLabelText('Expand sidebar'));
+    expect(sidebar).toHaveClass('w-[280px]');
   });
 
-  it('keeps the collapse toggle aligned with the brand row', () => {
+  it('collapses the sidebar with the keyboard shortcut', () => {
     const { props } = createProps();
     render(
       <MemoryRouter>
@@ -219,13 +226,9 @@ describe('AppScaffold layout', () => {
       </MemoryRouter>,
     );
 
-    const brandLink = screen.getByRole('link', { name: /RefData Hub/ });
-    const collapseToggle = screen.getByRole('button', { name: 'Collapse navigation menu' });
-    const topRow = brandLink.parentElement;
+    fireEvent.keyDown(document, { key: 'b', metaKey: true });
 
-    expect(topRow).not.toBeNull();
-    expect(topRow).toHaveClass('app-sidebar__top');
-    expect(collapseToggle.parentElement).toBe(topRow);
+    expect(screen.getByLabelText('Main navigation')).toHaveClass('w-[72px]');
   });
 
   it('shows descriptive navigation icons when collapsed', () => {
@@ -236,7 +239,7 @@ describe('AppScaffold layout', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByLabelText('Collapse navigation menu'));
+    fireEvent.click(screen.getByLabelText('Collapse sidebar'));
 
     const icons = screen.getAllByTestId(/nav-icon-/);
     expect(icons).toHaveLength(navItems.length);
