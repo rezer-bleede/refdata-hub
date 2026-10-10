@@ -81,7 +81,7 @@ For detailed setup instructions, see the [Quickstart Guide](quickstart.md).
 
 - **Backend:** FastAPI (Python) with SQLModel/PostgreSQL
 - **Frontend:** React 18 + Vite + Tailwind CSS
-- **Matching:** TF-IDF embeddings + OpenAI/Ollama LLM support
+- **Matching:** Local semantic embeddings (fastembed/ONNX) with lexical fallback + OpenAI/Ollama LLM support
 - **Testing:** Pytest (backend) + Vitest (frontend)
 - **Infrastructure:** Docker Compose / Kubernetes
 

@@ -49,9 +49,9 @@ class SystemConfig(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     default_dimension: str = Field(default="general")
-    match_threshold: float = Field(default=0.6)
+    match_threshold: float = Field(default=0.45)
     matcher_backend: str = Field(default="embedding")
-    embedding_model: str = Field(default="tfidf")
+    embedding_model: str = Field(default="BAAI/bge-small-en-v1.5")
     llm_mode: str = Field(
         default="online",
         description="Controls whether the LLM matcher talks to an online or offline provider.",
@@ -59,6 +59,10 @@ class SystemConfig(SQLModel, table=True):
     llm_model: Optional[str] = Field(default="gpt-3.5-turbo")
     llm_api_base: Optional[str] = None
     llm_api_key: Optional[str] = Field(default=None, description="Stored securely in the database.")
+    llm_escalation: bool = Field(
+        default=False,
+        description="Escalate ambiguous embedding matches to the configured LLM.",
+    )
     top_k: int = Field(default=5)
     updated_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc), nullable=False

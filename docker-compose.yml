@@ -57,6 +57,8 @@ services:
         condition: service_healthy
       targetdb:
         condition: service_healthy
+    volumes:
+      - embedding_cache:/root/.cache
     ports:
       - '8000:8000'
 
@@ -74,3 +76,4 @@ services:
 volumes:
   db_data:
   targetdb_data:
+  embedding_cache:

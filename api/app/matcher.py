@@ -7,13 +7,14 @@ import logging
 from typing import Any, Iterable, List
 
 import httpx
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 
+from .embeddings import embed_texts, resolve_model_name
 from .models import CanonicalValue, SystemConfig
 from .schemas import MatchCandidate
 
 LOGGER = logging.getLogger(__name__)
+
+ESCALATION_MARGIN = 0.15
 
 
 class SemanticMatcher:
@@ -34,7 +35,32 @@ class SemanticMatcher:
             if llm_rankings:
                 return llm_rankings
 
-        return self._rank_with_embeddings(raw_text)
+            return self._rank_with_embeddings(raw_text)
+
+        matches = self._rank_with_embeddings(raw_text)
+
+        if self._escalation_enabled() and self._is_ambiguous(matches):
+            llm_rankings = self._rank_with_llm(raw_text)
+            if llm_rankings:
+                LOGGER.info(
+                    "Escalated ambiguous match for '%s' to the configured LLM", raw_text
+                )
+                return llm_rankings
+
+        return matches
+
+    def _escalation_enabled(self) -> bool:
+        """LLM escalation applies only to the embedding backend."""
+
+        return bool(self.config.llm_escalation) and self.config.matcher_backend != "llm"
+
+    @staticmethod
+    def _is_ambiguous(matches: List[MatchCandidate]) -> bool:
+        """Detect near-tie rankings where embeddings are unreliable."""
+
+        if len(matches) < 2:
+            return False
+        return (matches[0].score - matches[1].score) < ESCALATION_MARGIN
 
     def _rank_with_embeddings(self, raw_text: str) -> List[MatchCandidate]:
         """Score matches using embedding cosine similarity."""
@@ -42,22 +68,31 @@ class SemanticMatcher:
         if not self.canonical_values:
             return []
 
-        normalised_raw = raw_text.strip().casefold()
-
+        model_name = resolve_model_name(self.config.embedding_model)
         try:
-            sentences = [raw_text] + [self._canonical_as_sentence(cv) for cv in self.canonical_values]
-            vectorizer = TfidfVectorizer().fit(sentences)
-            embeddings = vectorizer.transform(sentences)
-            scores = cosine_similarity(embeddings[0], embeddings[1:]).flatten()
-        except Exception:  # pragma: no cover - defensive
+            sentences = [raw_text] + [
+                self._canonical_as_sentence(cv) for cv in self.canonical_values
+            ]
+            matrix = embed_texts(model_name, sentences)
+            scores = matrix[0] @ matrix[1:].T
+        except Exception as exc:  # pragma: no cover - defensive
             LOGGER.warning(
-                "Falling back to lexical similarity because TF-IDF vectorization failed",
+                "Semantic embeddings failed for model '%s'; falling back to "
+                "lexical similarity: %s",
+                model_name,
+                exc,
             )
             return self._rank_with_lexical(raw_text)
 
-        matches = []
+        return self._build_matches(raw_text, scores)
+
+    def _build_matches(self, raw_text: str, scores: Iterable[float]) -> List[MatchCandidate]:
+        """Convert cosine scores into ranked match candidates."""
+
+        normalised_raw = raw_text.strip().casefold()
+        matches: list[MatchCandidate] = []
         for canonical, score in zip(self.canonical_values, scores):
-            scaled = float(max(0.0, min(1.0, score)))
+            scaled = float(max(0.0, min(1.0, float(score))))
             if canonical.canonical_label.strip().casefold() == normalised_raw:
                 scaled = 1.0
             matches.append(

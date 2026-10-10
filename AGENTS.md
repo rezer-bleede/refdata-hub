@@ -53,7 +53,7 @@ pytest
 pytest --cov=app --cov-report=html
 
 # Run specific test
-pytest tests/test_matcher.py::test_rank_with_embeddings
+pytest tests/test_matcher.py::test_rank_with_semantic_embeddings_ranks_by_cosine
 
 # Run with verbose output
 pytest -v
@@ -124,7 +124,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 feat(matcher): add support for custom embedding models
 
 Add a new parameter to the SemanticMatcher that allows users to specify
-custom embedding models beyond the default TF-IDF.
+custom embedding models beyond the default fastembed model.
 
 Closes #123
 ```
@@ -285,7 +285,7 @@ matches = matcher.rank("never married")
 
 - `api/app/config.py` – System configuration settings
 - `api/app/models.py` – SQLModel database models
-- `api/app/matcher.py` – Semantic matching logic (TF-IDF + LLM)
+- `api/app/matcher.py` – Semantic matching logic (fastembed embeddings + lexical fallback + LLM)
 - `tests/conftest.py` – Test fixtures and database setup (uses in-memory SQLite)
 - `docker-compose.yml` – Multi-service orchestration with PostgreSQL, Ollama, API, and UI
 - `.github/workflows/deploy-docs.yml` – GitHub Actions for documentation deployment
@@ -294,6 +294,6 @@ matches = matcher.rank("never married")
 
 - **Backend:** FastAPI (Python) with SQLModel/PostgreSQL
 - **Frontend:** React 18 + Vite + Tailwind CSS
-- **Matching:** TF-IDF embeddings + OpenAI/Ollama LLM support
+- **Matching:** ONNX sentence-transformer embeddings (fastembed, default `BAAI/bge-small-en-v1.5`) + lexical fallback + OpenAI/Ollama LLM support
 - **Testing:** Pytest (backend) + Vitest (frontend)
 - **Infrastructure:** Docker Compose

@@ -1119,12 +1119,31 @@ def test_config_endpoint_auto_seeds_when_missing(tmp_path) -> None:
         assert payload["default_dimension"] == settings.default_dimension
         assert payload["match_threshold"] == settings.match_threshold
         assert payload["llm_mode"] == settings.llm_mode
+        assert payload["llm_escalation"] == settings.llm_escalation
 
         with Session(engine) as session:
             config = session.exec(select(SystemConfig)).first()
             assert config is not None
             assert config.default_dimension == settings.default_dimension
             assert config.llm_mode == settings.llm_mode
+            assert config.llm_escalation is False
+
+
+def test_config_llm_escalation_roundtrip() -> None:
+    client = build_test_client()
+
+    initial = client.get("/api/config").json()
+    assert initial["llm_escalation"] is False
+
+    updated = client.put("/api/config", json={"llm_escalation": True})
+    assert updated.status_code == 200
+    assert updated.json()["llm_escalation"] is True
+
+    fetched = client.get("/api/config").json()
+    assert fetched["llm_escalation"] is True
+
+    reverted = client.put("/api/config", json={"llm_escalation": False})
+    assert reverted.json()["llm_escalation"] is False
 
 
 def test_seeded_source_connection_available() -> None:

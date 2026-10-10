@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- [x] Semantic matching via local ONNX sentence-transformer embeddings ([fastembed](https://github.com/qdrant/fastembed), default `BAAI/bge-small-en-v1.5`) with a per-process vector cache, replacing the previous TF-IDF matcher (now removed; lexical fallback retained)
+- [x] Optional `llm_escalation` setting: near-tied embedding results (top-2 margin < 0.15) are re-ranked by the configured LLM
+
 ### Planned Features
 - [ ] Role-based access control (RBAC)
 - [ ] Authentication (JWT, OAuth)

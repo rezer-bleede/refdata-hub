@@ -112,3 +112,56 @@ def test_init_db_adds_missing_llm_mode_column(tmp_path) -> None:
         value = connection.execute(text("SELECT llm_mode FROM systemconfig")).scalar_one()
 
     assert value == "online"
+
+
+def test_init_db_adds_missing_llm_escalation_column(tmp_path) -> None:
+    db_path = tmp_path / "legacy-escalation.sqlite"
+    engine = create_engine(
+        f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
+    )
+
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE systemconfig (
+                    id INTEGER PRIMARY KEY,
+                    default_dimension VARCHAR,
+                    match_threshold FLOAT,
+                    matcher_backend VARCHAR,
+                    embedding_model VARCHAR,
+                    llm_mode VARCHAR,
+                    llm_model VARCHAR,
+                    llm_api_base VARCHAR,
+                    llm_api_key VARCHAR,
+                    top_k INTEGER,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                INSERT INTO systemconfig (
+                    id, default_dimension, match_threshold, matcher_backend,
+                    embedding_model, llm_mode, top_k
+                ) VALUES (1, 'general', 0.45, 'embedding',
+                          'BAAI/bge-small-en-v1.5', 'online', 5)
+                """
+            )
+        )
+
+    settings = Settings(database_url=f"sqlite:///{db_path}")
+    init_db(engine, settings=settings)
+
+    inspector = inspect(engine)
+    columns = {column["name"] for column in inspector.get_columns("systemconfig")}
+    assert "llm_escalation" in columns
+
+    with engine.begin() as connection:
+        value = connection.execute(
+            text("SELECT llm_escalation FROM systemconfig")
+        ).scalar_one()
+
+    assert not value

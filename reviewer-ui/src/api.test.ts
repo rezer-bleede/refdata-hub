@@ -6,7 +6,7 @@ const buildConfigPayload = () => ({
   default_dimension: 'general',
   match_threshold: 0.6,
   matcher_backend: 'embedding',
-  embedding_model: 'tfidf',
+  embedding_model: 'BAAI/bge-small-en-v1.5',
   llm_mode: 'online',
   llm_model: null,
   llm_api_base: null,

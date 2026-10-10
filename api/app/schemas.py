@@ -69,6 +69,7 @@ class SystemConfigRead(BaseModel):
     llm_mode: Literal["online", "offline"]
     llm_model: Optional[str]
     llm_api_base: Optional[str]
+    llm_escalation: bool
     top_k: int
     llm_api_key_set: bool
 
@@ -81,6 +82,7 @@ class SystemConfigUpdate(BaseModel):
     llm_mode: Optional[Literal["online", "offline"]] = None
     llm_model: Optional[str] = None
     llm_api_base: Optional[str] = None
+    llm_escalation: Optional[bool] = None
     top_k: Optional[int] = Field(default=None, ge=1, le=20)
     llm_api_key: Optional[str] = Field(default=None, min_length=4)
 

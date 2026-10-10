@@ -14,7 +14,7 @@ graph TB
     
     subgraph "Backend Layer"
         API[FastAPI Backend<br/>Python + SQLModel]
-        MATCHER[Semantic Matcher<br/>TF-IDF + LLM]
+        MATCHER[Semantic Matcher<br/>Embeddings + LLM]
     end
     
     subgraph "Data Layer"
@@ -108,11 +108,14 @@ graph TB
 
 **Matching Strategies:**
 
-1. **TF-IDF Embeddings** (Default)
-   - Uses scikit-learn's TfidfVectorizer
-   - Cosine similarity for scoring
-   - Fast, no external dependencies
-   - Fallback to lexical matching on failure
+1. **Semantic Embeddings** (Default)
+   - Local ONNX sentence-transformer models via [fastembed](https://github.com/qdrant/fastembed)
+   - Default model: `BAAI/bge-small-en-v1.5` (~130 MB, downloaded on first use and cached)
+   - Cosine similarity for scoring with a per-process vector cache keyed by `(model, text)`
+   - `embedding_model` accepts any fastembed model name; legacy values such as `tfidf` resolve to the default model
+   - Automatic fallback to normalized token-overlap (lexical) matching when the model is unavailable
+   - Optional LLM escalation: when `llm_escalation` is enabled and the top two scores are within 0.15,
+     the configured LLM re-ranks the candidates (helps with negation traps like "never married")
 
 2. **LLM-Based Matching** (Optional)
    - **Offline Mode:** Ollama smollm / tinyllama (local)
@@ -138,7 +141,7 @@ sequenceDiagram
         Matcher->>LLM: Request ranking
         LLM-->>Matcher: Ranked candidates
     else Embedding Mode
-        Matcher->>Matcher: Compute TF-IDF vectors
+        Matcher->>Matcher: Compute embedding vectors
         Matcher->>Matcher: Calculate cosine similarity
     end
     
@@ -299,7 +302,8 @@ sequenceDiagram
 ### Matching: Multi-Strategy
 
 **Rationale:**
-- **TF-IDF:** Fast, reliable, no external deps
+- **Semantic embeddings:** True paraphrase matching with no external service (fastembed/ONNX)
+- **Lexical overlap:** Fast, reliable fallback with no external deps
 - **LLM:** Semantic understanding for complex cases
 - **Fallback:** Ensure system always works
 - **Choice:** User can switch based on use case
@@ -370,7 +374,7 @@ sequenceDiagram
 
 - API endpoints: < 100ms (p95)
 - Canonical value lookup: < 50ms
-- Semantic match (TF-IDF): < 200ms
+- Semantic match (embeddings): < 200ms
 - Semantic match (LLM): 1-3s
 - Bulk import (1000 rows): < 5s
 

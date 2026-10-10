@@ -35,6 +35,7 @@ export interface SystemConfig {
   llm_mode: 'online' | 'offline';
   llm_model?: string | null;
   llm_api_base?: string | null;
+  llm_escalation: boolean;
   top_k: number;
   llm_api_key_set: boolean;
 }
@@ -47,6 +48,7 @@ export interface SystemConfigUpdate {
   llm_mode?: 'online' | 'offline';
   llm_model?: string | null;
   llm_api_base?: string | null;
+  llm_escalation?: boolean;
   top_k?: number;
   llm_api_key?: string;
 }

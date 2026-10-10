@@ -116,12 +116,35 @@ def _ensure_systemconfig_llm_mode_column(engine) -> None:
         )
 
 
+def _ensure_systemconfig_llm_escalation_column(engine) -> None:
+    """Add the ``llm_escalation`` column for legacy installations."""
+
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if "systemconfig" not in tables:
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("systemconfig")}
+    if "llm_escalation" in columns:
+        return
+
+    logger.info("Adding missing systemconfig.llm_escalation column with default false")
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE systemconfig "
+                "ADD COLUMN llm_escalation BOOLEAN NOT NULL DEFAULT FALSE"
+            )
+        )
+
+
 def init_db(engine, settings: Settings | None = None) -> None:
     """Create database tables and seed initial data."""
 
     SQLModel.metadata.create_all(engine)
     _ensure_canonical_attributes_column(engine)
     _ensure_systemconfig_llm_mode_column(engine)
+    _ensure_systemconfig_llm_escalation_column(engine)
     seed_database(engine, settings=settings)
 
 

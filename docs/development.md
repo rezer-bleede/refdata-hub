@@ -424,7 +424,7 @@ pytest
 pytest --cov=app --cov-report=html
 
 # Run specific test
-pytest tests/test_matcher.py::test_rank_with_embeddings
+pytest tests/test_matcher.py::test_rank_with_semantic_embeddings_ranks_by_cosine
 
 # Run with verbose output
 pytest -v

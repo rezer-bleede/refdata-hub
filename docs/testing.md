@@ -106,7 +106,7 @@ from api.app.matcher import SemanticMatcher
 from api.app.models import CanonicalValue, SystemConfig
 
 def test_rank_with_embeddings():
-    """Test TF-IDF embedding matching."""
+    """Test semantic embedding matching."""
     config = SystemConfig(
         matcher_backend="embedding",
         top_k=5

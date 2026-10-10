@@ -11,13 +11,14 @@ The `systemconfig` table stores application-wide settings. These can be modified
 | Field | Type | Default | Description |
 |-------|------|----------|-------------|
 | `default_dimension` | VARCHAR | 'general' | Default dimension for semantic matching |
-| `match_threshold` | FLOAT | 0.6 | Minimum confidence score (0.0-1.0) for auto-approval |
+| `match_threshold` | FLOAT | 0.45 | Minimum confidence score (0.0-1.0) for auto-approval |
 | `matcher_backend` | VARCHAR | 'embedding' | Primary matching strategy: 'embedding' or 'llm' |
-| `embedding_model` | VARCHAR | 'tfidf' | Embedding model: 'tfidf' (currently only option) |
+| `embedding_model` | VARCHAR | 'BAAI/bge-small-en-v1.5' | Embedding model: any [fastembed](https://github.com/qdrant/fastembed) model name (legacy 'tfidf' values resolve to the default model) |
 | `llm_mode` | VARCHAR | 'online' | LLM operation mode: 'online' or 'offline' |
 | `llm_model` | VARCHAR | 'gpt-3.5-turbo' | LLM model name (e.g., 'gpt-3.5-turbo', 'smollm:135m') |
 | `llm_api_base` | VARCHAR | NULL | API endpoint URL for LLM service |
 | `llm_api_key` | VARCHAR | NULL | API key for LLM authentication |
+| `llm_escalation` | BOOLEAN | false | Escalate near-tied embedding matches to the configured LLM |
 | `top_k` | INTEGER | 5 | Number of match candidates to return |
 
 <figure>
@@ -103,6 +104,18 @@ export REFDATA_CORS_ORIGINS="https://refdata.example.com,https://app.refdata.com
 export REFDATA_CORS_ORIGINS="*"
 ```
 
+#### Embedding Matcher Configuration
+
+| Variable | Required | Default | Description |
+|----------|-----------|----------|-------------|
+| `REFDATA_EMBEDDING_MODEL` | No | BAAI/bge-small-en-v1.5 | Any [fastembed](https://github.com/qdrant/fastembed) model name |
+| `REFDATA_MATCH_THRESHOLD` | No | 0.45 | Minimum similarity score to surface matches |
+
+The model is downloaded from Hugging Face on first use (approximately 130 MB)
+and cached locally, so the API container needs outbound internet access once
+per model. The cache lives in the container home directory; mount a volume
+there if you rebuild frequently.
+
 #### LLM Configuration
 
 | Variable | Required | Default | Description |
@@ -111,6 +124,7 @@ export REFDATA_CORS_ORIGINS="*"
 | `REFDATA_LLM_MODEL` | No | gpt-3.5-turbo | LLM model identifier |
 | `REFDATA_LLM_API_BASE` | No | https://api.openai.com | LLM API endpoint URL |
 | `REFDATA_LLM_API_KEY` | No | - | API key for LLM authentication |
+| `REFDATA_LLM_ESCALATION` | No | false | Ask the LLM to re-rank when the top two embedding scores are within 0.15 |
 
 **Examples:**
 
@@ -490,7 +504,8 @@ REFDATA_LLM_API_KEY=${LLM_API_KEY}
 
 | Strategy | Speed | Cost | Accuracy |
 |----------|-------|------|----------|
-| TF-IDF Embeddings | Fast | Free | Good for exact/fuzzy matches |
+| Semantic Embeddings (fastembed) | Fast | Free | Best for paraphrases ("got hitched" → Married) |
+| Lexical Overlap | Fast | Free | Fallback when the model is unavailable |
 | LLM (Online) | Slow | Paid | Best for semantic understanding |
 | LLM (Offline) | Medium | Free | Good semantic understanding |
 

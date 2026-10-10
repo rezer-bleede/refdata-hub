@@ -41,6 +41,7 @@ def ensure_system_config(
         llm_mode=settings.llm_mode,
         llm_model=settings.llm_model,
         llm_api_base=settings.llm_api_base,
+        llm_escalation=settings.llm_escalation,
         top_k=settings.top_k,
     )
     session.add(config)
@@ -64,6 +65,7 @@ def system_config_to_read(config: SystemConfig) -> SystemConfigRead:
         llm_mode=config.llm_mode,
         llm_model=config.llm_model,
         llm_api_base=config.llm_api_base,
+        llm_escalation=config.llm_escalation,
         top_k=config.top_k,
         llm_api_key_set=bool(config.llm_api_key),
     )

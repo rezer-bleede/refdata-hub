@@ -41,7 +41,7 @@ In inconsistent multi-system environments, raw reference values—such as countr
 
 ## ✨ Key Features
 
-- 🧠 **AI-Assisted Semantic Matching:** Harmonize messy reference data automatically using TF-IDF vector similarity or configurable LLM providers (OpenAI API or local offline Ollama models).
+- 🧠 **AI-Assisted Semantic Matching:** Harmonize messy reference data automatically using local sentence-transformer embeddings ([fastembed](https://github.com/qdrant/fastembed)), or configurable LLM providers (OpenAI API or local offline Ollama models) — including optional LLM escalation that re-ranks near-tied embedding results.
 - 🛡️ **Human-in-the-Loop Curation:** A streamlined dashboard for data stewards and reviewers to inspect confidence scores, approve auto-suggestions, or manually map complex edge cases.
 - 🔗 **Source System Connectors:** Connect directly to upstream SQL databases (PostgreSQL, MySQL, Snowflake, etc.), inspect schemas, and sample unstandardized values in real time.
 - 📐 **Canonical Library & Custom Schemas:** Define flexible reference dimensions with custom JSON metadata schemas (e.g., ISO codes, regional attributes, sorting priority).
@@ -145,7 +145,7 @@ You can then select **Offline Ollama** in the **Settings workspace** of the Revi
 | **Backend API** | [FastAPI](https://fastapi.tiangolo.com/) + [Python 3.10+](https://www.python.org/) | High-performance asynchronous REST API |
 | **ORM / Database** | [SQLModel](https://sqlmodel.tiangolo.com/) + [PostgreSQL 15](https://www.postgresql.org/) | Type-safe SQL querying and schema migrations |
 | **Frontend UI** | [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/) | Fast, themeable single-page application |
-| **Matching Engine** | [scikit-learn](https://scikit-learn.org/) + [OpenAI](https://openai.com/) / [Ollama](https://ollama.com/) | TF-IDF vector embeddings & LLM re-ranking |
+| **Matching Engine** | [fastembed](https://github.com/qdrant/fastembed) + [OpenAI](https://openai.com/) / [Ollama](https://ollama.com/) | ONNX sentence-transformer embeddings & LLM re-ranking |
 | **Testing** | [Pytest](https://docs.pytest.org/) & [Vitest](https://vitest.dev/) | Complete unit, integration, and UI test coverage |
 | **Containerization** | [Docker](https://www.docker.com/) & Docker Compose | Multi-container service orchestration |
 
