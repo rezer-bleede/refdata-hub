@@ -413,3 +413,41 @@ class BulkImportResult(BaseModel):
     updated: List[CanonicalValueRead] = Field(default_factory=list)
     duplicates: List[BulkImportDuplicateRecord] = Field(default_factory=list)
     errors: List[str]
+
+
+class AgentHarmonizeRequest(BaseModel):
+    raw_text: Optional[str] = None
+    values: List[str] = Field(default_factory=list)
+    dimension: Optional[str] = None
+    max_steps: Optional[int] = Field(default=None, ge=1, le=20)
+    source_connection_id: Optional[int] = None
+    source_table: Optional[str] = None
+    source_field: Optional[str] = None
+
+
+class AgentToolCall(BaseModel):
+    name: str
+    arguments: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AgentStep(BaseModel):
+    index: int
+    tool: str
+    arguments: Dict[str, Any] = Field(default_factory=dict)
+    observation: Optional[Any] = None
+
+
+class AgentRunResult(BaseModel):
+    raw_text: str
+    dimension: str
+    status: Literal["completed", "incomplete", "error"]
+    summary: Optional[str] = None
+    steps: List[AgentStep] = Field(default_factory=list)
+    suggested_canonical_id: Optional[int] = None
+    error: Optional[str] = None
+
+
+class AgentToolInfo(BaseModel):
+    name: str
+    description: str
+    parameters: Dict[str, Any] = Field(default_factory=dict)

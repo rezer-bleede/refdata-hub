@@ -152,10 +152,12 @@ Fixes #456
 │   │   ├── matcher.py            # Semantic matching logic
 │   │   ├── seeds.py              # Database seeding
 │   │   ├── routes/               # API route handlers
+│   │   │   ├── agent.py         # Agentic harmonization endpoints
 │   │   │   ├── config.py        # System configuration endpoints
 │   │   │   ├── reference.py     # Canonical values & dimensions
 │   │   │   └── source.py       # Source connections & mappings
 │   │   └── services/            # Business logic services
+│   │       ├── agent.py         # LLM tool-calling agent engine
 │   │       ├── config.py         # Configuration service
 │   │       ├── dimensions.py     # Dimension management
 │   │       └── source_connections.py # Source system operations
@@ -195,6 +197,7 @@ Fixes #456
 │
 ├── tests/                     # Test suites
 │   ├── conftest.py            # Pytest configuration
+│   ├── test_agent.py          # Agentic integration tests
 │   ├── test_api.py            # API integration tests
 │   ├── test_matcher.py        # Matcher unit tests
 │   ├── test_config.py         # Configuration tests

@@ -99,6 +99,9 @@ graph TB
 │   ├── /connections/{id}/match-stats – Match statistics
 │   ├── /connections/{id}/unmatched – Unmatched values
 │   └── /value-mappings   – Approved raw-to-canonical mappings
+├── /agent
+│   ├── /harmonize        – Advisory LLM agent loop (tool-calling)
+│   └── /tools            – Agent tool catalog
 └── /config               – System configuration
 ```
 
@@ -122,6 +125,16 @@ graph TB
    - **Online Mode:** OpenAI-compatible API
    - Ranks candidates using semantic understanding
    - Automatic fallback to embeddings on failure
+
+3. **Agentic Harmonization API** (Optional)
+   - `POST /api/agent/harmonize` runs a bounded LLM tool-calling loop
+     (`api/app/services/agent.py`) over the existing matcher and repository
+   - Tools: `rank_matches`, `list_canonical_values`, `list_dimensions`,
+     `propose_mapping`, `flag_for_review`, `finish`
+   - **Advisory-only:** proposals are persisted as pending `ValueMapping`
+     rows or `suggested` `RawValue` records; the agent can never approve data
+   - Reuses the configured LLM (OpenAI function calling or Ollama JSON tool
+     protocol) with graceful partial-trace error handling
 
 **Matching Pipeline:**
 ```mermaid

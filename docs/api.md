@@ -639,6 +639,80 @@ Upload CSV/Excel mapping updates.
 
 ---
 
+## Agentic Harmonization
+
+The agent endpoints run an LLM-driven tool-calling loop that harmonizes raw
+values against the canonical library. The agent operates in **advisory mode
+only**: every proposal is persisted in a pending/suggested state for human
+review and the agent can never approve, reject, or modify canonical data.
+The agent reuses the configured `SystemConfig` LLM settings (online
+OpenAI-compatible function calling or offline Ollama JSON tool protocol).
+
+### Run Agent
+```http
+POST /api/agent/harmonize
+Content-Type: application/json
+```
+
+Run the agent over one raw value or a batch of values.
+
+**Request Body:**
+```json
+{
+  "raw_text": "never married",
+  "values": ["widowed"],
+  "dimension": "marital_status",
+  "max_steps": 8,
+  "source_connection_id": 1,
+  "source_table": "customers",
+  "source_field": "marital"
+}
+```
+
+**Fields:**
+- `raw_text` / `values`: at least one raw value is required (duplicates are collapsed)
+- `dimension`: optional dimension hint (must exist)
+- `max_steps`: optional loop bound, 1–20 (default 8)
+- `source_connection_id`, `source_table`, `source_field`: optional source context;
+  when provided together, proposals are persisted as pending `ValueMapping`
+  rows instead of `RawValue` suggestions
+
+**Response:** `AgentRunResult[]` — one run per value with full step trace:
+
+```json
+[
+  {
+    "raw_text": "never married",
+    "dimension": "marital_status",
+    "status": "completed",
+    "summary": "Proposed canonical match 'Single' with 0.93 confidence.",
+    "steps": [
+      {"index": 1, "tool": "rank_matches", "arguments": {"raw_text": "never married"}, "observation": {"...": "..."}},
+      {"index": 2, "tool": "propose_mapping", "arguments": {"raw_value": "never married", "canonical_id": 3}, "observation": {"created": "raw_suggestion", "status": "suggested"}}
+    ],
+    "suggested_canonical_id": 3,
+    "error": null
+  }
+]
+```
+
+Run `status` is `completed` (agent called `finish`), `incomplete` (max steps
+exhausted), or `error` (LLM unavailable/failed). Errors still return HTTP 200
+with a partial trace.
+
+### List Agent Tools
+```http
+GET /api/agent/tools
+```
+
+Returns the discoverable tool catalog with JSON parameter schemas:
+`rank_matches`, `list_canonical_values`, `list_dimensions`, `propose_mapping`,
+`flag_for_review`, `finish`.
+
+**Response:** `AgentToolInfo[]`
+
+---
+
 ## Error Responses
 
 All endpoints may return the following error responses:
