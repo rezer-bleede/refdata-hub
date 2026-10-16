@@ -18,8 +18,29 @@
 ---
 
 <figure align="center">
-  <img src="docs/screenshots/demo.gif" alt="RefData Hub Interactive Demo" width="1200">
-  <figcaption><em>Interactive Demo: Harmonizing unstandardized reference data with automated AI matching and human curation.</em></figcaption>
+  <table border="0" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td width="50%" align="center" style="padding: 6px;">
+        <img src="docs/screenshots/demo_semantic_matching.gif" alt="AI Semantic Matching & Playground" width="100%">
+        <br><sub><b>1. AI Semantic Matching & Playground</b></sub>
+      </td>
+      <td width="50%" align="center" style="padding: 6px;">
+        <img src="docs/screenshots/demo_canonical_library.gif" alt="Canonical Reference Library" width="100%">
+        <br><sub><b>2. Canonical Reference Library</b></sub>
+      </td>
+    </tr>
+    <tr>
+      <td width="50%" align="center" style="padding: 6px;">
+        <img src="docs/screenshots/demo_source_connections.gif" alt="Source System Connections & Profiling" width="100%">
+        <br><sub><b>3. Source System Connections & Profiling</b></sub>
+      </td>
+      <td width="50%" align="center" style="padding: 6px;">
+        <img src="docs/screenshots/demo_match_insights.gif" alt="Match Insights & Human Curation" width="100%">
+        <br><sub><b>4. Match Insights & Curation Workflow</b></sub>
+      </td>
+    </tr>
+  </table>
+  <figcaption><em>Multi-Tiled Interactive Demo: Harmonizing unstandardized reference data across 4 core enterprise platform use cases.</em></figcaption>
 </figure>
 
 ---
