@@ -18,6 +18,13 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 
 </div>
 
+<div class="rdh-hero-actions" markdown>
+
+[Get Started](quickstart.md){ .md-button .md-button--primary }
+[View on GitHub](https://github.com/rezer-bleede/refdata-hub){ .md-button .md-button--secondary }
+
+</div>
+
 <div class="rdh-steps" markdown>
 
 1. **Ingest &amp; profile** raw values from upstream databases.
@@ -189,5 +196,4 @@ intelligent harmonization through semantic matching and human curation.
 - **Documentation** — you are reading it; see the [nav](quickstart.md) or the
   GitHub repository
 - **Issues** — [github.com/rezer-bleede/refdata-hub/issues](https://github.com/rezer-bleede/refdata-hub/issues)
-- **Discussions** — [github.com/rezer-bleede/refdata-hub/discussions](https://github.com/rezer-bleede/refdata-hub/discussions)
 - **License** — [MIT](https://github.com/rezer-bleede/refdata-hub/blob/main/LICENSE)

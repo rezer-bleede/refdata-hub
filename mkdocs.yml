@@ -86,13 +86,14 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/rezer-bleede/refdata-hub
-      name: Source on GitHub
-    - icon: fontawesome/brands/github
+      name: Source code on GitHub
+    - icon: octicons/issue-opened-16
       link: https://github.com/rezer-bleede/refdata-hub/issues
       name: Issue tracker
-    - icon: fontawesome/solid/comment-dots
-      link: https://github.com/rezer-bleede/refdata-hub/discussions
-      name: Discussions
+    - icon: octicons/git-pull-request-16
+      link: https://github.com/rezer-bleede/refdata-hub/pulls
+      name: Open pull requests
+
 
 copyright: >-
   RefData Hub &middot; MIT License &middot;

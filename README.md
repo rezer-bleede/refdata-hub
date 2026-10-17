@@ -64,12 +64,12 @@ In inconsistent multi-system environments, raw reference values—such as countr
 
 - 🧠 **AI-Assisted Semantic Matching:** Harmonize messy reference data automatically using local sentence-transformer embeddings ([fastembed](https://github.com/qdrant/fastembed)), or configurable LLM providers (OpenAI API or local offline Ollama models) — including optional LLM escalation that re-ranks near-tied embedding results.
 - 🛡️ **Human-in-the-Loop Curation:** A streamlined dashboard for data stewards and reviewers to inspect confidence scores, approve auto-suggestions, or manually map complex edge cases.
-- 🔗 **Source System Connectors:** Connect directly to upstream SQL databases (PostgreSQL, MySQL, Snowflake, etc.), inspect schemas, and sample unstandardized values in real time.
+- 🔗 **Source System Connectors:** Connect directly to upstream databases — PostgreSQL, MySQL, ClickHouse, Snowflake, SQL Server, Oracle, MongoDB, SQLite, DuckDB, or a generic SQL driver — inspect live schemas, and sample unstandardized values in real time.
 - 📐 **Canonical Library & Custom Schemas:** Define flexible reference dimensions with custom JSON metadata schemas (e.g., ISO codes, regional attributes, sorting priority).
 - 📊 **Match Insights & Coverage Analytics:** Track overall harmonization health, percentage of standardized values, and unmapped raw value frequencies across source systems.
 - 🌳 **Dimension Hierarchies & Relations:** Model multi-level parent/child relationships (e.g., *Country → State → District*).
 - 📁 **Bulk Import & Export:** Effortlessly import/export canonical values and field mappings via CSV, TSV, or Excel formats.
-- 🎨 **Modern Themeable UI:** Built with React 18, Vite, and Tailwind CSS with full support for Light, Dark, and Midnight themes.
+- 🎨 **12-Palette Themeable UI:** Built with React 18, Vite, and Tailwind CSS, with twelve palettes plus a `System` option that follows your OS. The selection persists in `localStorage` and is shared with the documentation site, so both stay on the same theme.
 
 ---
 
@@ -96,7 +96,7 @@ RefData Hub acts as an intelligent middleware layer between operational source s
 
 ## 🚀 Quick Start (Docker Compose)
 
-Get the complete RefData Hub platform running in under **2 minutes**:
+Get the complete RefData Hub platform running with a single command:
 
 ```bash
 docker compose up --build
@@ -106,10 +106,12 @@ docker compose up --build
 
 - 🎨 **Reviewer UI (Dashboard):** [http://localhost:5274](http://localhost:5274)
 - ⚡ **Backend REST API Docs (Swagger):** [http://localhost:8000/docs](http://localhost:8000/docs)
-- 🗄️ **Primary Application DB (PostgreSQL):** `localhost:5432`
-- 🧪 **Bundled Demo Target DB (PostgreSQL):** `localhost:5433`
+- 🗄️ **Primary Application DB (PostgreSQL 15):** `localhost:5432`
+- 🧪 **Bundled Demo Target DB (PostgreSQL 15):** `localhost:5433`
 
 > 💡 **Lightweight by Default:** The default `docker compose up` stack starts PostgreSQL, the FastAPI backend, the React frontend, and a seeded target database. It requires minimal memory and CPU resources.
+>
+> Note the port difference: compose serves the UI on **5274**, while `npm run dev` serves it on **5173**.
 
 ---
 
@@ -138,23 +140,11 @@ You can then select **Offline Ollama** in the **Settings workspace** of the Revi
 
 ## 📸 Interface Preview
 
-<figure>
-  <img src="docs/screenshots/demo_canonical_library.gif" alt="RefData Hub Canonical Library View" width="1200">
-  <figcaption><em>Canonical Reference Library organizing standardized values, metadata attributes, and search filters.</em></figcaption>
-</figure>
-
-<br/>
+A single end-to-end pass through the reviewer console — dashboard metrics, the canonical library, source profiling, and the approval queue.
 
 <figure>
-  <img src="docs/screenshots/demo_source_connections.gif" alt="Source System Connector and Schema Explorer" width="1200">
-  <figcaption><em>Source System Connector &amp; Schema Explorer for profiling upstream databases.</em></figcaption>
-</figure>
-
-<br/>
-
-<figure>
-  <img src="docs/screenshots/demo_semantic_matching.gif" alt="Semantic Matching Playground and Dashboard" width="1200">
-  <figcaption><em>Dashboard and semantic matching playground with ranked suggestions and confidence scores.</em></figcaption>
+  <img src="docs/screenshots/demo.gif" alt="RefData Hub Reviewer Console end-to-end walkthrough" width="100%">
+  <figcaption><em>RefData Hub Reference Data Management Dashboard: from raw upstream values to approved canonical mappings.</em></figcaption>
 </figure>
 
 ---
@@ -176,6 +166,10 @@ You can then select **Offline Ollama** in the **Settings workspace** of the Revi
 
 ### Backend Setup
 
+Run from the repository root. `REFDATA_DATABASE_URL` is required for the API
+server; without it the app falls back to the compose-internal hostname `db:5432`,
+which does not resolve outside Docker.
+
 ```bash
 # Create and activate virtual environment
 python3 -m venv .venv
@@ -184,12 +178,12 @@ source .venv/bin/activate
 # Install dependencies
 pip install -r api/requirements.txt pytest pytest-cov
 
-# Run API server locally
-cd api
-uvicorn app.main:app --reload --port 8000
+# Point the API at a reachable database
+export REFDATA_DATABASE_URL="postgresql+psycopg://refdata:refdata@localhost:5432/refdata"
+export REFDATA_CORS_ORIGINS="http://localhost:5173"
 
-# Execute backend tests
-pytest
+# Run API server locally
+uvicorn app.main:app --app-dir api --reload --port 8000
 ```
 
 ### Frontend Setup
@@ -201,11 +195,49 @@ cd reviewer-ui
 # Install dependencies
 npm install
 
-# Start Vite dev server
+# Start Vite dev server (http://localhost:5173)
 npm run dev
 
 # Run UI test suite
 npm test
+```
+
+The UI defaults to `http://localhost:8000` for API calls on localhost. Set
+`VITE_API_BASE_URL` to point it elsewhere.
+
+### Tests
+
+The test suite lives in `tests/` at the repository root, so run pytest from
+there. Tests use an in-memory SQLite database and need no running Postgres.
+
+```bash
+# Backend — from the repository root
+pytest
+
+# With coverage
+pytest --cov=app --cov-report=html
+
+# Integration tests only
+pytest -m integration
+
+# Frontend
+cd reviewer-ui && npm test
+```
+
+### Documentation
+
+```bash
+pip install -r requirements-docs.txt
+
+# Port 8000 is the API, so serve the docs on 8001
+mkdocs serve -a localhost:8001
+```
+
+The docs theme is generated from the app's stylesheet. After changing a palette
+in `reviewer-ui/src/styles.css`, regenerate it with:
+
+```bash
+python scripts/generate_docs_tokens.py
 ```
 
 ---

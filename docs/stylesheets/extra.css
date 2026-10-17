@@ -177,6 +177,38 @@ body {
   border-radius: var(--radius-md);
 }
 
+/* Material styles .md-source with --md-primary-fg-color (white) because its
+   stock header is a solid primary colour. This theme paints the header with
+   --color-topbar-bg, a translucent near-white, which made the repository link
+   render white-on-white and invisible. */
+.md-source {
+  color: var(--color-text-secondary);
+}
+
+.md-source:is(:hover, :focus) {
+  color: var(--color-brand-primary);
+}
+
+.md-source__icon {
+  fill: currentColor;
+}
+
+.md-source__facts {
+  color: var(--color-text-tertiary);
+}
+
+/* Material renders the repository's latest *release tag* as a version chip.
+   This repository has a stray tag literally named "docker" (not a release),
+   so the header showed "◇docker" next to the star count and read as a bug.
+   Remove this block once the repo publishes real semantic version tags. */
+.md-source__fact--version {
+  display: none;
+}
+
+.md-source__title {
+  font-weight: 600;
+}
+
 .md-tabs {
   background-color: var(--color-topbar-bg);
   border-bottom: 1px solid var(--color-topbar-border);
@@ -464,6 +496,23 @@ body {
   color: var(--color-text-secondary);
   max-width: 46rem;
   margin-bottom: 0;
+}
+
+/* Hero call-to-action row: primary docs CTA plus a GitHub escape hatch. */
+.rdh-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 1.5rem 0 1.8rem;
+}
+
+.rdh-hero-actions .md-button {
+  margin: 0;
+}
+
+.rdh-hero-actions .md-button--secondary {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* Steps / numbered cards used by the quickstart page. */

@@ -615,4 +615,3 @@ export function MyComponent({ title, onClick }: Props) {
 - **Documentation:** See `/docs` folder
 - **API Docs:** http://localhost:8000/docs
 - **Issues:** https://github.com/rezer-bleede/refdata-hub/issues
-- **Discussions:** https://github.com/rezer-bleede/refdata-hub/discussions
