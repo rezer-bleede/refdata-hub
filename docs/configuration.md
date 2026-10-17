@@ -21,16 +21,6 @@ The `systemconfig` table stores application-wide settings. These can be modified
 | `llm_escalation` | BOOLEAN | false | Escalate near-tied embedding matches to the configured LLM |
 | `top_k` | INTEGER | 5 | Number of match candidates to return |
 
-<figure>
-  <img src="../screenshots/settings/matcher-config.png" alt="Matcher Settings" width="1000">
-  <figcaption>Configure matcher thresholds and matching strategy</figcaption>
-</figure>
-
-<figure>
-  <img src="../screenshots/settings/llm-settings.png" alt="LLM Settings" width="1000">
-  <figcaption>Configure LLM connectivity and model settings</figcaption>
-</figure>
-
 ### Configuration via API
 
 **Get Configuration:**

@@ -1,8 +1,15 @@
 # Canonical Library Guide
 
+<p class="rdh-eyebrow">Workspace</p>
+
 The canonical library centralises every approved reference value. Reviewers can curate records manually or load large batches of
 rows in one action. This guide documents the workflows now supported by the dedicated **Canonical Library** page in the reviewer
 UI and provides an Abu Dhabi–specific dataset ready for import.
+
+<figure class="rdh-figure">
+  <img src="../screenshots/demo_canonical_library.gif" alt="Canonical reference library with dimension filters and metadata attributes">
+  <figcaption>The canonical reference library: dimension filters, keyword search, and per-value metadata attributes.</figcaption>
+</figure>
 
 ## Page overview
 
@@ -18,11 +25,6 @@ The library page offers five key capabilities:
 5. **Export** – Download the filtered table to CSV for auditing or offline collaboration. The export includes attribute columns
    so downstream tools can preserve the additional metadata.
 
-<figure>
-  <img src="../screenshots/canonical-library/library-grid.png" alt="Canonical Library Grid" width="1200">
-  <figcaption>Browse and filter canonical values organized by dimension</figcaption>
-</figure>
-
 All changes are persisted via the `/api/reference/canonical` endpoints exposed by the FastAPI backend.
 
 ## Adding or editing records
@@ -33,11 +35,6 @@ All changes are persisted via the `/api/reference/canonical` endpoints exposed b
 3. To edit a row, choose **Edit** in the table. Adjust any field and save to persist the change.
 4. Use **Delete** to remove records that are no longer valid. A confirmation modal protects against accidental deletions.
 
-<figure>
-  <img src="../screenshots/canonical-library/edit-modal.png" alt="Edit Canonical Value" width="1000">
-  <figcaption>Edit canonical values with dimension-specific attributes</figcaption>
-</figure>
-
 ## Bulk import walkthrough
 
 The importer accepts CSV, TSV, or Excel workbooks. Provide a header row describing each column; the preview step inspects the
@@ -46,16 +43,6 @@ or ignore each column before creating any records. Excel uploads no longer need 
 backend now scans every worksheet, discards prefatory rows until it finds the first genuine header, and keeps the data immediately
 below it even when earlier cells are merged. When the dataset targets a brand-new dimension, you can capture the dimension label
 and optional description inline—the backend will create the dimension and its attribute schema automatically during the import.
-
-<figure>
-  <img src="../screenshots/canonical-library/bulk-import-modal.png" alt="Bulk Import Modal" width="1000">
-  <figcaption>Upload and preview files before importing canonical values</figcaption>
-</figure>
-
-<figure>
-  <img src="../screenshots/canonical-library/column-mapping.png" alt="Column Mapping" width="1000">
-  <figcaption>Map file columns to canonical value fields</figcaption>
-</figure>
 
 - If an Excel workbook contains multiple sheets, the preview step now lists every sheet so you can choose which one to import.
    Work through larger templates one tab at a time without having to split the workbook manually.

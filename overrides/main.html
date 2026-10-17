@@ -1,0 +1,56 @@
+{#-
+  RefData Hub documentation theme overrides.
+
+  Extends Material's base.html so the anti-flash theme script runs before
+  first paint. Everything else lives in partials/.
+-#}
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <meta name="theme-color" content="#4f46e5" />
+  {#-
+    `page` is None in Material's 404 template, so guard the per-page
+    description lookup before falling back to the site description.
+  -#}
+  {% set page_description = (page.meta.description if page and page.meta else none) %}
+  {% if page_description %}
+    <meta name="description" content="{{ page_description | e }}" />
+  {% else %}
+    <meta name="description" content="{{ config.site_description | e }}" />
+  {% endif %}
+{% endblock %}
+
+{% block announce %}
+  {#-
+    Runs before Material's stylesheet applies the default scheme. Reads the
+    same localStorage key as the Reviewer UI so a visitor keeps one palette
+    across the app and these docs.
+  -#}
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem("refdata-hub:theme-choice");
+        var choice = stored || "light";
+        var resolved = choice;
+        var dark = false;
+
+        if (choice === "system") {
+          dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          resolved = dark ? "dark" : "light";
+        } else if (
+          ["dark", "midnight-marina", "burj-gold", "aurora", "classic-dark", "midnight"].indexOf(choice) !== -1
+        ) {
+          dark = true;
+        }
+
+        var root = document.documentElement;
+        root.setAttribute("data-theme", resolved);
+        root.setAttribute("data-md-color-scheme", dark ? "slate" : "default");
+        root.classList.toggle("rdh-dark", dark);
+      } catch (error) {
+        /* storage unavailable: fall through to the default palette */
+      }
+    })();
+  </script>
+{% endblock %}

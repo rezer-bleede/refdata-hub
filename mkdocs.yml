@@ -1,24 +1,62 @@
 site_name: RefData Hub
-site_description: A semi-automated reference data and standardization service for global projects
+site_description: >-
+  Reference data management and data harmonization for global projects.
+  RefData Hub semantically matches raw source values to canonical dimensions,
+  routes them to reviewers for approval, and maintains a central mapping
+  repository.
 site_url: https://rezer-bleede.github.io/refdata-hub/
 repo_url: https://github.com/rezer-bleede/refdata-hub
 repo_name: rezer-bleede/refdata-hub
+edit_uri: edit/main/docs/
+site_dir: site
+
+docs_dir: docs
+
+# Internal process notes that are useful in the repo but should not be
+# published. Previously these leaked to public URLs (screenshots/README/, etc.)
+# and shipped broken internal links.
+exclude_docs: |
+  brand/
+  screenshots/CAPTURE_GUIDE.md
+  screenshots/IMPLEMENTATION_SUMMARY.md
+  screenshots/README.md
 
 theme:
   name: material
+  custom_dir: overrides
+  language: en
+  # The Reviewer UI ships no webfont; using Material's default would pull
+  # Roboto from Google Fonts and break the visual match.
+  font: false
+  logo: assets/images/logo.svg
+  favicon: assets/images/favicon.svg
+  icon:
+    logo: material/library
+    repo: fontawesome/brands/github
+    previous: material/arrow-left
+    next: material/arrow-right
   features:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
     - navigation.expand
+    - navigation.indexes
     - navigation.top
+    - navigation.footer
+    - toc.follow
     - search.suggest
     - search.highlight
     - search.share
     - content.code.copy
-    - navigation.tracking
+    - content.code.annotate
     - content.tabs.link
+    - content.tooltips
+    - navigation.tracking
   palette:
+    # Only the fallback pair is declared here. The real palette comes from the
+    # 12-entry switcher in assets/javascripts/theme.js, which shares the
+    # Reviewer UI's design tokens. Material's toggle is suppressed by
+    # overrides/partials/palette.html.
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: indigo
@@ -33,48 +71,114 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
-  language: en
-  extra_css:
-    - stylesheets/extra.css
+
+extra_css:
+  # NOTE: these must be top-level keys. They were previously nested under
+  # `theme:`, where MkDocs silently ignored them and emitted no <link> tag.
+  - stylesheets/tokens.css
+  - stylesheets/extra.css
+
+extra_javascript:
+  - assets/javascripts/theme.js
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rezer-bleede/refdata-hub
+      name: Source on GitHub
+    - icon: fontawesome/brands/github
+      link: https://github.com/rezer-bleede/refdata-hub/issues
+      name: Issue tracker
+    - icon: fontawesome/solid/comment-dots
+      link: https://github.com/rezer-bleede/refdata-hub/discussions
+      name: Discussions
+
+copyright: >-
+  RefData Hub &middot; MIT License &middot;
+  <a href="https://github.com/rezer-bleede/refdata-hub" target="_blank" rel="noopener">rezer-bleede/refdata-hub</a>
 
 plugins:
-  - search
+  - search:
+      lang: en
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|_|\b'
 
 markdown_extensions:
+  # Mermaid was declared as ```mermaid fences but never registered, so every
+  # diagram in architecture.md, database-schema.md, and index.md rendered as
+  # a plain code block.
+  #
+  # `fence_div_format` (not `fence_code_format`) is required here: it emits
+  # `<div class="mermaid">graph LR ...</div>` with the diagram as plain text.
+  # `fence_code_format` emits `<pre class="mermaid"><code>...</code></pre>`,
+  # which mermaid mis-parses and which breaks the re-render path in
+  # assets/javascripts/theme.js (it caches node.textContent as the source).
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
   - pymdownx.tabbed:
       alternate_style: true
-  - admonition
   - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - admonition
   - attr_list
   - md_in_html
+  - def_list
   - tables
+  - abbr
+  - footnotes
   - toc:
       permalink: true
+      toc_depth: 3
 
 nav:
   - Home: index.md
+
   - Getting Started:
       - Quickstart: quickstart.md
-  - Documentation:
+      - Deployment: deployment.md
+
+  # Mirrors navGroups in reviewer-ui/src/components/layout/navigation.tsx
+  - Workspace:
+      - Features Overview: features.md
+      - Dashboard: dashboard.md
+      - Dimensions: dimensions.md
+      - Canonical Library: canonical-library.md
+
+  - Integration:
+      - Source Connections: source-connections.md
+      - Field Mappings: field-mappings.md
+
+  - Quality Control:
+      - Match Insights: match-insights.md
+      - Suggestions: suggestions.md
+      - Mapping History: mapping-history.md
+
+  - System:
+      - Settings: settings.md
+
+  - Reference:
       - Architecture: architecture.md
       - Database Schema: database-schema.md
       - API Reference: api.md
       - Configuration: configuration.md
-  - Developer Guide:
+
+  - Developers:
       - Development: development.md
       - Testing: testing.md
-      - Deployment: deployment.md
-  - Features:
-      - Features Overview: features.md
-      - Canonical Library: canonical-library.md
       - Troubleshooting: troubleshooting.md
-  - Community:
-      - Contributing: ../CONTRIBUTING.md
-      - Changelog: ../CHANGELOG.md

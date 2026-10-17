@@ -1,5 +1,22 @@
 # Screenshot Capture Guide
 
+> [!NOTE]
+> **Status (2026-02).** The PNG screenshots described below were committed as
+> zero-byte placeholders and rendered as broken images on the published site and
+> in the GitHub README. They have been removed. The site now ships the five
+> working demo recordings in this directory (`demo.gif`,
+> `demo_semantic_matching.gif`, `demo_canonical_library.gif`,
+> `demo_source_connections.gif`, `demo_match_insights.gif`), each placed once on
+> the page that documents it.
+>
+> This guide remains the checklist for anyone re-capturing real stills. Only add
+> a file here once it has real content -- the CI job in
+> `.github/workflows/deploy-docs.yml` fails the build on zero-byte output, and
+> MkDocs `--strict` fails on links to files that do not exist.
+>
+> These files are internal process notes and are excluded from the published
+> site via `exclude_docs` in `mkdocs.yml`.
+
 This guide explains how to capture professional screenshots for RefData Hub documentation.
 
 ## Table of Contents

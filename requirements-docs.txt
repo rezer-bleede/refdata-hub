@@ -1,0 +1,9 @@
+# Pinned documentation toolchain.
+#
+# Pin exact versions so the published site is reproducible. Material for
+# MkDocs pins Pygments and pymdown-extensions transitively, so upgrading
+# mkdocs alone can otherwise change rendering without any diff in this repo.
+mkdocs==1.6.1
+mkdocs-material==9.7.1
+mkdocs-material-extensions==1.3.1
+pymdown-extensions==10.20.1

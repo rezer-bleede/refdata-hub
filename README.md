@@ -6,7 +6,7 @@
 
 *Automate, harmonize, and standardize reference data dimensions across global enterprise systems with AI-assisted semantic matching and intuitive human-in-the-loop curation workflows.*
 
-[![Documentation](https://img.shields.io/badge/Docs-Latest-blue.svg)][docs-url]
+[![Documentation](https://img.shields.io/badge/Docs-Live-4f46e5.svg)][docs-url]
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)][license-url]
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![React 18](https://img.shields.io/badge/React-18-61dafb.svg)](https://react.dev/)
@@ -139,22 +139,22 @@ You can then select **Offline Ollama** in the **Settings workspace** of the Revi
 ## 📸 Interface Preview
 
 <figure>
-  <img src="docs/screenshots/dashboard/overview.png" alt="RefData Hub Reference Data Management Dashboard Overview" width="1200">
-  <figcaption><em>Main Dashboard displaying reference dimension coverage metrics and interactive semantic playground.</em></figcaption>
-</figure>
-
-<br/>
-
-<figure>
-  <img src="docs/screenshots/canonical-library/library-grid.png" alt="RefData Hub Canonical Library View" width="1200">
+  <img src="docs/screenshots/demo_canonical_library.gif" alt="RefData Hub Canonical Library View" width="1200">
   <figcaption><em>Canonical Reference Library organizing standardized values, metadata attributes, and search filters.</em></figcaption>
 </figure>
 
 <br/>
 
 <figure>
-  <img src="docs/screenshots/connections/schema-explorer.png" alt="Source System Schema Explorer" width="1200">
-  <figcaption><em>Source System Connector & Schema Explorer for profiling upstream databases.</em></figcaption>
+  <img src="docs/screenshots/demo_source_connections.gif" alt="Source System Connector and Schema Explorer" width="1200">
+  <figcaption><em>Source System Connector &amp; Schema Explorer for profiling upstream databases.</em></figcaption>
+</figure>
+
+<br/>
+
+<figure>
+  <img src="docs/screenshots/demo_semantic_matching.gif" alt="Semantic Matching Playground and Dashboard" width="1200">
+  <figcaption><em>Dashboard and semantic matching playground with ranked suggestions and confidence scores.</em></figcaption>
 </figure>
 
 ---
@@ -212,15 +212,57 @@ npm test
 
 ## 📖 Complete Documentation Index
 
+**Full documentation is published at → https://rezer-bleede.github.io/refdata-hub/**
+
+The hosted site is the canonical, always-current version of every guide below.
+It ships the same 12-palette theme switcher as the Reviewer UI, so it reads as
+part of the product rather than a separate website. The Markdown sources for
+each page are committed in [`docs/`](docs/) and build locally with
+`mkdocs serve`.
+
+### Getting Started
+
 | Guide | Description |
 |---|---|
 | 🚀 [Quickstart Guide](docs/quickstart.md) | Detailed walkthrough for Docker and local setup |
+
+### Workspace
+
+| Guide | Description |
+|---|---|
+| 🏠 [Features Overview](docs/features.md) | What the platform does, capability by capability |
+| 📊 [Dashboard](docs/dashboard.md) | Metric tiles and the semantic match playground |
+| 🧱 [Dimensions](docs/dimensions.md) | Dimension definitions, attribute schemas, and parent/child relations |
+| 📚 [Canonical Library](docs/canonical-library.md) | Curating golden records, bulk import, and attributes |
+
+### Integration
+
+| Guide | Description |
+|---|---|
+| 🔌 [Source Connections](docs/source-connections.md) | Register upstreams, test connectivity, introspect live schemas |
+| 🗺️ [Field Mappings](docs/field-mappings.md) | Bind source columns to dimensions and capture samples |
+
+### Quality Control
+
+| Guide | Description |
+|---|---|
+| 📈 [Match Insights](docs/match-insights.md) | Coverage rates, top matched and unmatched values |
+| 💡 [Suggestions](docs/suggestions.md) | Reviewing and approving semantic match suggestions |
+| 🕓 [Mapping History](docs/mapping-history.md) | Audit trail plus CSV/XLSX round-trip |
+
+### Reference & Developers
+
+| Guide | Description |
+|---|---|
+| ⚙️ [System Settings](docs/settings.md) | Match thresholds, embedding models, LLM escalation |
 | 🏛️ [Architecture Guide](docs/architecture.md) | Deep dive into system components and vector matching |
 | 🗄️ [Database Schema Reference](docs/database-schema.md) | Complete ERD, table specs, and migration guides |
 | 📡 [REST API Documentation](docs/api.md) | API endpoints, payloads, and integration examples |
-| ⚙️ [Configuration Reference](docs/configuration.md) | Environment variables, matcher settings, and tuning |
+| 🔧 [Configuration Reference](docs/configuration.md) | Environment variables, matcher settings, and tuning |
 | 🛠️ [Developer Guide](docs/development.md) | Local development, testing, and contribution patterns |
+| 🧪 [Testing Guide](docs/testing.md) | Test strategies and execution |
 | ☁️ [Deployment Guide](docs/deployment.md) | Production Docker, Kubernetes, and Cloudflare Pages setup |
+| 🆘 [Troubleshooting](docs/troubleshooting.md) | Common issues and solutions |
 
 ---
 

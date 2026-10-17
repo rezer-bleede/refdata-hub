@@ -1,0 +1,60 @@
+{#-
+  RefData Hub 404 page.
+
+  Material ships templates/404.html that hardcodes an "404 - Not found" heading
+  and replaces the content block. This override replaces that copy with the
+  project's own.
+
+  Everything below is plain HTML: content injected from a template bypasses the
+  Markdown pipeline, so `markdown` attributes, emoji shortcodes, and list
+  syntax are not available here. `docs/404.md` is not an option either -- the
+  404 template has no Page object, and File.content only holds raw Markdown.
+
+  The card markup mirrors what Material's `grid cards` extension produces.
+-#}
+{% extends "main.html" %}
+
+{% block content %}
+  <div class="rdh-404">
+    <p class="rdh-404__code">404</p>
+    <p class="rdh-404__lede">
+      That page isn't in the library. The URL may have changed, or the link that
+      brought you here may be out of date.
+    </p>
+  </div>
+
+  <div class="grid cards">
+    <ul>
+      <li>
+        <p class="rdh-eyebrow">Get running</p>
+        <h3>Quickstart</h3>
+        <p>RefData Hub runs with Docker in under five minutes.</p>
+        <p>
+          <a href="{{ 'quickstart/' | url }}">Start here <span class="twist"></span></a>
+        </p>
+      </li>
+      <li>
+        <p class="rdh-eyebrow">Workspace</p>
+        <h3>Feature guides</h3>
+        <p>Canonical Library, Dimensions, Source Connections, and Field Mappings.</p>
+        <p>
+          <a href="{{ 'features/' | url }}">Browse the workspace <span class="twist"></span></a>
+        </p>
+      </li>
+      <li>
+        <p class="rdh-eyebrow">Reference</p>
+        <h3>Architecture &amp; API</h3>
+        <p>Component design, database schema, and the full REST API.</p>
+        <p>
+          <a href="{{ 'architecture/' | url }}">Read the reference <span class="twist"></span></a>
+        </p>
+      </li>
+    </ul>
+  </div>
+
+  <p>
+    If a link inside these docs brought you here, please
+    <a href="https://github.com/rezer-bleede/refdata-hub/issues/new" target="_blank" rel="noopener">open an issue</a>
+    so it can be fixed.
+  </p>
+{% endblock %}

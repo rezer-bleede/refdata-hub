@@ -1,0 +1,58 @@
+{#-
+  Footer copyright + community links.
+
+  MkDocs cannot read files above docs_dir, so the old nav pointed at
+  "../CONTRIBUTING.md" and "../CHANGELOG.md" and both 404'd. Those documents
+  still live at the repository root, so they are linked from the repository
+  here instead of being duplicated into docs/ and left to drift.
+-#}
+<div class="md-copyright">
+  {% if config.copyright %}
+    <div class="md-copyright__highlight">
+      {{ config.copyright }}
+    </div>
+  {% endif %}
+
+  <div class="rdh-footer-links">
+    <a
+      href="{{ config.repo_url }}/blob/main/CONTRIBUTING.md"
+      target="_blank"
+      rel="noopener"
+      >Contributing</a
+    >
+    <a
+      href="{{ config.repo_url }}/blob/main/CHANGELOG.md"
+      target="_blank"
+      rel="noopener"
+      >Changelog</a
+    >
+    <a
+      href="{{ config.repo_url }}/blob/main/LICENSE"
+      target="_blank"
+      rel="noopener"
+      >License</a
+    >
+    <a
+      href="{{ config.repo_url }}/issues"
+      target="_blank"
+      rel="noopener"
+      >Issues</a
+    >
+    <a
+      href="{{ config.repo_url }}/discussions"
+      target="_blank"
+      rel="noopener"
+      >Discussions</a
+    >
+    <a href="{{ config.site_url }}" target="_blank" rel="noopener">Docs Home</a>
+  </div>
+
+  {% if not config.extra.generator == false %}
+    <span class="rdh-footer-madewith">
+      Theme shared with the Reviewer UI &middot; built with
+      <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener"
+        >Material for MkDocs</a
+      >
+    </span>
+  {% endif %}
+</div>

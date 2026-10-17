@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Lets a docs-only change be rebuilt without an empty commit.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,7 +13,9 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
+  # Never cancel an in-flight deploy; a half-finished deploy is worse than a
+  # slightly stale one.
   cancel-in-progress: false
 
 jobs:
@@ -25,14 +29,46 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
 
-      - name: Install dependencies
+      - name: Install pinned documentation dependencies
+        run: pip install -r requirements-docs.txt
+
+      # --strict turns broken internal links, references to missing files, and
+      # pages missing from the nav into build failures. Without it these were
+      # warnings that deployed silently: the previous configuration pointed the
+      # Community nav at ../CONTRIBUTING.md, which MkDocs cannot reach, and the
+      # site shipped with 404 links and no warning surfaced in CI.
+      - name: Build documentation (strict)
+        run: mkdocs build --strict
+
+      - name: Verify custom CSS and JS are actually emitted
+        # extra_css was previously nested under `theme:` in mkdocs.yml, where
+        # MkDocs silently ignored it: the stylesheet was copied to the output
+        # but no <link> tag referenced it, and no warning was raised.
         run: |
-          pip install mkdocs
-          pip install mkdocs-material
+          set -euo pipefail
+          for asset in stylesheets/tokens.css stylesheets/extra.css assets/javascripts/theme.js; do
+            if ! grep -q "$asset" site/index.html; then
+              echo "::error::$asset is not referenced by site/index.html"
+              exit 1
+            fi
+            echo "ok: $asset is linked"
+          done
 
-      - name: Build documentation
-        run: mkdocs build
+      - name: Verify no zero-byte assets shipped
+        # docs/screenshots/** contained 25 tracked empty PNGs, which rendered
+        # as broken images on the deployed site and in the GitHub README.
+        run: |
+          set -euo pipefail
+          empty=$(find site -type f -size 0 -print)
+          if [ -n "$empty" ]; then
+            echo "::error::zero-byte files in build output:"
+            echo "$empty"
+            exit 1
+          fi
+          echo "ok: no zero-byte files"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

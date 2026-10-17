@@ -11,7 +11,7 @@ A semi-automated reference data and standardization service for global projects.
 docker compose up --build
 
 # Access services
-# - Reviewer UI: http://localhost:5173
+# - Reviewer UI: http://localhost:5274
 # - API: http://localhost:8000
 # - API Docs: http://localhost:8000/docs
 # - PostgreSQL: localhost:5432
@@ -26,7 +26,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 export REFDATA_DATABASE_URL="postgresql+psycopg://refdata:refdata@localhost:5432/refdata"
-export REFDATA_CORS_ORIGINS="http://localhost:5173"
+export REFDATA_CORS_ORIGINS="http://localhost:5274"
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -207,6 +207,15 @@ Fixes #456
 │   └── test_targetdb_seed.py
 │
 ├── docs/                     # Documentation
+│   ├── assets/
+│   │   ├── images/          # Logo + favicons (copied from branding/)
+│   │   ├── javascripts/
+│   │   │   ├── theme.js     # 12-palette switcher + mermaid loader
+│   │   │   └── mermaid.min.js
+│   │   └── stylesheets/
+│   │       ├── tokens.css   # GENERATED — do not hand-edit
+│   │       └── extra.css    # Component layer
+│   ├── screenshots/         # Demo GIFs only
 │   ├── architecture.md
 │   ├── development.md
 │   ├── database-schema.md
@@ -214,10 +223,61 @@ Fixes #456
 │   ├── deployment.md
 │   └── ...
 │
+├── overrides/                # Jinja overrides for the docs theme
+│   ├── main.html            # Anti-flash theme script
+│   ├── 404.html
+│   └── partials/
+│
+├── scripts/
+│   └── generate_docs_tokens.py
+│
 ├── docker-compose.yml          # Multi-service orchestration
 ├── pytest.ini                 # Pytest configuration
-└── mkdocs.yml                # Documentation site config
+├── mkdocs.yml                # Documentation site config
+└── requirements-docs.txt    # Pinned MkDocs toolchain (used by CI)
 ```
+
+## Documentation Site
+
+The hosted site is <https://rezer-bleede.github.io/refdata-hub/>. It is built
+from `docs/` with MkDocs Material and is deployed to GitHub Pages by
+`.github/workflows/deploy-docs.yml` on every push to `main`.
+
+```bash
+# Local preview
+pip install -r requirements-docs.txt
+mkdocs serve
+
+# Reproduce CI exactly (warnings are errors)
+mkdocs build --strict
+```
+
+**The docs theme and the Reviewer UI share one design system.** The palette
+tokens in `docs/stylesheets/tokens.css` are generated from
+`reviewer-ui/src/styles.css`. If you change a palette in the app, regenerate:
+
+```bash
+python scripts/generate_docs_tokens.py
+```
+
+Do not hand-edit `tokens.css` — the next regeneration will discard your change.
+
+### Gotchas that caused previous bugs
+
+- `extra_css` / `extra_javascript` **must** be top-level keys in `mkdocs.yml`.
+  Nested under `theme:` they are silently ignored — the files are copied into
+  the output but never linked, and no warning is emitted. CI asserts these
+  assets appear in `site/index.html`.
+- MkDocs cannot read files above `docs_dir`. Linking `../CONTRIBUTING.md` from
+  `nav` produces a 404 and only a WARNING. `docs/brand/` and
+  `docs/screenshots/*.md` are internal process notes and are excluded via
+  `exclude_docs`; Contributing/Changelog/LICENSE live in the repo root and are
+  linked from the footer instead.
+- Mermaid fences require `fence_div_format`. `fence_code_format` emits
+  `<pre class="mermaid"><code>…</code></pre>`, which mermaid mis-parses and
+  which breaks the re-render path in `theme.js`.
+- Pages that live in a subdirectory (`use_directory_urls`) must reference
+  images as `../screenshots/…`, not `screenshots/…`.
 
 ## Common Development Tasks
 

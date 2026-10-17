@@ -1,0 +1,14 @@
+{#-
+  Replaces Material's light/dark radio form with a 12-palette switcher that
+  mirrors the Reviewer UI's theme picker. Options, swatches, and descriptions
+  are rendered by assets/javascripts/theme.js so there is a single source of
+  truth for the palette table.
+
+  Deliberately no <noscript> radio fallback. Material's bundle.js reads any
+  `data-md-color-scheme` input present in the DOM and mirrors it onto <body>.
+  That would pin `data-md-color-scheme="default"` to the body, and because
+  tokens.css keys the light palette off [data-md-color-scheme="default"], it
+  re-imposed light tokens on every descendant and defeated the switcher.
+  Without JavaScript the page simply renders in the default Light palette.
+-#}
+<div class="md-header__option rdh-themes" data-rdh-themes></div>
