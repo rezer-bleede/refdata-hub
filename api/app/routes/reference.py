@@ -49,6 +49,7 @@ from ..schemas import (
     CanonicalValueRead,
     CanonicalValueUpdate,
     CompanyAliasRead,
+    CompanyIdentityRead,
     DimensionCreate,
     DimensionRead,
     DimensionRelationCreate,
@@ -866,6 +867,36 @@ def list_company_aliases(session: Session = Depends(get_session)) -> list[Compan
     return [
         CompanyAliasRead(raw_value=raw, canonical_id=canonical_id, canonical_label=label)
         for raw, canonical_id, label in rows
+    ]
+
+
+@router.get("/company-identities", response_model=list[CompanyIdentityRead])
+def list_company_identities(session: Session = Depends(get_session)) -> list[CompanyIdentityRead]:
+    """Publish curated, structured identifiers for canonical companies."""
+
+    values = session.exec(
+        select(CanonicalValue)
+        .where(CanonicalValue.dimension == "company")
+        .order_by(CanonicalValue.canonical_label)
+    ).all()
+    identity_fields = (
+        "linkedin_company_url",
+        "lei",
+        "commercial_registration_number",
+        "registration_authority",
+        "wikidata_id",
+    )
+    return [
+        CompanyIdentityRead(
+            canonical_id=value.id or 0,
+            canonical_label=value.canonical_label,
+            **{
+                key: attribute.strip()
+                for key in identity_fields
+                if isinstance((attribute := value.attributes.get(key)), str) and attribute.strip()
+            },
+        )
+        for value in values
     ]
 
 

@@ -36,6 +36,15 @@ Returns approved raw-value mappings for the `company` dimension as
 other dimensions are excluded; consumers should leave aliases mapped to
 conflicting canonical IDs unresolved.
 
+### Export Canonical Company Identities
+```http
+GET /api/reference/company-identities
+```
+
+Returns canonical company labels and their curated LinkedIn company URL, LEI,
+commercial registration number and authority, and Wikidata ID. Other canonical
+attributes are not exposed by this feed.
+
 ### Get All Canonical Values
 ```http
 GET /api/reference/canonical

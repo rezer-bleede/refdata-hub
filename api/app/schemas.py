@@ -31,6 +31,16 @@ class CompanyAliasRead(BaseModel):
     canonical_label: str
 
 
+class CompanyIdentityRead(BaseModel):
+    canonical_id: int
+    canonical_label: str
+    linkedin_company_url: Optional[str] = None
+    lei: Optional[str] = None
+    commercial_registration_number: Optional[str] = None
+    registration_authority: Optional[str] = None
+    wikidata_id: Optional[str] = None
+
+
 class CanonicalValueUpdate(BaseModel):
     dimension: Optional[str] = None
     canonical_label: Optional[str] = None

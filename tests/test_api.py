@@ -202,6 +202,36 @@ def test_company_alias_feed_contains_only_approved_company_mappings() -> None:
     }]
 
 
+def test_company_identity_feed_returns_only_supported_identifiers() -> None:
+    client = build_test_client()
+    assert client.post("/api/reference/dimensions", json={
+        "code": "company",
+        "label": "Company",
+    }).status_code == 201
+    response = client.post("/api/reference/canonical", json={
+        "dimension": "company",
+        "canonical_label": "Acme Group",
+        "attributes": {
+            "linkedin_company_url": "https://sa.linkedin.com/company/acme",
+            "lei": "5493001KJTIIGC8Y1R12",
+            "private_note": "not exported",
+        },
+    })
+    assert response.status_code == 201
+
+    identities = client.get("/api/reference/company-identities")
+    assert identities.status_code == 200
+    assert identities.json() == [{
+        "canonical_id": response.json()["id"],
+        "canonical_label": "Acme Group",
+        "linkedin_company_url": "https://sa.linkedin.com/company/acme",
+        "lei": "5493001KJTIIGC8Y1R12",
+        "commercial_registration_number": None,
+        "registration_authority": None,
+        "wikidata_id": None,
+    }]
+
+
 def test_dimension_crud_and_extra_fields() -> None:
     client = build_test_client()
 
