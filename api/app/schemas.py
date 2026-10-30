@@ -25,6 +25,12 @@ class CanonicalValueRead(CanonicalValueBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CompanyAliasRead(BaseModel):
+    raw_value: str
+    canonical_id: int
+    canonical_label: str
+
+
 class CanonicalValueUpdate(BaseModel):
     dimension: Optional[str] = None
     canonical_label: Optional[str] = None
@@ -65,11 +71,9 @@ class SystemConfigRead(BaseModel):
     default_dimension: str
     match_threshold: float
     matcher_backend: str
-    embedding_model: str
     llm_mode: Literal["online", "offline"]
     llm_model: Optional[str]
     llm_api_base: Optional[str]
-    llm_escalation: bool
     top_k: int
     llm_api_key_set: bool
 
@@ -77,12 +81,10 @@ class SystemConfigRead(BaseModel):
 class SystemConfigUpdate(BaseModel):
     default_dimension: Optional[str] = None
     match_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
-    matcher_backend: Optional[str] = None
-    embedding_model: Optional[str] = None
+    matcher_backend: Optional[Literal["lexical", "llm"]] = None
     llm_mode: Optional[Literal["online", "offline"]] = None
     llm_model: Optional[str] = None
     llm_api_base: Optional[str] = None
-    llm_escalation: Optional[bool] = None
     top_k: Optional[int] = Field(default=None, ge=1, le=20)
     llm_api_key: Optional[str] = Field(default=None, min_length=4)
 
@@ -225,7 +227,7 @@ class MatchedValuePreview(BaseModel):
     raw_value: str
     occurrence_count: int
     canonical_label: str
-    match_type: Literal["mapping", "semantic"]
+    match_type: Literal["mapping", "similarity"]
     confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
 
 

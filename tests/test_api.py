@@ -33,7 +33,7 @@ from api.app.services.source_connections import SourceConnectionServiceError
 
 
 def build_test_client() -> TestClient:
-    settings = Settings(database_url="sqlite:///:memory:", match_threshold=0.55)
+    settings = Settings(database_url="sqlite:///:memory:", match_threshold=0.9)
     app = create_app(settings)
     engine = create_db_engine(settings)
     app.state.engine = engine
@@ -151,6 +151,55 @@ def test_canonical_crud_operations() -> None:
 
     delete_response = client.delete(f"/api/reference/canonical/{canonical_id}")
     assert delete_response.status_code == 204
+
+
+def test_company_alias_feed_contains_only_approved_company_mappings() -> None:
+    client = build_test_client()
+    dimension = client.post(
+        "/api/reference/dimensions",
+        json={"code": "company", "label": "Company"},
+    )
+    assert dimension.status_code == 201
+    canonical = client.post(
+        "/api/reference/canonical",
+        json={"dimension": "company", "canonical_label": "Acme Group"},
+    )
+    assert canonical.status_code == 201
+    connection = client.post(
+        "/api/source/connections",
+        json={
+            "name": "jobs-analyzer",
+            "db_type": "postgres",
+            "host": "localhost",
+            "database": "jobs",
+            "username": "readonly",
+        },
+    )
+    assert connection.status_code == 201
+    connection_id = connection.json()["id"]
+    for raw_value, canonical_id, status in (
+        ("Acme LLC", canonical.json()["id"], "approved"),
+        ("Acme Group", canonical.json()["id"], "pending"),
+    ):
+        response = client.post(
+            f"/api/source/connections/{connection_id}/value-mappings",
+            json={
+                "source_table": "jobs",
+                "source_field": "company",
+                "raw_value": raw_value,
+                "canonical_id": canonical_id,
+                "status": status,
+            },
+        )
+        assert response.status_code == 201
+
+    response = client.get("/api/reference/company-aliases")
+    assert response.status_code == 200
+    assert response.json() == [{
+        "raw_value": "Acme LLC",
+        "canonical_id": canonical.json()["id"],
+        "canonical_label": "Acme Group",
+    }]
 
 
 def test_dimension_crud_and_extra_fields() -> None:
@@ -766,7 +815,7 @@ def test_source_mapping_flow() -> None:
     assert mapping_response.status_code == 201
     mapping_id = mapping_response.json()["id"]
 
-    # Ingest raw values (one typo, one exact match)
+    # Ingest raw values (one typo, one exact match); neither is resolved yet.
     ingest_response = client.post(
         f"/api/source/connections/{connection_id}/samples",
         json={
@@ -780,6 +829,20 @@ def test_source_mapping_flow() -> None:
     )
     assert ingest_response.status_code == 201
 
+    canonical_options = client.get("/api/reference/canonical").json()
+    single = next(item for item in canonical_options if item["canonical_label"] == "Single")
+    pending_response = client.post(
+        f"/api/source/connections/{connection_id}/value-mappings",
+        json={
+            "source_table": "customers",
+            "source_field": "marital",
+            "raw_value": "Singel",
+            "canonical_id": single["id"],
+            "status": "pending",
+        },
+    )
+    assert pending_response.status_code == 201
+
     # Compute match statistics
     stats_response = client.get(f"/api/source/connections/{connection_id}/match-stats")
     assert stats_response.status_code == 200
@@ -788,41 +851,38 @@ def test_source_mapping_flow() -> None:
     stat = next(item for item in stats if item["mapping_id"] == mapping_id)
     assert stat["unmatched_values"] >= 1
     assert stat["total_values"] == 8
-    assert stat["top_matched"]
-    assert any(match["raw_value"] == "Married" for match in stat["top_matched"])
+    assert not stat["top_matched"]
 
-    # Retrieve unmatched values (should include "Singel")
+    # Both unmapped values remain unmatched despite their exact/similar suggestions.
     unmatched_response = client.get(f"/api/source/connections/{connection_id}/unmatched")
     assert unmatched_response.status_code == 200
     unmatched = unmatched_response.json()
     assert any(record["raw_value"] == "Singel" for record in unmatched)
+    assert any(record["raw_value"] == "Married" for record in unmatched)
 
-    # Approve a mapping for the typo using the existing canonical "Single"
-    canonical_response = client.get("/api/reference/canonical")
-    canonical_options = canonical_response.json()
-    single = next(item for item in canonical_options if item["canonical_label"] == "Single")
-
-    create_mapping_response = client.post(
-        f"/api/source/connections/{connection_id}/value-mappings",
+    # Approve the pending mapping for the typo using the existing canonical "Single"
+    approve_mapping_response = client.put(
+        f"/api/source/connections/{connection_id}/value-mappings/{pending_response.json()['id']}",
         json={
-            "source_table": "customers",
-            "source_field": "marital",
-            "raw_value": "Singel",
-            "canonical_id": single["id"],
             "status": "approved",
         },
     )
-    assert create_mapping_response.status_code == 201
+    assert approve_mapping_response.status_code == 200
+
+    # An approved mapping resolves the typo; the other exact-name suggestion
+    # still does not count as resolved until separately approved.
 
     refreshed_stats = client.get(
         f"/api/source/connections/{connection_id}/match-stats"
     ).json()
     updated_stat = next(item for item in refreshed_stats if item["mapping_id"] == mapping_id)
     assert any(match["raw_value"] == "Singel" for match in updated_stat["top_matched"])
+    assert not any(match["raw_value"] == "Married" for match in updated_stat["top_matched"])
 
     # The value should disappear from unmatched results
     unmatched_after = client.get(f"/api/source/connections/{connection_id}/unmatched").json()
     assert not any(record["raw_value"] == "Singel" for record in unmatched_after)
+    assert any(record["raw_value"] == "Married" for record in unmatched_after)
 
     # Connection specific mapping list
     connection_mappings = client.get(
@@ -1119,31 +1179,16 @@ def test_config_endpoint_auto_seeds_when_missing(tmp_path) -> None:
         assert payload["default_dimension"] == settings.default_dimension
         assert payload["match_threshold"] == settings.match_threshold
         assert payload["llm_mode"] == settings.llm_mode
-        assert payload["llm_escalation"] == settings.llm_escalation
+        assert payload["matcher_backend"] == "lexical"
+        assert "embedding_model" not in payload
+        assert "llm_escalation" not in payload
 
         with Session(engine) as session:
             config = session.exec(select(SystemConfig)).first()
             assert config is not None
             assert config.default_dimension == settings.default_dimension
             assert config.llm_mode == settings.llm_mode
-            assert config.llm_escalation is False
-
-
-def test_config_llm_escalation_roundtrip() -> None:
-    client = build_test_client()
-
-    initial = client.get("/api/config").json()
-    assert initial["llm_escalation"] is False
-
-    updated = client.put("/api/config", json={"llm_escalation": True})
-    assert updated.status_code == 200
-    assert updated.json()["llm_escalation"] is True
-
-    fetched = client.get("/api/config").json()
-    assert fetched["llm_escalation"] is True
-
-    reverted = client.put("/api/config", json={"llm_escalation": False})
-    assert reverted.json()["llm_escalation"] is False
+            assert config.matcher_backend == "lexical"
 
 
 def test_seeded_source_connection_available() -> None:

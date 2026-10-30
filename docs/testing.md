@@ -38,7 +38,7 @@ pytest -v
 pytest tests/test_matcher.py
 
 # Run specific test
-pytest tests/test_matcher.py::test_rank_with_embeddings
+pytest tests/test_matcher.py::test_default_uses_high_precision_name_similarity
 
 # Run with coverage
 pytest --cov=app --cov-report=html
@@ -105,10 +105,10 @@ import pytest
 from api.app.matcher import SemanticMatcher
 from api.app.models import CanonicalValue, SystemConfig
 
-def test_rank_with_embeddings():
-    """Test semantic embedding matching."""
+def test_rank_with_name_similarity():
+    """Test normalized name similarity matching."""
     config = SystemConfig(
-        matcher_backend="embedding",
+        matcher_backend="lexical",
         top_k=5
     )
     

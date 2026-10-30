@@ -70,7 +70,7 @@ export default function TopBar({
         {config && (
           <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-brand-secondary/10 text-brand-secondary border border-brand-secondary/20">
             <Sparkles className="h-3 w-3" />
-            Matcher: {config.matcher_backend}
+            Matcher: {config.matcher_backend === 'lexical' ? 'name similarity' : 'LLM'}
           </span>
         )}
 

@@ -1,5 +1,5 @@
 ---
-description: Review ranked semantic match suggestions and approve raw values into canonical mappings.
+description: Review ranked name-similarity suggestions and approve raw values into canonical mappings.
 ---
 
 # Suggestions
@@ -47,18 +47,18 @@ unmatched value carries its own suggestion list:
 }
 ```
 
-The scorer combines, in order of the configured pipeline:
+The default scorer normalizes Unicode, case, punctuation, whitespace, and word
+order, then ranks with RapidFuzz character and token-order similarity. It does
+not infer meaning from unrelated words. Suggestions start at `0.95`; the
+`0.97` strong-match threshold only classifies similarity and never resolves a
+value. Scores are not calibrated probabilities. LLM ranking is an explicit
+opt-in, not a fallback default.
 
-1. **Semantic embeddings** — a sentence-transformer model (default
-   `BAAI/bge-small-en-v1.5`) encodes the raw text and each canonical label, then
-   ranks by cosine similarity.
-2. **Lexical fallback** — if embeddings are unavailable, a token-overlap score
-   keeps the queue populated rather than failing closed.
-3. **LLM re-ranking** — when `llm_escalation` is on, near-tied embedding
-   candidates are escalated to an online or offline LLM for a tiebreak.
+Pending mappings are not counted as resolved values. Only mappings with status
+`approved` count as matched in source statistics and publish to consumers.
 
 The full pipeline is described in
-[Architecture → Semantic matching](architecture.md#semantic-matching-workflow).
+[Architecture → Name matching](architecture.md#3-name-matcher-apiappmatcherpy).
 
 ## Approving a suggestion
 

@@ -45,18 +45,10 @@ class Settings(BaseSettings):
         default="general", description="Fallback dimension when none is provided."
     )
     match_threshold: float = Field(
-        default=0.45, ge=0.0, le=1.0, description="Minimum similarity score to surface matches."
+        default=0.97, ge=0.0, le=1.0, description="Name-similarity threshold for surfacing suggestions."
     )
-    matcher_backend: str = Field(
-        default="embedding",
-        description="Selected matcher backend (embedding or llm).",
-    )
-    embedding_model: str = Field(
-        default="BAAI/bge-small-en-v1.5",
-        description=(
-            "Identifier for the embedding backend: any fastembed model name "
-            "(e.g. BAAI/bge-small-en-v1.5)."
-        ),
+    matcher_backend: Literal["lexical", "llm"] = Field(
+        default="lexical", description="Name similarity matcher or opt-in LLM ranking."
     )
     llm_mode: Literal["online", "offline"] = Field(
         default="online",
@@ -67,10 +59,6 @@ class Settings(BaseSettings):
     )
     llm_api_base: str | None = Field(
         default=None, description="Optional override for the LLM API base URL."
-    )
-    llm_escalation: bool = Field(
-        default=False,
-        description="Escalate ambiguous embedding matches to the configured LLM.",
     )
     top_k: int = Field(
         default=5, ge=1, le=20, description="Maximum number of match candidates to return."

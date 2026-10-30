@@ -31,7 +31,7 @@ AGENT_TOOLS: list[dict[str, Any]] = [
         "name": "rank_matches",
         "description": (
             "Rank canonical values for a raw input text using the configured "
-            "semantic matcher. Returns scored candidates with their canonical ids."
+            "name matcher. Returns ranked candidates with their canonical ids."
         ),
         "parameters": {
             "type": "object",

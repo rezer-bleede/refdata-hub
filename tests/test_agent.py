@@ -346,7 +346,7 @@ def test_harmonize_requires_full_source_context(client_and_engine) -> None:
     assert response.status_code == 400
 
 
-def test_rank_match_tool_uses_semantic_matcher(
+def test_rank_match_tool_uses_name_matcher(
     engine_setup, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     engine, config = engine_setup

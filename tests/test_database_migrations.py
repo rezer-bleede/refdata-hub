@@ -107,15 +107,19 @@ def test_init_db_adds_missing_llm_mode_column(tmp_path) -> None:
     inspector = inspect(engine)
     columns = {column["name"] for column in inspector.get_columns("systemconfig")}
     assert "llm_mode" in columns
+    assert "embedding_model" not in columns
+    assert "llm_escalation" not in columns
 
     with engine.begin() as connection:
-        value = connection.execute(text("SELECT llm_mode FROM systemconfig")).scalar_one()
+        value = connection.execute(
+            text("SELECT llm_mode, matcher_backend, match_threshold FROM systemconfig")
+        ).one()
 
-    assert value == "online"
+    assert tuple(value) == ("online", "lexical", 0.97)
 
 
-def test_init_db_adds_missing_llm_escalation_column(tmp_path) -> None:
-    db_path = tmp_path / "legacy-escalation.sqlite"
+def test_init_db_removes_retired_matcher_columns(tmp_path) -> None:
+    db_path = tmp_path / "legacy-matcher.sqlite"
     engine = create_engine(
         f"sqlite:///{db_path}", connect_args={"check_same_thread": False}
     )
@@ -157,11 +161,12 @@ def test_init_db_adds_missing_llm_escalation_column(tmp_path) -> None:
 
     inspector = inspect(engine)
     columns = {column["name"] for column in inspector.get_columns("systemconfig")}
-    assert "llm_escalation" in columns
+    assert "embedding_model" not in columns
+    assert "llm_escalation" not in columns
 
     with engine.begin() as connection:
         value = connection.execute(
-            text("SELECT llm_escalation FROM systemconfig")
-        ).scalar_one()
+            text("SELECT matcher_backend, match_threshold FROM systemconfig")
+        ).one()
 
-    assert not value
+    assert tuple(value) == ("lexical", 0.97)

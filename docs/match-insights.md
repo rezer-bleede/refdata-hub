@@ -89,7 +89,7 @@ messy source — use `occurrence_count` to judge the real blast radius.
 | Value | Meaning |
 | --- | --- |
 | `mapping` | Resolved by an approved value mapping — deterministic, trust it |
-| `semantic` | Resolved by embedding similarity — probabilistic, verify it |
+| `similarity` | Classified by normalized name similarity — verify identity before approval |
 
 A high rate dominated by `semantic` matches deserves more scrutiny than the same
 rate driven by `mapping` rows.

@@ -14,7 +14,7 @@ graph TB
     
     subgraph "Backend Layer"
         API[FastAPI Backend<br/>Python + SQLModel]
-        MATCHER[Semantic Matcher<br/>Embeddings + LLM]
+        MATCHER[Name Similarity Matcher<br/>Optional LLM]
     end
     
     subgraph "Data Layer"
@@ -91,7 +91,7 @@ graph TB
 │   ├── /canonical/import   – Bulk import canonical values
 │   ├── /dimensions        – Manage dimension catalog
 │   ├── /dimension-relations – Parent/child hierarchies
-│   └── /propose          – Semantic matching suggestions
+│   └── /propose          – Name-similarity suggestions
 ├── /source
 │   ├── /connections       – Source system connections
 │   ├── /connections/{id}/mappings – Field mappings
@@ -105,26 +105,22 @@ graph TB
 └── /config               – System configuration
 ```
 
-### 3. Semantic Matcher (`api/app/matcher.py`)
+### 3. Name Matcher (`api/app/matcher.py`)
 
 **Design Pattern:** Strategy Pattern with pluggable implementations
 
 **Matching Strategies:**
 
-1. **Semantic Embeddings** (Default)
-   - Local ONNX sentence-transformer models via [fastembed](https://github.com/qdrant/fastembed)
-   - Default model: `BAAI/bge-small-en-v1.5` (~130 MB, downloaded on first use and cached)
-   - Cosine similarity for scoring with a per-process vector cache keyed by `(model, text)`
-   - `embedding_model` accepts any fastembed model name; legacy values such as `tfidf` resolve to the default model
-   - Automatic fallback to normalized token-overlap (lexical) matching when the model is unavailable
-   - Optional LLM escalation: when `llm_escalation` is enabled and the top two scores are within 0.15,
-     the configured LLM re-ranks the candidates (helps with negation traps like "never married")
+1. **Normalized name similarity** (Default)
+   - RapidFuzz character and token-order ratios over normalized Unicode names
+   - Conservative `0.97` suggestion threshold; candidates can surface from `0.95`; scores are not probabilities
+   - No embeddings, model downloads, or automatic approval
 
-2. **LLM-Based Matching** (Optional)
+2. **LLM-Based Ranking** (Optional)
    - **Offline Mode:** Ollama smollm / tinyllama (local)
    - **Online Mode:** OpenAI-compatible API
    - Ranks candidates using semantic understanding
-   - Automatic fallback to embeddings on failure
+    - Falls back to normalized name similarity on failure
 
 3. **Agentic Harmonization API** (Optional)
    - `POST /api/agent/harmonize` runs a bounded LLM tool-calling loop
@@ -150,12 +146,11 @@ sequenceDiagram
     DB-->>API: Return values
     API->>Matcher: rank(raw_text, values, config)
     
-    alt LLM Mode
+    alt LLM Mode (opt-in)
         Matcher->>LLM: Request ranking
         LLM-->>Matcher: Ranked candidates
-    else Embedding Mode
-        Matcher->>Matcher: Compute embedding vectors
-        Matcher->>Matcher: Calculate cosine similarity
+    else Default Name Similarity
+        Matcher->>Matcher: Normalize and compare names
     end
     
     Matcher-->>API: Match candidates
@@ -232,30 +227,20 @@ sequenceDiagram
     API-->>UI: Match rates and insights
 ```
 
-### Semantic Matching Workflow
+### Name Suggestion Review Workflow
 
 ```mermaid
 sequenceDiagram
     participant Source
-    participant Ingestion
     participant Matcher
-    participant LLM
     participant Reviewer
     
-    Source->>Ingestion: New raw value
-    Ingestion->>Matcher: Propose matches
+    Source->>Matcher: New raw value
     Matcher->>Matcher: Load canonical values
     
-    alt High confidence
-        Matcher->>Ingestion: Auto-approve (threshold > 0.9)
-    else Medium confidence
-        Matcher->>Reviewer: Queue for review
-        Reviewer->>Matcher: Approve/reject
-    else Low confidence
-        Matcher->>Ingestion: Flag for manual review
-    end
-    
-    Matcher->>Matcher: Store mapping in valuemapping
+    Matcher->>Reviewer: Return ranked suggestions
+    Reviewer->>Matcher: Explicitly approve or reject
+    Matcher->>Matcher: Persist only reviewer-approved mappings
 ```
 
 ## Technology Decisions
@@ -312,14 +297,12 @@ sequenceDiagram
 - MongoDB (schemaless not ideal)
 - SQLite (no concurrent writes)
 
-### Matching: Multi-Strategy
+### Matching: Conservative Name Similarity
 
 **Rationale:**
-- **Semantic embeddings:** True paraphrase matching with no external service (fastembed/ONNX)
-- **Lexical overlap:** Fast, reliable fallback with no external deps
-- **LLM:** Semantic understanding for complex cases
-- **Fallback:** Ensure system always works
-- **Choice:** User can switch based on use case
+- **Name similarity:** Fast normalized character/token matching suited to spelling variants
+- **LLM:** Optional ranking for language-level suggestions; requires human verification
+- **Default:** No embeddings, downloads, automatic approvals, or network calls
 
 ## Security Considerations
 
@@ -357,7 +340,7 @@ sequenceDiagram
 
 - Monolithic FastAPI backend
 - Single PostgreSQL instance
-- In-process semantic matching
+- In-process normalized-name matching
 
 ### Scaling Options
 
@@ -374,7 +357,7 @@ sequenceDiagram
 3. **Matching Service**
    - Extract matcher as microservice
    - Queue-based processing for bulk jobs
-   - Embedding precomputation for performance
+    - Batch processing for large review queues
 
 4. **Caching Strategy**
    - Redis for session management
@@ -387,8 +370,8 @@ sequenceDiagram
 
 - API endpoints: < 100ms (p95)
 - Canonical value lookup: < 50ms
-- Semantic match (embeddings): < 200ms
-- Semantic match (LLM): 1-3s
+- Name similarity match: < 200ms
+- LLM ranking: 1-3s
 - Bulk import (1000 rows): < 5s
 
 ### Optimization Strategies
@@ -405,8 +388,7 @@ sequenceDiagram
 
 3. **Matching Optimization**
    - Limit candidates with dimension filtering
-   - Cache embedding vectors
-   - Batch processing for bulk operations
+    - Batch processing for bulk operations
 
 ## Deployment Architecture
 
@@ -481,7 +463,7 @@ sequenceDiagram
 2. **Advanced Matching**
    - Custom model training
    - Multi-language support
-   - Domain-specific embeddings
+    - Domain-specific normalization rules
 
 3. **Governance**
    - Approval workflows
@@ -490,5 +472,5 @@ sequenceDiagram
 
 4. **Performance**
    - Graph database for relationships
-   - Vector database for embeddings
+    - Search index for large canonical libraries
    - Precomputed match clusters

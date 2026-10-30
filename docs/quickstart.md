@@ -61,13 +61,13 @@ Once all services are running:
 ### 1. Explore the Dashboard
 The dashboard gives you an overview of:
 - Canonical coverage across dimensions
-- Semantic matching playground for testing suggestions
+- Name-similarity playground for testing suggestions
 - Quick access to key workspaces
 
 ### 2. Check Settings
 Navigate to **Settings** to configure:
-- Matcher thresholds (confidence levels)
-- Embedding defaults
+- Name-similarity threshold
+- Matching method (name similarity by default; LLM is opt-in)
 - LLM connectivity (switch between offline Ollama and hosted API)
 
 ### 3. Browse Canonical Library

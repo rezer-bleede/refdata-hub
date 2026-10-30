@@ -104,10 +104,10 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 **Examples:**
 ```
-feat(matcher): add support for custom embedding models
+feat(matcher): add conservative normalized-name scoring
 
-Add a new parameter to the SemanticMatcher that allows users to specify
-custom embedding models beyond the default TF-IDF.
+Rank spelling variants with normalized character and token-order similarity;
+keep uncertain identity decisions in the human review queue.
 
 Closes #123
 ```

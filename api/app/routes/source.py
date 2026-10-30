@@ -564,7 +564,7 @@ def _record_matched_preview(
     sample: SourceSample,
     *,
     canonical_label: str,
-    match_type: Literal["mapping", "semantic"],
+    match_type: Literal["mapping", "similarity"],
     confidence: float | None,
 ) -> None:
     existing = accumulator.get(sample.raw_value)
@@ -572,7 +572,7 @@ def _record_matched_preview(
         existing.occurrence_count += sample.occurrence_count
         if confidence is not None:
             existing.confidence = max(existing.confidence or 0.0, confidence)
-        if existing.match_type == "semantic" and match_type == "mapping":
+        if existing.match_type == "similarity" and match_type == "mapping":
             existing.match_type = match_type
             existing.canonical_label = canonical_label
         return
@@ -598,7 +598,7 @@ def _suggestions_for_samples(
     matched: dict[str, MatchedValuePreview] = {}
     for sample in samples:
         mapping = mapped_values.get(sample.raw_value)
-        if mapping:
+        if mapping and mapping.status == "approved":
             canonical_label = (
                 canonical_lookup.get(mapping.canonical_id).canonical_label
                 if mapping.canonical_id in canonical_lookup
@@ -615,19 +615,7 @@ def _suggestions_for_samples(
             continue
 
         ranked = matcher.rank(sample.raw_value)
-        if ranked and ranked[0].score >= threshold:
-            best = ranked[0]
-            matched_count += sample.occurrence_count
-            _record_matched_preview(
-                matched,
-                sample,
-                canonical_label=best.canonical_label,
-                match_type="semantic",
-                confidence=best.score,
-            )
-            continue
-
-        candidate_threshold = max(threshold * 0.75, 0.2)
+        candidate_threshold = max(threshold - 0.02, 0.95)
         suggestions = [
             match for match in ranked if match.score >= candidate_threshold
         ][:3]

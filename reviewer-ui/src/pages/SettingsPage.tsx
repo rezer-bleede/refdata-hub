@@ -27,9 +27,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
         if (value === '') {
           return;
         }
-        if (key === 'llm_escalation') {
-          payload[key] = value === 'true';
-        } else if (key === 'match_threshold' || key === 'top_k') {
+        if (key === 'match_threshold' || key === 'top_k') {
           payload[key] = Number(value);
         } else {
           payload[key] = value;
@@ -49,22 +47,20 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
 
   const currentValues = useMemo(() => ({
     default_dimension: config?.default_dimension ?? '',
+    matcher_backend: config?.matcher_backend ?? 'lexical',
     match_threshold: config?.match_threshold?.toString() ?? '',
     top_k: config?.top_k?.toString() ?? '',
-    embedding_model: config?.embedding_model ?? '',
     llm_mode: config?.llm_mode ?? 'online',
     llm_model: config?.llm_model ?? '',
     llm_api_base: config?.llm_api_base ?? '',
-    llm_escalation: config?.llm_escalation ?? false,
   }), [
     config?.default_dimension,
+    config?.matcher_backend,
     config?.match_threshold,
     config?.top_k,
-    config?.embedding_model,
     config?.llm_mode,
     config?.llm_model,
     config?.llm_api_base,
-    config?.llm_escalation,
   ]);
 
   return (
@@ -76,7 +72,7 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
               System configuration
             </Card.Title>
             <Card.Text className="text-text-tertiary mb-0">
-              Fine-tune matcher defaults, LLM integrations, and semantic controls. Changes apply immediately after saving.
+              Fine-tune name matching and optional LLM settings. Changes apply immediately after saving.
             </Card.Text>
           </div>
           {config ? (
@@ -96,13 +92,26 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   onChange={(event) => handleChange('default_dimension', event.target.value)}
                 />
               </Form.Group>
+              <Form.Group as={Col} md={6} controlId="settings-matcher-backend">
+                <Form.Label>Matching method</Form.Label>
+                <Form.Select
+                  value={draft.matcher_backend ?? currentValues.matcher_backend}
+                  onChange={(event) => handleChange('matcher_backend', event.target.value)}
+                >
+                  <option value="lexical">Name similarity (recommended)</option>
+                  <option value="llm">LLM ranking (opt-in)</option>
+                </Form.Select>
+                <Form.Text className="text-text-tertiary">
+                  Similarity scores rank names but do not prove identity. Mappings still need review and approval.
+                </Form.Text>
+              </Form.Group>
               <Form.Group as={Col} md={3} controlId="settings-match-threshold">
                 <Form.Label>Match threshold</Form.Label>
                 <Form.Control
                   type="number"
                   min={0}
                   max={1}
-                  step="0.05"
+                  step="0.01"
                   value={draft.match_threshold ?? currentValues.match_threshold}
                   onChange={(event) => handleChange('match_threshold', event.target.value)}
                 />
@@ -115,14 +124,6 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   max={20}
                   value={draft.top_k ?? currentValues.top_k}
                   onChange={(event) => handleChange('top_k', event.target.value)}
-                />
-              </Form.Group>
-              <Form.Group as={Col} md={6} controlId="settings-embedding-model">
-                <Form.Label>Embedding model</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={draft.embedding_model ?? currentValues.embedding_model}
-                  onChange={(event) => handleChange('embedding_model', event.target.value)}
                 />
               </Form.Group>
               <Form.Group as={Col} md={6} controlId="settings-llm-mode">
@@ -155,23 +156,6 @@ const SettingsPage = ({ onToast }: SettingsPageProps) => {
                   value={draft.llm_api_base ?? currentValues.llm_api_base}
                   onChange={(event) => handleChange('llm_api_base', event.target.value)}
                 />
-              </Form.Group>
-              <Form.Group as={Col} md={6} controlId="settings-llm-escalation">
-                <Form.Label>Ambiguous match handling</Form.Label>
-                <Form.Check
-                  type="switch"
-                  label="Escalate near-tied embedding results to the LLM"
-                  checked={
-                    draft.llm_escalation !== undefined
-                      ? draft.llm_escalation === 'true'
-                      : currentValues.llm_escalation
-                  }
-                  onChange={(event) => handleChange('llm_escalation', event.target.checked ? 'true' : 'false')}
-                />
-                <Form.Text className="text-text-tertiary">
-                  When the top two embedding scores are within 0.15, the configured LLM re-ranks the
-                  candidates. Useful for negation and other paraphrase traps (e.g. "never married").
-                </Form.Text>
               </Form.Group>
               <Col xs={12} className="flex justify-end">
                 <Button type="submit" variant="primary" disabled={saving}>

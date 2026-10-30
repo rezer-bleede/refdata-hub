@@ -28,8 +28,8 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 <div class="rdh-steps" markdown>
 
 1. **Ingest &amp; profile** raw values from upstream databases.
-2. **Semantically match** them to canonical dimensions using embedding vectors,
-   with lexical fallback and optional LLM re-ranking.
+2. **Rank likely name matches** with conservative string similarity; LLM ranking
+   is opt-in and all mappings remain subject to review.
 3. **Route to reviewers** who approve, reject, or refine suggestions in a
    purpose-built console.
 4. **Publish** canonical mappings to downstream warehouses, BI tools, and
@@ -43,7 +43,7 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 
     ---
 
-    Metric tiles plus a semantic match playground for instant feedback on how
+    Metric tiles plus a name-match playground for instant feedback on how
     the matcher is scoring your data.
 
     [:octicons-arrow-right-24: Open the console](dashboard.md)
@@ -57,12 +57,12 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 
     [:octicons-arrow-right-24: Curate values](canonical-library.md)
 
--   :material-lightbulb: **Semantic Matching**
+-   :material-lightbulb: **Name Similarity Matching**
 
     ---
 
-    ONNX sentence-transformer embeddings ranked by cosine similarity, with a
-    lexical fallback so the queue never goes empty.
+    normalized Unicode names ranked with RapidFuzz similarity; optional LLM
+    ranking falls back to name similarity.
 
     [:octicons-arrow-right-24: Review suggestions](suggestions.md)
 
@@ -133,7 +133,7 @@ first-run configuration, and seeding details.
 ```mermaid
 graph LR
     A[Source Systems] -->|Raw data| B[RefData Hub]
-    B --> C[Semantic Matcher]
+    B --> C[Name Similarity Matcher]
     B --> D[Canonical Library]
     D -->|Approved mappings| E[Downstream Consumers]
     C -->|Ranked suggestions| B
@@ -178,8 +178,8 @@ intelligent harmonization through semantic matching and human curation.
 
 - **Backend** — FastAPI (Python) with SQLModel / PostgreSQL
 - **Frontend** — React 18 + Vite + Tailwind CSS
-- **Matching** — ONNX sentence-transformer embeddings (default
-  `BAAI/bge-small-en-v1.5`) + lexical fallback + OpenAI/Ollama LLM
+- **Matching** — RapidFuzz normalized-name similarity by default (0.97 strong-match threshold); optional
+  OpenAI/Ollama LLM ranking; mappings require reviewer approval
 - **Testing** — Pytest (backend) + Vitest (frontend)
 - **Infrastructure** — Docker Compose, GitHub Pages for this documentation
 

@@ -13,8 +13,7 @@ const stateMock = vi.hoisted(() => ({
       default_dimension: 'general',
       match_threshold: 0.7,
       top_k: 5,
-      matcher_backend: 'embedding',
-      embedding_model: 'text-embeddings',
+      matcher_backend: 'lexical',
       llm_mode: 'online',
       llm_model: 'gpt-4o-mini',
       llm_api_base: 'https://api.openai.com/v1',
@@ -41,8 +40,7 @@ describe('SettingsPage', () => {
       default_dimension: 'general',
       match_threshold: 0.7,
       top_k: 5,
-      matcher_backend: 'embedding',
-      embedding_model: 'text-embeddings',
+      matcher_backend: 'lexical',
       llm_mode: 'online',
       llm_model: 'gpt-4o-mini',
       llm_api_base: 'https://api.openai.com/v1',
@@ -76,11 +74,32 @@ describe('SettingsPage', () => {
     );
   });
 
+  it('allows explicitly selecting LLM ranking', async () => {
+    apiMocks.updateConfig.mockResolvedValue({
+      ...stateMock.value.config,
+      matcher_backend: 'llm',
+    });
+    render(<SettingsPage onToast={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText('Matching method'), {
+      target: { value: 'llm' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save configuration' }));
+    await waitFor(() => expect(apiMocks.updateConfig).toHaveBeenCalledWith({
+      matcher_backend: 'llm',
+    }));
+  });
+
   it('surfaces loading state when configuration is unavailable', () => {
     stateMock.value.config = null as never;
     const onToast = vi.fn();
     render(<SettingsPage onToast={onToast} />);
 
     expect(screen.getByText('Configuration is still loading.')).toBeInTheDocument();
+  });
+
+  it('does not expose retired embedding controls', () => {
+    render(<SettingsPage onToast={vi.fn()} />);
+    expect(screen.queryByLabelText(/embedding/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/embedding/i)).not.toBeInTheDocument();
   });
 });

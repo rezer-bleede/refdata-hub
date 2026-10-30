@@ -26,6 +26,16 @@ All endpoints accept and return structured JSON payloads that align with the Rea
 
 ## Canonical Values
 
+### Export Approved Company Aliases
+```http
+GET /api/reference/company-aliases
+```
+
+Returns approved raw-value mappings for the `company` dimension as
+`{ raw_value, canonical_id, canonical_label }` records. Pending suggestions and
+other dimensions are excluded; consumers should leave aliases mapped to
+conflicting canonical IDs unresolved.
+
 ### Get All Canonical Values
 ```http
 GET /api/reference/canonical
@@ -269,7 +279,7 @@ Delete a canonical value pairing.
 GET /api/config
 ```
 
-Retrieve the system configuration including matcher thresholds, embedding defaults, and LLM settings.
+Retrieve the system configuration including name-similarity thresholds and optional LLM settings.
 
 **Response:** `SystemConfig`
 

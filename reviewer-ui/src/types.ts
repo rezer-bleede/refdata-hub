@@ -30,12 +30,10 @@ export interface MatchResponse {
 export interface SystemConfig {
   default_dimension: string;
   match_threshold: number;
-  matcher_backend: 'embedding' | 'llm';
-  embedding_model: string;
+  matcher_backend: 'lexical' | 'llm';
   llm_mode: 'online' | 'offline';
   llm_model?: string | null;
   llm_api_base?: string | null;
-  llm_escalation: boolean;
   top_k: number;
   llm_api_key_set: boolean;
 }
@@ -43,12 +41,10 @@ export interface SystemConfig {
 export interface SystemConfigUpdate {
   default_dimension?: string;
   match_threshold?: number;
-  matcher_backend?: 'embedding' | 'llm';
-  embedding_model?: string;
+  matcher_backend?: 'lexical' | 'llm';
   llm_mode?: 'online' | 'offline';
   llm_model?: string | null;
   llm_api_base?: string | null;
-  llm_escalation?: boolean;
   top_k?: number;
   llm_api_key?: string;
 }
@@ -168,7 +164,7 @@ export interface MatchedValuePreview {
   raw_value: string;
   occurrence_count: number;
   canonical_label: string;
-  match_type: 'mapping' | 'semantic';
+  match_type: 'mapping' | 'similarity';
   confidence?: number | null;
 }
 

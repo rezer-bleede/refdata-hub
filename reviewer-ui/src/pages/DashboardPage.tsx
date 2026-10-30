@@ -34,7 +34,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
     return {
       uniqueDimensions,
       canonicalCount,
-      matcher: config?.matcher_backend ?? '—',
+      matcher: config?.matcher_backend === 'lexical' ? 'Name similarity' : config?.matcher_backend === 'llm' ? 'LLM ranking' : '—',
     };
   }, [availableDimensions, canonicalValues.length, config?.matcher_backend]);
 
@@ -68,7 +68,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
               <th className="px-4 py-3 text-left">Canonical Label</th>
               <th className="px-4 py-3 text-left">Dimension</th>
               <th className="px-4 py-3 text-left">Description</th>
-              <th className="px-4 py-3 text-right">Confidence</th>
+              <th className="px-4 py-3 text-right">Score</th>
             </tr>
           </thead>
           <tbody>
@@ -101,7 +101,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
         <div className="panel-card">
           <p className="panel-heading">Dimensions</p>
           <p className="metric-value">{insights.uniqueDimensions}</p>
-          <p className="metric-subtitle">Distinct semantic domains</p>
+            <p className="metric-subtitle">Distinct reference dimensions</p>
         </div>
         <div className="panel-card">
           <p className="panel-heading">Matcher backend</p>
@@ -112,7 +112,7 @@ const DashboardPage = ({ onToast }: DashboardPageProps) => {
 
       <section className="surface-card flex flex-col gap-6">
         <div className="space-y-2">
-          <h2 className="section-heading">Semantic match playground</h2>
+          <h2 className="section-heading">Name match playground</h2>
           <p className="text-sm text-text-tertiary">
             Experiment with raw inputs to validate canonical coverage and scoring across dimensions.
           </p>

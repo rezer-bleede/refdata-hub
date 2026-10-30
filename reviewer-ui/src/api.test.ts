@@ -5,8 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const buildConfigPayload = () => ({
   default_dimension: 'general',
   match_threshold: 0.6,
-  matcher_backend: 'embedding',
-  embedding_model: 'BAAI/bge-small-en-v1.5',
+  matcher_backend: 'lexical',
   llm_mode: 'online',
   llm_model: null,
   llm_api_base: null,

@@ -19,13 +19,13 @@ Three metric tiles read live from the app state context:
 | --- | --- | --- |
 | **Canonical values** | `GET /api/reference/canonical` | Size of your approved golden-record set |
 | **Dimensions** | `GET /api/reference/dimensions` | How many semantic domains you have defined |
-| **Matcher backend** | `GET /api/config` | Whether matching runs on embeddings, lexical fallback, or LLM |
+| **Matcher backend** | `GET /api/config` | Whether matching uses name similarity or opt-in LLM ranking |
 
 If the **Matcher backend** tile disagrees with what you set in
 [Settings](settings.md), your most recent `PUT /api/config` did not persist.
 Check that the API accepted the write and that the browser can reach it.
 
-## Semantic match playground
+## Name match playground
 
 The playground is the fastest feedback loop in the product. Enter a raw value
 you expect to see in a source system, optionally pick a dimension, and see the
@@ -56,24 +56,23 @@ The response carries a `matches` array of `MatchCandidate` objects, each with a
 }
 ```
 
-The UI renders this as a table of label, dimension, description, and confidence
-percentage.
+The UI renders this as a table of label, dimension, description, and similarity
+score. The score is not a probability or confirmation of identity.
 
 <figure class="rdh-figure">
-  <img src="../screenshots/demo_semantic_matching.gif" alt="Semantic matching playground scoring raw values against canonical values">
-  <figcaption>The semantic matching playground: type a raw value, see ranked candidates with confidence scores.</figcaption>
+  <img src="../screenshots/demo_semantic_matching.gif" alt="Name matching playground scoring raw values against canonical values">
+  <figcaption>The name matching playground: type a raw value to see ranked candidates with similarity scores.</figcaption>
 </figure>
 
 !!! tip "Read the score, not just the rank"
-    A high score means the embedding put the candidate close to your raw text.
-    It does not mean the candidate is *correct*. The score is a ranking signal
-    for humans; approval is always a deliberate act.
+    A high score means the normalized names are textually similar. It does not
+    mean they identify the same entity. Approval is always a deliberate act.
 
 ## Interpreting a weak match
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Every score is low and flat | Embedding model has not downloaded, or the backend fell back to lexical matching | Check the **Matcher backend** tile and the API log for model download errors |
+| Every score is low | The names differ beyond the conservative similarity threshold | Review manually or add an approved alias; do not lower the threshold without checking false positives |
 | A candidate from the wrong dimension ranks first | You left `dimension` unset, so the matcher searched the whole library | Pin the dimension in the playground |
 | Good candidates exist but scores are below the threshold | `match_threshold` is set too high for your data | Lower it in [Settings](settings.md), or approve from [Suggestions](suggestions.md) |
 
@@ -101,7 +100,7 @@ percentage.
 
     ---
 
-    Tune thresholds, the embedding model, and LLM escalation.
+    Tune the name-similarity threshold and optional LLM settings.
 
     [:octicons-arrow-right-24: Tune the matcher](settings.md)
 

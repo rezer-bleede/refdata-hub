@@ -53,7 +53,7 @@ pytest
 pytest --cov=app --cov-report=html
 
 # Run specific test
-pytest tests/test_matcher.py::test_rank_with_semantic_embeddings_ranks_by_cosine
+pytest tests/test_matcher.py::test_default_uses_high_precision_name_similarity
 
 # Run with verbose output
 pytest -v
@@ -121,10 +121,10 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 **Examples:**
 ```
-feat(matcher): add support for custom embedding models
+feat(matcher): add conservative normalized-name scoring
 
-Add a new parameter to the SemanticMatcher that allows users to specify
-custom embedding models beyond the default fastembed model.
+Rank spelling variants with normalized character and token-order similarity;
+keep uncertain identity decisions in the human review queue.
 
 Closes #123
 ```
@@ -149,7 +149,7 @@ Fixes #456
 │   │   ├── database.py           # Database engine and session
 │   │   ├── models.py             # SQLModel database models
 │   │   ├── schemas.py            # Pydantic schemas for API
-│   │   ├── matcher.py            # Semantic matching logic
+│   │   ├── matcher.py            # Normalized name matching + optional LLM
 │   │   ├── seeds.py              # Database seeding
 │   │   ├── routes/               # API route handlers
 │   │   │   ├── agent.py         # Agentic harmonization endpoints
@@ -348,7 +348,7 @@ matches = matcher.rank("never married")
 
 - `api/app/config.py` – System configuration settings
 - `api/app/models.py` – SQLModel database models
-- `api/app/matcher.py` – Semantic matching logic (fastembed embeddings + lexical fallback + LLM)
+- `api/app/matcher.py` – normalized-name similarity matching + optional LLM ranking
 - `tests/conftest.py` – Test fixtures and database setup (uses in-memory SQLite)
 - `docker-compose.yml` – Multi-service orchestration with PostgreSQL, Ollama, API, and UI
 - `.github/workflows/deploy-docs.yml` – GitHub Actions for documentation deployment
@@ -357,6 +357,6 @@ matches = matcher.rank("never married")
 
 - **Backend:** FastAPI (Python) with SQLModel/PostgreSQL
 - **Frontend:** React 18 + Vite + Tailwind CSS
-- **Matching:** ONNX sentence-transformer embeddings (fastembed, default `BAAI/bge-small-en-v1.5`) + lexical fallback + OpenAI/Ollama LLM support
+- **Matching:** RapidFuzz normalized-name similarity by default + optional OpenAI/Ollama LLM ranking; no embedding model or automatic mapping approvals
 - **Testing:** Pytest (backend) + Vitest (frontend)
 - **Infrastructure:** Docker Compose

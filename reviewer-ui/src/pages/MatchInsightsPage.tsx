@@ -31,7 +31,7 @@ const renderSuggestions = (suggestions: MatchCandidate[]) => {
 
 const renderMatchedValueCard = (matched: FieldMatchStats['top_matched'][number]) => {
   const confidence = matched.confidence ?? null;
-  const badgeLabel = matched.match_type === 'mapping' ? 'Mapped value' : 'Semantic match';
+  const badgeLabel = matched.match_type === 'mapping' ? 'Approved mapping' : 'Name similarity';
   const badgeVariant = matched.match_type === 'mapping' ? 'success' : 'secondary';
 
   return (
@@ -48,8 +48,8 @@ const renderMatchedValueCard = (matched: FieldMatchStats['top_matched'][number])
       <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
         <span className="font-semibold text-text-primary">Canonical:</span>{' '}
         <span>{matched.canonical_label}</span>
-        {confidence !== null && (
-          <span className="ml-2 text-xs text-text-tertiary">{`Confidence ${(confidence * 100).toFixed(0)}%`}</span>
+         {confidence !== null && (
+           <span className="ml-2 text-xs text-text-tertiary">{`${matched.match_type === 'mapping' ? 'Confidence' : 'Similarity'} ${(confidence * 100).toFixed(0)}%`}</span>
         )}
       </div>
     </Card>

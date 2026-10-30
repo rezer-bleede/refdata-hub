@@ -18,11 +18,11 @@
 - Canonical library dimension badges now use brighter aurora accents on translucent backgrounds to stay readable on the dark
   reviewer shell.
 
-## 2. Semantic Matching
-- Use NLP and embedding models to suggest standardized values for new raw inputs.
-- Allow configurable confidence thresholds that determine when to auto-apply suggestions.
+## 2. Name Matching
+- Use conservative normalized-name similarity to rank candidates for new raw inputs.
+- Allow configurable similarity thresholds; suggestions are never auto-approved.
 - Route low-confidence matches for manual review to ensure data quality.
-- Operate in offline mode via local Ollama runtimes (e.g. `smollm:135m` or `tinyllama`) or switch to a hosted OpenAI-compatible endpoint from the dedicated settings workspace, which centralises matcher thresholds, embedding defaults, and credential inputs.
+- Optionally use local Ollama runtimes or a hosted OpenAI-compatible endpoint; name similarity remains the default.
 
 ## 3. Review & Approval Workflow
 - Offer UI and API pathways for reviewers to approve or reject suggestions.
@@ -40,7 +40,7 @@
 
 ### Analytics & Insights
 - Visualize match coverage rates across dimensions and field mappings
-- Track top matched values with confidence scores
+- Track top matched values with name-similarity scores
 - Identify unmatched values requiring manual review
 - Monitor harmonization health over time
 

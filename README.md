@@ -54,7 +54,7 @@
 In inconsistent multi-system environments, raw reference values—such as country codes, employment statuses, education levels, or marital statuses—vary widely between source databases, analytics pipelines, and third-party APIs. RefData Hub establishes a single source of truth by:
 
 1. **Ingesting & Profiling** raw source data from upstream databases.
-2. **Semantically Matching** disparate raw values to canonical dimensions using AI embedding vectors or LLM-powered re-ranking.
+2. **Matching Names** to canonical values with conservative normalized string similarity, with optional LLM ranking.
 3. **Empowering Reviewers** with a modern human-in-the-loop dashboard to inspect, approve, or refine suggestions.
 4. **Publishing Canonical Mappings** to downstream data warehouses, business intelligence tools, and microservices.
 
@@ -62,7 +62,7 @@ In inconsistent multi-system environments, raw reference values—such as countr
 
 ## ✨ Key Features
 
-- 🧠 **AI-Assisted Semantic Matching:** Harmonize messy reference data automatically using local sentence-transformer embeddings ([fastembed](https://github.com/qdrant/fastembed)), or configurable LLM providers (OpenAI API or local offline Ollama models) — including optional LLM escalation that re-ranks near-tied embedding results.
+- 🔎 **Conservative Name Matching:** Rank likely matches with RapidFuzz character and token-order similarity; exact mappings are reviewed and approved by a human. Optional LLM ranking is opt-in.
 - 🛡️ **Human-in-the-Loop Curation:** A streamlined dashboard for data stewards and reviewers to inspect confidence scores, approve auto-suggestions, or manually map complex edge cases.
 - 🔗 **Source System Connectors:** Connect directly to upstream databases — PostgreSQL, MySQL, ClickHouse, Snowflake, SQL Server, Oracle, MongoDB, SQLite, DuckDB, or a generic SQL driver — inspect live schemas, and sample unstandardized values in real time.
 - 📐 **Canonical Library & Custom Schemas:** Define flexible reference dimensions with custom JSON metadata schemas (e.g., ISO codes, regional attributes, sorting priority).
@@ -88,8 +88,8 @@ RefData Hub acts as an intelligent middleware layer between operational source s
 ```
 
 1. **Extraction & Sampling:** Source connectors pull distinct raw values and record counts.
-2. **Semantic Vector Matching:** Matcher scores candidates using cosine vector similarity or LLMs.
-3. **Approval Thresholds:** High-confidence matches auto-approve while uncertain values route to human reviewers.
+2. **Name Similarity:** RapidFuzz ranks normalized-name candidates; optional LLM ranking can be selected.
+3. **Human Review:** Suggestions never resolve values; only reviewer-approved mappings count and publish.
 4. **Central Repository:** Approved canonical mappings are persisted and accessible via REST APIs.
 
 ---
@@ -156,7 +156,7 @@ A single end-to-end pass through the reviewer console — dashboard metrics, the
 | **Backend API** | [FastAPI](https://fastapi.tiangolo.com/) + [Python 3.10+](https://www.python.org/) | High-performance asynchronous REST API |
 | **ORM / Database** | [SQLModel](https://sqlmodel.tiangolo.com/) + [PostgreSQL 15](https://www.postgresql.org/) | Type-safe SQL querying and schema migrations |
 | **Frontend UI** | [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/) | Fast, themeable single-page application |
-| **Matching Engine** | [fastembed](https://github.com/qdrant/fastembed) + [OpenAI](https://openai.com/) / [Ollama](https://ollama.com/) | ONNX sentence-transformer embeddings & LLM re-ranking |
+| **Matching Engine** | RapidFuzz + [OpenAI](https://openai.com/) / [Ollama](https://ollama.com/) | Conservative normalized-name similarity by default; LLM ranking is opt-in |
 | **Testing** | [Pytest](https://docs.pytest.org/) & [Vitest](https://vitest.dev/) | Complete unit, integration, and UI test coverage |
 | **Containerization** | [Docker](https://www.docker.com/) & Docker Compose | Multi-container service orchestration |
 
@@ -286,7 +286,7 @@ each page are committed in [`docs/`](docs/) and build locally with
 
 | Guide | Description |
 |---|---|
-| ⚙️ [System Settings](docs/settings.md) | Match thresholds, embedding models, LLM escalation |
+| ⚙️ [System Settings](docs/settings.md) | Name-similarity threshold and optional LLM ranking |
 | 🏛️ [Architecture Guide](docs/architecture.md) | Deep dive into system components and vector matching |
 | 🗄️ [Database Schema Reference](docs/database-schema.md) | Complete ERD, table specs, and migration guides |
 | 📡 [REST API Documentation](docs/api.md) | API endpoints, payloads, and integration examples |

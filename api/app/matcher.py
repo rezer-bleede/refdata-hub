@@ -1,24 +1,24 @@
-"""Semantic matcher implementations."""
+"""Conservative normalized-name matching with optional LLM ranking."""
 
 from __future__ import annotations
 
 import json
 import logging
+import re
+import unicodedata
 from typing import Any, Iterable, List
 
 import httpx
+from rapidfuzz import fuzz
 
-from .embeddings import embed_texts, resolve_model_name
 from .models import CanonicalValue, SystemConfig
 from .schemas import MatchCandidate
 
 LOGGER = logging.getLogger(__name__)
 
-ESCALATION_MARGIN = 0.15
-
 
 class SemanticMatcher:
-    """Selects the appropriate semantic matcher implementation."""
+    """Rank likely name matches without treating similarity as identity proof."""
 
     def __init__(self, config: SystemConfig, canonical_values: Iterable[CanonicalValue]):
         self.config = config
@@ -29,105 +29,26 @@ class SemanticMatcher:
 
         if not raw_text.strip():
             return []
-
         if self.config.matcher_backend == "llm":
-            llm_rankings = self._rank_with_llm(raw_text)
-            if llm_rankings:
-                return llm_rankings
-
-            return self._rank_with_embeddings(raw_text)
-
-        matches = self._rank_with_embeddings(raw_text)
-
-        if self._escalation_enabled() and self._is_ambiguous(matches):
-            llm_rankings = self._rank_with_llm(raw_text)
-            if llm_rankings:
-                LOGGER.info(
-                    "Escalated ambiguous match for '%s' to the configured LLM", raw_text
-                )
-                return llm_rankings
-
-        return matches
-
-    def _escalation_enabled(self) -> bool:
-        """LLM escalation applies only to the embedding backend."""
-
-        return bool(self.config.llm_escalation) and self.config.matcher_backend != "llm"
-
-    @staticmethod
-    def _is_ambiguous(matches: List[MatchCandidate]) -> bool:
-        """Detect near-tie rankings where embeddings are unreliable."""
-
-        if len(matches) < 2:
-            return False
-        return (matches[0].score - matches[1].score) < ESCALATION_MARGIN
-
-    def _rank_with_embeddings(self, raw_text: str) -> List[MatchCandidate]:
-        """Score matches using embedding cosine similarity."""
-
-        if not self.canonical_values:
-            return []
-
-        model_name = resolve_model_name(self.config.embedding_model)
-        try:
-            sentences = [raw_text] + [
-                self._canonical_as_sentence(cv) for cv in self.canonical_values
-            ]
-            matrix = embed_texts(model_name, sentences)
-            scores = matrix[0] @ matrix[1:].T
-        except Exception as exc:  # pragma: no cover - defensive
-            LOGGER.warning(
-                "Semantic embeddings failed for model '%s'; falling back to "
-                "lexical similarity: %s",
-                model_name,
-                exc,
-            )
-            return self._rank_with_lexical(raw_text)
-
-        return self._build_matches(raw_text, scores)
-
-    def _build_matches(self, raw_text: str, scores: Iterable[float]) -> List[MatchCandidate]:
-        """Convert cosine scores into ranked match candidates."""
-
-        normalised_raw = raw_text.strip().casefold()
-        matches: list[MatchCandidate] = []
-        for canonical, score in zip(self.canonical_values, scores):
-            scaled = float(max(0.0, min(1.0, float(score))))
-            if canonical.canonical_label.strip().casefold() == normalised_raw:
-                scaled = 1.0
-            matches.append(
-                MatchCandidate(
-                    canonical_id=canonical.id or 0,
-                    canonical_label=canonical.canonical_label,
-                    dimension=canonical.dimension,
-                    description=canonical.description,
-                    score=round(scaled, 4),
-                )
-            )
-
-        matches.sort(key=lambda item: item.score, reverse=True)
-        top_k = max(1, self.config.top_k or 5)
-        return matches[:top_k]
+            return self._rank_with_llm(raw_text)
+        return self._rank_with_lexical(raw_text)
 
     def _rank_with_lexical(self, raw_text: str) -> List[MatchCandidate]:
-        """Fallback matcher using normalized token overlap."""
+        """Rank normalized names by conservative character/token similarity."""
 
-        raw_tokens = self._tokenize(raw_text)
-        if not raw_tokens:
+        raw_name = self._normalize_name(raw_text)
+        if not raw_name:
             return []
-
-        normalised_raw = raw_text.strip().casefold()
 
         candidates: list[MatchCandidate] = []
         for canonical in self.canonical_values:
-            canonical_tokens = self._tokenize(self._canonical_as_sentence(canonical))
-            if not canonical_tokens:
+            canonical_name = self._normalize_name(canonical.canonical_label)
+            if not canonical_name:
                 continue
-            overlap = len(raw_tokens & canonical_tokens)
-            union = len(raw_tokens | canonical_tokens)
-            score = float(overlap / union) if union else 0.0
-            if canonical.canonical_label.strip().casefold() == normalised_raw:
-                score = 1.0
+            score = max(
+                fuzz.ratio(raw_name, canonical_name),
+                fuzz.token_sort_ratio(raw_name, canonical_name),
+            ) / 100
             candidates.append(
                 MatchCandidate(
                     canonical_id=canonical.id or 0,
@@ -142,6 +63,11 @@ class SemanticMatcher:
         top_k = max(1, self.config.top_k or 5)
         return candidates[:top_k]
 
+    @staticmethod
+    def _normalize_name(text: str) -> str:
+        text = unicodedata.normalize("NFKC", text).casefold()
+        return " ".join(re.sub(r"[^\w\s]", " ", text).split())
+
     def _rank_with_llm(self, raw_text: str) -> List[MatchCandidate]:
         """Use an LLM to score match candidates when configured."""
 
@@ -150,20 +76,20 @@ class SemanticMatcher:
 
         mode = (self.config.llm_mode or "online").lower()
         if mode == "offline":
-            return self._rank_with_ollama(raw_text)
-        return self._rank_with_openai(raw_text)
+            return self._rank_with_ollama(raw_text) or self._rank_with_lexical(raw_text)
+        return self._rank_with_openai(raw_text) or self._rank_with_lexical(raw_text)
 
     def _rank_with_openai(self, raw_text: str) -> List[MatchCandidate]:
         """Call an OpenAI-compatible API to score candidates."""
 
         if not self.config.llm_api_key or not self.config.llm_model:
-            LOGGER.warning("LLM backend configured without API credentials; falling back to embeddings")
+            LOGGER.warning("LLM backend configured without API credentials; falling back to name similarity")
             return []
 
         try:
             import openai
         except ImportError:  # pragma: no cover - dependency missing in some environments
-            LOGGER.warning("openai package not available; falling back to embeddings")
+            LOGGER.warning("openai package not available; falling back to name similarity")
             return []
 
         openai.api_key = self.config.llm_api_key
@@ -227,7 +153,7 @@ class SemanticMatcher:
                 content = str(data.get("response", ""))
 
         if not content:
-            LOGGER.warning("Ollama response missing usable content; falling back to embeddings")
+            LOGGER.warning("Ollama response missing usable content; falling back to name similarity")
             return []
 
         rankings = self._parse_llm_json(content)
@@ -335,14 +261,3 @@ class SemanticMatcher:
             return []
 
         return [item for item in data if isinstance(item, dict)]
-
-    @staticmethod
-    def _canonical_as_sentence(canonical: CanonicalValue) -> str:
-        if canonical.description:
-            return f"{canonical.canonical_label}. {canonical.description}"
-        return canonical.canonical_label
-
-    @staticmethod
-    def _tokenize(text: str) -> set[str]:
-        tokens = {token.lower() for token in text.replace('-', ' ').split() if token}
-        return tokens

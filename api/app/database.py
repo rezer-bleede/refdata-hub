@@ -116,26 +116,23 @@ def _ensure_systemconfig_llm_mode_column(engine) -> None:
         )
 
 
-def _ensure_systemconfig_llm_escalation_column(engine) -> None:
-    """Add the ``llm_escalation`` column for legacy installations."""
-
+def _migrate_matcher_config(engine) -> None:
+    """Replace the retired embedding backend and remove its stored settings."""
     inspector = inspect(engine)
-    tables = set(inspector.get_table_names())
-    if "systemconfig" not in tables:
+    if "systemconfig" not in inspector.get_table_names():
         return
 
     columns = {column["name"] for column in inspector.get_columns("systemconfig")}
-    if "llm_escalation" in columns:
-        return
-
-    logger.info("Adding missing systemconfig.llm_escalation column with default false")
     with engine.begin() as connection:
-        connection.execute(
-            text(
-                "ALTER TABLE systemconfig "
-                "ADD COLUMN llm_escalation BOOLEAN NOT NULL DEFAULT FALSE"
-            )
-        )
+        if "matcher_backend" in columns:
+            connection.execute(text(
+                "UPDATE systemconfig SET matcher_backend = 'lexical', match_threshold = 0.97 "
+                "WHERE matcher_backend IS NULL OR matcher_backend NOT IN ('lexical', 'llm')"
+            ))
+        for column in ("embedding_model", "llm_escalation"):
+            if column in columns:
+                logger.info("Dropping retired systemconfig.%s column", column)
+                connection.execute(text(f"ALTER TABLE systemconfig DROP COLUMN {column}"))
 
 
 def init_db(engine, settings: Settings | None = None) -> None:
@@ -144,7 +141,7 @@ def init_db(engine, settings: Settings | None = None) -> None:
     SQLModel.metadata.create_all(engine)
     _ensure_canonical_attributes_column(engine)
     _ensure_systemconfig_llm_mode_column(engine)
-    _ensure_systemconfig_llm_escalation_column(engine)
+    _migrate_matcher_config(engine)
     seed_database(engine, settings=settings)
 
 

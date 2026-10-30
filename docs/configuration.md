@@ -10,15 +10,13 @@ The `systemconfig` table stores application-wide settings. These can be modified
 
 | Field | Type | Default | Description |
 |-------|------|----------|-------------|
-| `default_dimension` | VARCHAR | 'general' | Default dimension for semantic matching |
-| `match_threshold` | FLOAT | 0.45 | Minimum confidence score (0.0-1.0) for auto-approval |
-| `matcher_backend` | VARCHAR | 'embedding' | Primary matching strategy: 'embedding' or 'llm' |
-| `embedding_model` | VARCHAR | 'BAAI/bge-small-en-v1.5' | Embedding model: any [fastembed](https://github.com/qdrant/fastembed) model name (legacy 'tfidf' values resolve to the default model) |
+| `default_dimension` | VARCHAR | 'general' | Default dimension for name matching |
+| `match_threshold` | FLOAT | 0.97 | Similarity threshold for suggestions; candidates may be shown from 0.02 below this, with a 0.95 floor |
+| `matcher_backend` | VARCHAR | 'lexical' | Primary matching strategy: conservative name similarity (`lexical`) or opt-in `llm` |
 | `llm_mode` | VARCHAR | 'online' | LLM operation mode: 'online' or 'offline' |
 | `llm_model` | VARCHAR | 'gpt-3.5-turbo' | LLM model name (e.g., 'gpt-3.5-turbo', 'smollm:135m') |
 | `llm_api_base` | VARCHAR | NULL | API endpoint URL for LLM service |
 | `llm_api_key` | VARCHAR | NULL | API key for LLM authentication |
-| `llm_escalation` | BOOLEAN | false | Escalate near-tied embedding matches to the configured LLM |
 | `top_k` | INTEGER | 5 | Number of match candidates to return |
 
 ### Configuration via API
@@ -94,17 +92,16 @@ export REFDATA_CORS_ORIGINS="https://refdata.example.com,https://app.refdata.com
 export REFDATA_CORS_ORIGINS="*"
 ```
 
-#### Embedding Matcher Configuration
+#### Name Matcher Configuration
 
 | Variable | Required | Default | Description |
 |----------|-----------|----------|-------------|
-| `REFDATA_EMBEDDING_MODEL` | No | BAAI/bge-small-en-v1.5 | Any [fastembed](https://github.com/qdrant/fastembed) model name |
-| `REFDATA_MATCH_THRESHOLD` | No | 0.45 | Minimum similarity score to surface matches |
+| `REFDATA_MATCHER_BACKEND` | No | lexical | `lexical` name similarity or opt-in `llm` ranking |
+| `REFDATA_MATCH_THRESHOLD` | No | 0.97 | Similarity threshold for suggestions; the effective floor is 0.95 |
 
-The model is downloaded from Hugging Face on first use (approximately 130 MB)
-and cached locally, so the API container needs outbound internet access once
-per model. The cache lives in the container home directory; mount a volume
-there if you rebuild frequently.
+The default uses normalized Unicode names and RapidFuzz ratio/token-order
+similarity. Scores are ranking signals, not calibrated probabilities or identity
+proof; only reviewer-approved mappings publish as aliases.
 
 #### LLM Configuration
 
@@ -114,7 +111,6 @@ there if you rebuild frequently.
 | `REFDATA_LLM_MODEL` | No | gpt-3.5-turbo | LLM model identifier |
 | `REFDATA_LLM_API_BASE` | No | https://api.openai.com | LLM API endpoint URL |
 | `REFDATA_LLM_API_KEY` | No | - | API key for LLM authentication |
-| `REFDATA_LLM_ESCALATION` | No | false | Ask the LLM to re-rank when the top two embedding scores are within 0.15 |
 
 **Examples:**
 
@@ -480,9 +476,8 @@ REFDATA_LLM_API_KEY=${LLM_API_KEY}
 
 #### Match Threshold
 
-- **Lower (0.4-0.5):** More suggestions, lower precision
-- **Medium (0.6-0.7):** Balanced approach
-- **Higher (0.8-0.9):** Fewer suggestions, higher precision
+- Default `0.97` is deliberately conservative; suggestions can start at `0.95`.
+- Only reviewer-approved mappings resolve values; the score is not a probability.
 
 #### Top K Candidates
 
@@ -490,14 +485,13 @@ REFDATA_LLM_API_KEY=${LLM_API_KEY}
 - **Medium (10):** Balanced
 - **Large (20+):** More comprehensive, slower
 
-#### LLM vs. Embeddings
+#### Name Similarity vs. LLM Ranking
 
 | Strategy | Speed | Cost | Accuracy |
 |----------|-------|------|----------|
-| Semantic Embeddings (fastembed) | Fast | Free | Best for paraphrases ("got hitched" → Married) |
-| Lexical Overlap | Fast | Free | Fallback when the model is unavailable |
-| LLM (Online) | Slow | Paid | Best for semantic understanding |
-| LLM (Offline) | Medium | Free | Good semantic understanding |
+| Normalized name similarity (RapidFuzz) | Fast | Free | Default; appropriate for near-identical names and spelling variants |
+| LLM (Online) | Slow | Paid | Optional ranking; still requires reviewer verification |
+| LLM (Offline) | Medium | Free | Optional local ranking; still requires reviewer verification |
 
 ---
 

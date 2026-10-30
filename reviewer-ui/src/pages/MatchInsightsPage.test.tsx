@@ -170,7 +170,7 @@ describe('MatchInsightsPage empty-state messaging', () => {
             raw_value: 'shipped',
             occurrence_count: 8,
             canonical_label: 'Shipped',
-            match_type: 'semantic',
+            match_type: 'similarity',
             confidence: 0.97,
           },
         ],
@@ -189,6 +189,6 @@ describe('MatchInsightsPage empty-state messaging', () => {
 
     expect(matchedSection).toHaveAttribute('open');
     expect(screen.getByText('Shipped')).toBeInTheDocument();
-    expect(screen.getByText('Confidence 97%')).toBeInTheDocument();
+    expect(screen.getByText('Similarity 97%')).toBeInTheDocument();
   });
 });

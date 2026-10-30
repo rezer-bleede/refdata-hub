@@ -104,7 +104,7 @@ docker run -d \
 │   │   ├── database.py           # Database engine and session
 │   │   ├── models.py             # SQLModel database models
 │   │   ├── schemas.py            # Pydantic schemas for API
-│   │   ├── matcher.py            # Semantic matching logic
+│   │   ├── matcher.py            # Normalized name matching + optional LLM
 │   │   ├── seeds.py              # Database seeding
 │   │   ├── routes/               # API route handlers
 │   │   │   ├── config.py        # System configuration endpoints
@@ -424,7 +424,7 @@ pytest
 pytest --cov=app --cov-report=html
 
 # Run specific test
-pytest tests/test_matcher.py::test_rank_with_semantic_embeddings_ranks_by_cosine
+pytest tests/test_matcher.py::test_default_uses_high_precision_name_similarity
 
 # Run with verbose output
 pytest -v

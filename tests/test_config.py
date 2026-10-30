@@ -35,6 +35,8 @@ def test_cors_origins_default_is_preserved() -> None:
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+    assert settings.matcher_backend == "lexical"
+    assert settings.match_threshold == 0.97
 
 
 def test_cors_origins_accepts_comma_separated_values() -> None:

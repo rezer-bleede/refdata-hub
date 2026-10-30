@@ -37,6 +37,7 @@ from ..models import (
     DimensionRelationLink,
     RawValue,
     SystemConfig,
+    ValueMapping,
 )
 from ..schemas import (
     BulkImportColumnMapping,
@@ -47,6 +48,7 @@ from ..schemas import (
     CanonicalValueCreate,
     CanonicalValueRead,
     CanonicalValueUpdate,
+    CompanyAliasRead,
     DimensionCreate,
     DimensionRead,
     DimensionRelationCreate,
@@ -849,6 +851,22 @@ def list_canonical_values(session: Session = Depends(get_session)) -> list[Canon
     results = session.exec(statement).all()
     logger.debug("Canonical values requested", extra={"count": len(results)})
     return results
+
+
+@router.get("/company-aliases", response_model=list[CompanyAliasRead])
+def list_company_aliases(session: Session = Depends(get_session)) -> list[CompanyAliasRead]:
+    """Publish approved aliases for the company dimension to downstream consumers."""
+
+    rows = session.exec(
+        select(ValueMapping.raw_value, CanonicalValue.id, CanonicalValue.canonical_label)
+        .join(CanonicalValue, CanonicalValue.id == ValueMapping.canonical_id)
+        .where(CanonicalValue.dimension == "company", ValueMapping.status == "approved")
+        .order_by(ValueMapping.raw_value)
+    ).all()
+    return [
+        CompanyAliasRead(raw_value=raw, canonical_id=canonical_id, canonical_label=label)
+        for raw, canonical_id, label in rows
+    ]
 
 
 @router.post(

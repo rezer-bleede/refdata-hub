@@ -33,15 +33,13 @@ erDiagram
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|----------|-------------|
 | id | INTEGER | NO | 1 (primary key) | Unique identifier (always 1) |
-| default_dimension | VARCHAR | NO | 'general' | Default dimension for semantic matching |
-| match_threshold | FLOAT | NO | 0.45 | Minimum confidence score for auto-approval (0.0 - 1.0) |
-| matcher_backend | VARCHAR | NO | 'embedding' | Primary matching strategy ('embedding' or 'llm') |
-| embedding_model | VARCHAR | NO | 'BAAI/bge-small-en-v1.5' | Embedding model to use (any fastembed model name) |
+| default_dimension | VARCHAR | NO | 'general' | Default dimension for name matching |
+| match_threshold | FLOAT | NO | 0.97 | Suggestion threshold (candidates may be shown from 0.02 below, with a 0.95 floor) |
+| matcher_backend | VARCHAR | NO | 'lexical' | Primary matching strategy ('lexical' or opt-in 'llm') |
 | llm_mode | VARCHAR | NO | 'online' | LLM mode ('online' or 'offline') |
 | llm_model | VARCHAR | YES | NULL | LLM model name (e.g., 'gpt-3.5-turbo', 'smollm:135m') |
 | llm_api_base | VARCHAR | YES | NULL | API base URL for LLM service |
 | llm_api_key | VARCHAR | YES | NULL | API key for LLM service (encrypted in production) |
-| llm_escalation | BOOLEAN | NO | false | Re-rank near-tied embedding results with the configured LLM |
 | top_k | INTEGER | NO | 5 | Number of match candidates to return |
 | updated_at | TIMESTAMP | NO | NOW() | Last update timestamp |
 
@@ -53,9 +51,8 @@ erDiagram
 INSERT INTO systemconfig VALUES (
   1,
   'marital_status',
-  0.7,
-  'llm',
-  'BAAI/bge-small-en-v1.5',
+  0.97,
+  'lexical',
   'offline',
   'smollm:135m',
   'http://ollama:11434',

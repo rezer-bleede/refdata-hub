@@ -128,7 +128,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
                 Triage unmatched values
               </Card.Title>
               <Card.Text className="text-text-tertiary mb-0">
-                Review low-confidence matches and confirm the appropriate canonical record. Suggestions are ranked using the semantic matcher.
+                Review name-similarity suggestions and confirm the appropriate canonical record. Similarity does not prove identity.
               </Card.Text>
             </div>
             <Form.Group controlId="suggestions-connection" className="w-auto">
@@ -182,7 +182,7 @@ const SuggestionsPage = ({ onToast }: SuggestionsPageProps) => {
                     onClick={() => void applyMapping(record, suggestion.canonical_id, suggestion.score, suggestion.canonical_label)}
                     disabled={linking === key}
                   >
-                    {suggestion.canonical_label} ({(suggestion.score * 100).toFixed(0)}%)
+                    {suggestion.canonical_label} (score {(suggestion.score * 100).toFixed(0)}%)
                   </Button>
                 ))}
               </div>
