@@ -31,6 +31,7 @@ import type {
   ValueMappingExpanded,
   ValueMappingPayload,
   ValueMappingImportResult,
+  ValueMappingClusterReviewResult,
   ValueMappingUpdatePayload,
 } from './types';
 
@@ -548,6 +549,21 @@ export async function updateValueMapping(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+}
+
+export async function reviewValueMappingCluster(
+  connectionId: number,
+  clusterId: string,
+  status: 'approved' | 'rejected',
+): Promise<ValueMappingClusterReviewResult> {
+  return apiFetchJson<ValueMappingClusterReviewResult>(
+    `/api/source/connections/${connectionId}/value-mappings/review-cluster`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cluster_id: clusterId, status }),
+    },
+  );
 }
 
 export async function deleteValueMapping(connectionId: number, mappingId: number): Promise<void> {

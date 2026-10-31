@@ -8,6 +8,7 @@ import {
   fetchConnectionValueMappings,
   fetchSourceConnections,
   importValueMappings,
+  reviewValueMappingCluster,
   updateValueMapping,
 } from '../api';
 import { useAppState } from '../state/AppStateContext';
@@ -23,6 +24,41 @@ import type {
 interface MappingHistoryPageProps {
   onToast: (toast: ToastMessage) => void;
 }
+
+interface CompanyEvidence {
+  cluster_id: string;
+  evidence_tier?: string;
+  method?: string;
+  matched_identifiers?: { field: string; value: string; tier: string }[];
+  review_flags?: string[];
+  linkedin_page?: { url: string; title?: string; description?: string | null };
+  candidate_evidence?: {
+    similar_company_name: string;
+    name_similarity: number;
+    overlapping_job_cities: string[];
+    source_industry?: string | null;
+    anchor_industry?: string | null;
+    industry_similarity: number;
+  };
+}
+
+interface EvidenceCluster {
+  key: string;
+  connectionId: number;
+  id: string;
+  mappings: ValueMappingExpanded[];
+  evidence: CompanyEvidence;
+}
+
+const companyEvidence = (notes?: string | null): CompanyEvidence | null => {
+  try {
+    const value: unknown = JSON.parse(notes ?? '');
+    return value && typeof value === 'object' && 'cluster_id' in value
+      && typeof value.cluster_id === 'string' ? value as CompanyEvidence : null;
+  } catch {
+    return null;
+  }
+};
 
 const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
   const { canonicalValues } = useAppState();
@@ -40,6 +76,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ValueMappingImportResult | null>(null);
+  const [reviewingCluster, setReviewingCluster] = useState<string | null>(null);
 
   const canonicalByDimension = useMemo(() => {
     const map = new Map<string, CanonicalValue[]>();
@@ -51,6 +88,43 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
     map.forEach((list) => list.sort((a, b) => a.canonical_label.localeCompare(b.canonical_label)));
     return map;
   }, [canonicalValues]);
+
+  const evidenceClusters = useMemo(() => {
+    const groups = new Map<string, EvidenceCluster>();
+    for (const mapping of mappings) {
+      if (mapping.status !== 'pending' || mapping.ref_dimension !== 'company') continue;
+      const evidence = companyEvidence(mapping.notes);
+      if (!evidence) continue;
+      const key = `${mapping.source_connection_id}:${evidence.cluster_id}`;
+      const group = groups.get(key) ?? {
+        key, connectionId: mapping.source_connection_id, id: evidence.cluster_id, mappings: [], evidence,
+      };
+      group.mappings.push(mapping);
+      group.evidence = {
+        ...group.evidence,
+        matched_identifiers: [...new Map([
+          ...(group.evidence.matched_identifiers ?? []), ...(evidence.matched_identifiers ?? []),
+        ].map((item) => [`${item.field}:${item.value}`, item])).values()],
+        review_flags: [...new Set([...(group.evidence.review_flags ?? []), ...(evidence.review_flags ?? [])])],
+      };
+      groups.set(key, group);
+    }
+    return [...groups.values()].sort((a, b) => a.mappings[0].canonical_label.localeCompare(b.mappings[0].canonical_label));
+  }, [mappings]);
+
+  const handleClusterReview = async (cluster: EvidenceCluster, status: 'approved' | 'rejected') => {
+    setReviewingCluster(cluster.key);
+    try {
+      const result = await reviewValueMappingCluster(cluster.connectionId, cluster.id, status);
+      await loadMappings(selectedConnection);
+      onToast({ type: 'success', content: `${status === 'approved' ? 'Approved' : 'Rejected'} ${result.updated} mappings in the company cluster.` });
+    } catch (error) {
+      console.error(error);
+      onToast({ type: 'error', content: 'Unable to review the company cluster.' });
+    } finally {
+      setReviewingCluster(null);
+    }
+  };
 
   const loadConnections = useCallback(async () => {
     try {
@@ -218,7 +292,10 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
       );
     }
 
-    if (!mappings.length) {
+    const visibleMappings = mappings.filter((mapping) =>
+      !(mapping.status === 'pending' && mapping.ref_dimension === 'company' && companyEvidence(mapping.notes)),
+    );
+    if (!visibleMappings.length) {
       return (
         <tr>
           <td colSpan={7} className="text-center text-text-tertiary py-4">
@@ -228,7 +305,7 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
       );
     }
 
-    return mappings.map((mapping) => (
+    return visibleMappings.map((mapping) => (
       <tr key={mapping.id}>
         <td className="font-semibold">{mapping.raw_value}</td>
         <td>{mapping.canonical_label}</td>
@@ -313,6 +390,64 @@ const MappingHistoryPage = ({ onToast }: MappingHistoryPageProps) => {
               </div>
             </div>
           </div>
+          {evidenceClusters.length > 0 && (
+            <section aria-label="Pending company identity clusters" className="flex flex-col gap-3">
+              <div>
+                <h2 className="text-lg font-semibold">Pending company identity clusters</h2>
+                <p className="text-sm text-text-tertiary mb-0">
+                  Exact evidence generated these proposals; review the whole cluster before approving. No proposal is approved automatically.
+                </p>
+              </div>
+              {evidenceClusters.map((cluster) => (
+                <div key={cluster.key} className="rounded border border-border-primary bg-bg-tertiary p-3 flex flex-col gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="font-semibold">{cluster.mappings[0].canonical_label}</div>
+                      <div className="text-sm text-text-tertiary">
+                        {cluster.mappings.length} name{cluster.mappings.length === 1 ? '' : 's'} · {cluster.evidence.evidence_tier ?? 'evidence'} tier · connection {cluster.connectionId}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline-danger" disabled={reviewingCluster !== null}
+                        onClick={() => void handleClusterReview(cluster, 'rejected')}>
+                        Reject cluster
+                      </Button>
+                      <Button size="sm" variant="primary" disabled={reviewingCluster !== null}
+                        onClick={() => void handleClusterReview(cluster, 'approved')}>
+                        Approve cluster
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="text-sm">{cluster.mappings.map((mapping) => mapping.raw_value).join(' · ')}</div>
+                  <div className="text-xs text-text-tertiary">
+                    {cluster.evidence.method ?? 'identifier'}: {(cluster.evidence.matched_identifiers ?? []).map((item) => `${item.field}=${item.value}`).join(' · ')}
+                  </div>
+                  {cluster.evidence.candidate_evidence && (
+                    <div className="text-sm">
+                      Name similarity {(cluster.evidence.candidate_evidence.name_similarity).toFixed(0)}% to{' '}
+                      <strong>{cluster.evidence.candidate_evidence.similar_company_name}</strong>
+                      {' · '}locations: {cluster.evidence.candidate_evidence.overlapping_job_cities.join(', ') || 'none'}
+                      {' · '}industry: {cluster.evidence.candidate_evidence.source_industry || '—'}
+                      {' / '}anchor: {cluster.evidence.candidate_evidence.anchor_industry || '—'}
+                    </div>
+                  )}
+                  {cluster.evidence.linkedin_page && (
+                    <div className="text-sm">
+                      <a href={cluster.evidence.linkedin_page.url} target="_blank" rel="noreferrer" className="underline">
+                        {cluster.evidence.linkedin_page.title ?? 'Public LinkedIn company page'}
+                      </a>
+                      {cluster.evidence.linkedin_page.description && (
+                        <p className="text-xs text-text-tertiary mt-1 mb-0">{cluster.evidence.linkedin_page.description}</p>
+                      )}
+                    </div>
+                  )}
+                  {!!cluster.evidence.review_flags?.length && (
+                    <div className="text-sm text-brand-warning">Review flags: {cluster.evidence.review_flags.join(', ')}</div>
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
           <div className="overflow-x-auto">
             <Table striped hover className="align-middle whitespace-nowrap">
               <thead>

@@ -208,6 +208,12 @@ export interface ValueMappingPayload {
 
 export interface ValueMappingUpdatePayload extends Partial<ValueMappingPayload> {}
 
+export interface ValueMappingClusterReviewResult {
+  cluster_id: string;
+  status: 'approved' | 'rejected';
+  updated: number;
+}
+
 export interface ValueMappingImportResult {
   created: number;
   updated: number;

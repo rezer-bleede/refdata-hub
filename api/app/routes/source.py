@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -42,6 +43,8 @@ from ..schemas import (
     UnmatchedValuePreview,
     UnmatchedValueRecord,
     ValueMappingCreate,
+    ValueMappingClusterReview,
+    ValueMappingClusterReviewResult,
     ValueMappingExpanded,
     ValueMappingImportResult,
     ValueMappingRead,
@@ -870,6 +873,49 @@ def update_value_mapping(
     session.commit()
     session.refresh(mapping)
     return mapping
+
+
+@router.post(
+    "/connections/{connection_id}/value-mappings/review-cluster",
+    response_model=ValueMappingClusterReviewResult,
+)
+def review_value_mapping_cluster(
+    connection_id: int,
+    payload: ValueMappingClusterReview,
+    session: Session = Depends(get_session),
+) -> ValueMappingClusterReviewResult:
+    """Apply an explicit reviewer decision to pending rows in one evidence cluster."""
+
+    _require_connection(session, connection_id)
+    records = session.exec(
+        select(ValueMapping).where(
+            and_(
+                ValueMapping.source_connection_id == connection_id,
+                ValueMapping.status == "pending",
+            )
+        )
+    ).all()
+    matched = []
+    for record in records:
+        try:
+            evidence = json.loads(record.notes or "")
+        except (TypeError, json.JSONDecodeError):
+            continue
+        if isinstance(evidence, dict) and evidence.get("cluster_id") == payload.cluster_id:
+            matched.append(record)
+    if not matched:
+        raise HTTPException(status_code=404, detail="Pending evidence cluster not found")
+
+    for record in matched:
+        record.status = payload.status
+        record.touch()
+        session.add(record)
+    session.commit()
+    return ValueMappingClusterReviewResult(
+        cluster_id=payload.cluster_id,
+        status=payload.status,
+        updated=len(matched),
+    )
 
 
 @router.delete(

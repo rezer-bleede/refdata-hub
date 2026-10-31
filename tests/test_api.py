@@ -225,11 +225,57 @@ def test_company_identity_feed_returns_only_supported_identifiers() -> None:
         "canonical_id": response.json()["id"],
         "canonical_label": "Acme Group",
         "linkedin_company_url": "https://sa.linkedin.com/company/acme",
+        "website_domain": None,
         "lei": "5493001KJTIIGC8Y1R12",
         "commercial_registration_number": None,
         "registration_authority": None,
         "wikidata_id": None,
     }]
+
+
+def test_cluster_review_updates_only_pending_rows_in_selected_evidence_cluster() -> None:
+    client = build_test_client()
+    client.post("/api/reference/dimensions", json={"code": "company", "label": "Company"})
+    canonical = client.post("/api/reference/canonical", json={
+        "dimension": "company", "canonical_label": "Acme Group",
+    }).json()
+    connection = client.post("/api/source/connections", json={
+        "name": "jobs-analyzer", "db_type": "postgres", "host": "localhost",
+        "database": "jobs", "username": "readonly",
+    }).json()
+    path = f"/api/source/connections/{connection['id']}/value-mappings"
+    for name, status, cluster in (
+        ("Acme Limited", "pending", "identity:abc"),
+        ("Acme Arabia", "pending", "identity:abc"),
+        ("Other Acme", "pending", "identity:other"),
+        ("Already approved", "approved", "identity:abc"),
+    ):
+        assert client.post(path, json={
+            "source_table": "employers", "source_field": "company_name",
+            "raw_value": name, "canonical_id": canonical["id"], "status": status,
+            "notes": json.dumps({"cluster_id": cluster}),
+        }).status_code == 201
+
+    response = client.post(
+        f"{path}/review-cluster",
+        json={"cluster_id": "identity:abc", "status": "approved"},
+    )
+    assert response.status_code == 200
+    assert response.json()["updated"] == 2
+    mappings = client.get(path).json()
+    statuses = {row["raw_value"]: row["status"] for row in mappings}
+    assert statuses == {
+        "Acme Limited": "approved",
+        "Acme Arabia": "approved",
+        "Other Acme": "pending",
+        "Already approved": "approved",
+    }
+
+    missing = client.post(
+        f"{path}/review-cluster",
+        json={"cluster_id": "not-found", "status": "approved"},
+    )
+    assert missing.status_code == 404
 
 
 def test_dimension_crud_and_extra_fields() -> None:

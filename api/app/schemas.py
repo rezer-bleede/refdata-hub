@@ -35,6 +35,7 @@ class CompanyIdentityRead(BaseModel):
     canonical_id: int
     canonical_label: str
     linkedin_company_url: Optional[str] = None
+    website_domain: Optional[str] = None
     lei: Optional[str] = None
     commercial_registration_number: Optional[str] = None
     registration_authority: Optional[str] = None
@@ -287,6 +288,17 @@ class ValueMappingUpdate(BaseModel):
     confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
     suggested_label: Optional[str] = None
     notes: Optional[str] = None
+
+
+class ValueMappingClusterReview(BaseModel):
+    cluster_id: str = Field(min_length=1, max_length=200)
+    status: Literal["approved", "rejected"]
+
+
+class ValueMappingClusterReviewResult(BaseModel):
+    cluster_id: str
+    status: Literal["approved", "rejected"]
+    updated: int
 
 
 class ValueMappingExpanded(ValueMappingRead):

@@ -881,6 +881,7 @@ def list_company_identities(session: Session = Depends(get_session)) -> list[Com
     ).all()
     identity_fields = (
         "linkedin_company_url",
+        "website_domain",
         "lei",
         "commercial_registration_number",
         "registration_authority",

@@ -42,8 +42,18 @@ GET /api/reference/company-identities
 ```
 
 Returns canonical company labels and their curated LinkedIn company URL, LEI,
-commercial registration number and authority, and Wikidata ID. Other canonical
-attributes are not exposed by this feed.
+commercial registration number and authority, Wikidata ID, and website domain.
+Other canonical attributes are not exposed by this feed.
+
+### Review a Pending Evidence Cluster
+```http
+POST /api/source/connections/{connection_id}/value-mappings/review-cluster
+Content-Type: application/json
+```
+
+Body: `{ "cluster_id": "company:...", "status": "approved" }` (or
+`"rejected"`). This updates only pending mappings whose JSON `notes` contain
+the exact cluster ID. It never approves suggestions implicitly.
 
 ### Get All Canonical Values
 ```http
