@@ -22,20 +22,14 @@ This will build and start all required services.
 The Docker Compose setup includes the following services:
 
 ### PostgreSQL Database (`db`)
-- Seeded with example canonical values
-- Pre-configured with default settings
+- Stores operational configuration and user/source-managed data
+- No dimensions, canonical values, entities, records, or connections are preloaded
 - Runs on port 5432 (internal to Docker network)
-
-### Target Demo Database (`targetdb`)
-- Populated with realistic customer, order, and product warehouse data
-- Includes departments, employees, globally diverse customers, addresses, products, orders, and line items
-- Perfect for practicing field mappings and semantic match flows
-- Runs on port 5433 (internal to Docker network)
 
 ### FastAPI Backend (`api`)
 - REST API endpoints available at `http://localhost:8000`
 - API documentation at `http://localhost:8000/docs`
-- Auto-creates schema and seeds default data on first run
+- Auto-creates schema and operational configuration on first run
 
 ### Reviewer UI (`reviewer-ui`)
 - Modern React-based dashboard served at `http://localhost:5274`
@@ -70,22 +64,18 @@ Navigate to **Settings** to configure:
 - Matching method (name similarity by default; LLM is opt-in)
 - LLM connectivity (switch between offline Ollama and hosted API)
 
-### 3. Browse Canonical Library
-The Canonical Library contains:
-- Curated reference values organized by dimension
+### 3. Load real reference data
+- Create dimensions and canonical values from your governed standards, or import them from an authoritative file
 - Filters for dimension and keyword search
 - Bulk import capabilities for CSV/TSV/Excel files
 
 ### 4. Connect a Source
-Try the demo connection:
-- Go to **Source Connections**
-- You'll find a demo connection to the bundled `targetdb` database
-- Click **Test connection** to verify connectivity
-- Explore tables and fields in the connection detail view
+Register a real source system in **Source Connections** with its approved
+endpoint and credentials, then test the connection and inspect its schema.
 
 ### 5. Create a Field Mapping
 To practice mapping:
-1. Go to a connection's detail view
+1. Go to a registered connection's detail view
 2. Click **New Mapping** in the Field Mappings section
 3. Select a source table and field
 4. Choose a target dimension

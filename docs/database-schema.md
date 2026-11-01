@@ -13,6 +13,14 @@ erDiagram
     CANONICAL_VALUE ||--o{ DIMENSION_RELATION_LINK : parent
     CANONICAL_VALUE ||--o{ DIMENSION_RELATION_LINK : child
     CANONICAL_VALUE ||--o{ VALUE_MAPPING : maps_to
+    MASTER_ENTITY ||--o{ MASTER_RECORD : configures
+    MASTER_ENTITY ||--o{ SOURCE_RECORD : classifies
+    SOURCE_CONNECTION ||--o{ SOURCE_RECORD : supplies
+    MASTER_RECORD ||--o{ SOURCE_RECORD : crosswalk
+    MASTER_RECORD ||--o{ RECORD_LINK : parent
+    MASTER_RECORD ||--o{ RECORD_LINK : child
+    MASTER_RECORD ||--o{ MERGE_HISTORY : survivor
+    MASTER_RECORD ||--o{ MERGE_HISTORY : merged_record
     SOURCE_CONNECTION ||--o{ SOURCE_FIELD_MAPPING : has
     SOURCE_CONNECTION ||--o{ VALUE_MAPPING : has
     SOURCE_CONNECTION ||--o{ SOURCE_SAMPLE : has
@@ -424,6 +432,42 @@ INSERT INTO valuemapping (source_connection_id, source_table, source_field, raw_
 
 ---
 
+## Master Data Management Tables
+
+The generic MDM module stores entity-level master data separately from the
+value-level `dimension` / `canonicalvalue` model.
+
+### masterentity
+
+Defines an entity code, attribute schema, matching fields and threshold,
+per-field survivorship strategies, and data-quality rules. JSON configuration
+is validated when created or updated.
+
+### masterrecord
+
+Stores versioned golden-record attributes. `status` is `active` or `merged`;
+`merged_into_id` points to the current survivor for merged records.
+
+### sourcerecord
+
+Stores a source-system payload and its crosswalk state. The unique key
+`(source_connection_id, source_table, source_pk)` makes push ingestion
+idempotent. `master_record_id` is only set by human approval; an AI/matcher
+proposal is stored separately in `proposed_master_record_id`.
+
+### recordlink
+
+Stores typed parent-child record links. The API enforces one entity type per
+link and rejects cycles.
+
+### mergehistory
+
+Captures pre/post survivor attributes, applied survivorship choices, and source
+crosswalk IDs moved during a merge. `unmerged_at` retains the audit event after
+an unmerge; version checks prevent rollback after a later survivor edit.
+
+---
+
 ## Common Queries
 
 ### Get Canonical Values by Dimension
@@ -501,7 +545,7 @@ ORDER BY p.label, c.label;
 - **Dimension Relations:** No cascade (manual cleanup required)
 - **Dimension Links:** No cascade (manual cleanup required)
 - **Value Mappings:** No cascade on canonical value deletion
-- **Source Samples:** No cascade on connection deletion (manual cleanup)
+- **Source Data:** Connection deletion manually removes samples, mappings, and MDM crosswalk rows
 
 ### Constraints
 

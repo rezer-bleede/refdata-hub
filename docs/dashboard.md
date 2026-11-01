@@ -61,7 +61,7 @@ score. The score is not a probability or confirmation of identity.
 
 <figure class="rdh-figure">
   <img src="../screenshots/demo_semantic_matching.gif" alt="Name matching playground scoring raw values against canonical values">
-  <figcaption>The name matching playground: type a raw value to see ranked candidates with similarity scores.</figcaption>
+  <figcaption>Illustrative UI capture — any values shown are not bundled runtime data.</figcaption>
 </figure>
 
 !!! tip "Read the score, not just the rank"

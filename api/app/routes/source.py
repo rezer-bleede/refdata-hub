@@ -20,6 +20,7 @@ from ..models import (
     CanonicalValue,
     SourceConnection,
     SourceFieldMapping,
+    SourceRecord,
     SourceSample,
     SystemConfig,
     ValueMapping,
@@ -232,6 +233,9 @@ def delete_connection(
     )
     session.exec(
         delete(ValueMapping).where(ValueMapping.source_connection_id == connection_id)
+    )
+    session.exec(
+        delete(SourceRecord).where(SourceRecord.source_connection_id == connection_id)
     )
 
     session.delete(connection)

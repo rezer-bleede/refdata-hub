@@ -24,6 +24,7 @@ from api.app.schemas import AgentToolCall
 from api.app.services import agent as agent_service
 from api.app.services.agent import AgentEngine, AgentError
 from api.app.services.agent import parse_agent_tool_response
+from conftest import seed_test_data
 
 
 def build_test_client() -> tuple[TestClient, Any]:
@@ -32,6 +33,7 @@ def build_test_client() -> tuple[TestClient, Any]:
     engine = create_db_engine(settings)
     app.state.engine = engine
     init_db(engine, settings=settings)
+    seed_test_data(engine)
 
     def session_override() -> Iterator[Session]:
         with Session(engine) as session:
@@ -79,6 +81,7 @@ def engine_setup():
     settings = Settings(database_url="sqlite:///:memory:", match_threshold=0.55)
     engine = create_db_engine(settings)
     init_db(engine, settings=settings)
+    seed_test_data(engine, include_source_connection=False)
     from api.app.models import SystemConfig
 
     with Session(engine) as session:

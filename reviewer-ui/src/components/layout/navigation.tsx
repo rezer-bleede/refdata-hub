@@ -1,5 +1,6 @@
 import {
   Boxes,
+  Building2,
   GitFork,
   History,
   LayoutDashboard,
@@ -33,6 +34,12 @@ const dimensions: NavItem = {
   path: '/dimensions',
   label: 'Dimensions',
   icon: Boxes,
+};
+
+const masterData: NavItem = {
+  path: '/master-data',
+  label: 'Master Data',
+  icon: Building2,
 };
 
 const canonicalLibrary: NavItem = {
@@ -87,7 +94,7 @@ export const navGroups: NavGroup[] = [
   {
     id: 'workspace',
     label: 'Workspace',
-    items: [dashboard, dimensions, canonicalLibrary, dimensionRelations],
+    items: [dashboard, dimensions, canonicalLibrary, dimensionRelations, masterData],
   },
   {
     id: 'integration',

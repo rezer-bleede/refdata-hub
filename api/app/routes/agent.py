@@ -8,9 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
 from ..database import get_session
-from ..models import Dimension, SourceConnection, SystemConfig
-from ..schemas import AgentHarmonizeRequest, AgentRunResult, AgentToolInfo
-from ..services.agent import AGENT_TOOLS, AgentEngine, AgentSourceContext
+from ..models import Dimension, MasterEntity, SourceConnection, SourceRecord, SystemConfig
+from ..schemas import AgentHarmonizeRequest, AgentRunResult, AgentToolInfo, MDMAgentRequest
+from ..services.agent import AGENT_TOOLS, MDM_AGENT_TOOLS, AgentEngine, AgentSourceContext
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -34,6 +34,40 @@ def list_agent_tools() -> List[AgentToolInfo]:
         )
         for tool in AGENT_TOOLS
     ]
+
+
+@router.get("/mdm/tools", response_model=List[AgentToolInfo])
+def list_mdm_agent_tools() -> List[AgentToolInfo]:
+    """List advisory tools available to the master-data agent."""
+
+    return [
+        AgentToolInfo(
+            name=tool["name"],
+            description=tool["description"],
+            parameters=tool["parameters"],
+        )
+        for tool in MDM_AGENT_TOOLS
+    ]
+
+
+@router.post("/mdm/harmonize", response_model=AgentRunResult)
+def harmonize_master_record(
+    payload: MDMAgentRequest, session: Session = Depends(get_session)
+) -> AgentRunResult:
+    """Run an advisory LLM tool loop for a source-record crosswalk row."""
+
+    source = session.get(SourceRecord, payload.source_record_id)
+    if not source:
+        raise HTTPException(status_code=404, detail="Source record not found")
+    if source.status == "approved":
+        raise HTTPException(status_code=409, detail="Approved source records cannot be re-matched")
+    if not session.exec(
+        select(MasterEntity).where(MasterEntity.code == source.entity_code)
+    ).first():
+        raise HTTPException(status_code=404, detail="Master entity type not found")
+    return AgentEngine(session=session, config=_get_config(session)).run_master_record(
+        source.id or 0, max_steps=payload.max_steps
+    )
 
 
 @router.post("/harmonize", response_model=List[AgentRunResult])

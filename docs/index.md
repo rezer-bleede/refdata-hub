@@ -35,7 +35,16 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 4. **Publish** canonical mappings to downstream warehouses, BI tools, and
    services.
 
+The **Master Data** workspace extends reference harmonization to entity-level
+golden records, source-record crosswalks, reviewed identity matches,
+survivorship-controlled merges, record hierarchies, and data-quality rules.
+
 </div>
+
+!!! info "Real-data policy"
+    Runtime business data must come from authorized real sources or explicit
+    user actions. Values shown in documentation examples and screenshots are
+    illustrative only; do not load them into an application database.
 
 <div class="grid cards" markdown>
 
@@ -75,6 +84,15 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 
     [:octicons-arrow-right-24: Connect a source](source-connections.md)
 
+-   :material-domain: **Master Data Management**
+
+    ---
+
+    Govern generic entity types, golden records, source identity crosswalks,
+    record merges, hierarchies, and quality rules.
+
+    [:octicons-arrow-right-24: Manage master data](mdm.md)
+
 -   :material-chart-line: **Match Insights**
 
     ---
@@ -97,7 +115,7 @@ and third-party APIs. RefData Hub establishes a single source of truth:
 
 <figure class="rdh-figure">
   <img src="screenshots/demo.gif" alt="RefData Hub reviewer console: dashboard, canonical library, and review workflows">
-  <figcaption>The reviewer console in motion — coverage metrics, the canonical library, and the approval queue.</figcaption>
+  <figcaption>Illustrative UI capture — any values shown are not bundled runtime data.</figcaption>
 </figure>
 
 ## Quick start
@@ -108,8 +126,9 @@ cd refdata-hub
 docker compose up --build
 ```
 
-That starts PostgreSQL with seeded reference data, the FastAPI backend, and the
-React reviewer UI:
+That starts PostgreSQL, the FastAPI backend, and the React reviewer UI. The
+application database starts without domain data; load real data from your
+sources or create it through the UI:
 
 | Service | URL |
 | --- | --- |
@@ -117,7 +136,6 @@ React reviewer UI:
 | **API** | <http://localhost:8000> |
 | **API docs (Swagger)** | <http://localhost:8000/docs> |
 | **PostgreSQL** | `localhost:5432` |
-| **Demo warehouse (`targetdb`)** | `localhost:5433` |
 
 To add a local LLM runtime for offline re-ranking:
 
@@ -125,8 +143,8 @@ To add a local LLM runtime for offline re-ranking:
 docker compose --profile ollama up -d
 ```
 
-Follow the [Quickstart Guide](quickstart.md) for local (non-Docker) setup,
-first-run configuration, and seeding details.
+Follow the [Quickstart Guide](quickstart.md) for local (non-Docker) setup and
+first-run configuration.
 
 ## How it fits together
 
@@ -152,7 +170,7 @@ intelligent harmonization through semantic matching and human curation.
 
     ---
 
-    Docker and local setup, first-run walkthrough, and seeding.
+    Docker and local setup, first-run walkthrough, and connecting real data.
 
     [:octicons-arrow-right-24: Quickstart](quickstart.md)
 

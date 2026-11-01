@@ -475,3 +475,150 @@ class AgentToolInfo(BaseModel):
     name: str
     description: str
     parameters: Dict[str, Any] = Field(default_factory=dict)
+
+
+class MasterEntityBase(BaseModel):
+    code: str = Field(..., min_length=1, pattern=r"^[A-Za-z0-9_-]+$")
+    label: str = Field(..., min_length=1)
+    description: Optional[str] = None
+    attribute_schema: List[Dict[str, Any]] = Field(default_factory=list)
+    match_fields: List[str] = Field(default_factory=list)
+    match_threshold: float = Field(default=0.95, ge=0.0, le=1.0)
+    survivorship_rules: Dict[str, Literal["master_wins", "source_priority", "newest", "fill_nulls", "incoming_wins"]] = Field(default_factory=dict)
+    quality_rules: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class MasterEntityCreate(MasterEntityBase):
+    pass
+
+
+class MasterEntityUpdate(BaseModel):
+    label: Optional[str] = Field(default=None, min_length=1)
+    description: Optional[str] = None
+    attribute_schema: Optional[List[Dict[str, Any]]] = None
+    match_fields: Optional[List[str]] = None
+    match_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    survivorship_rules: Optional[Dict[str, Literal["master_wins", "source_priority", "newest", "fill_nulls", "incoming_wins"]]] = None
+    quality_rules: Optional[List[Dict[str, Any]]] = None
+
+
+class MasterEntityRead(MasterEntityBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MasterRecordCreate(BaseModel):
+    entity_code: str = Field(..., min_length=1)
+    attributes: Dict[str, Any] = Field(default_factory=dict)
+
+
+class MasterRecordUpdate(BaseModel):
+    attributes: Dict[str, Any]
+
+
+class MasterRecordRead(BaseModel):
+    id: int
+    entity_code: str
+    attributes: Dict[str, Any]
+    status: Literal["active", "merged"]
+    merged_into_id: Optional[int] = None
+    version: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SourceRecordInput(BaseModel):
+    source_pk: str = Field(..., min_length=1, max_length=500)
+    payload: Dict[str, Any]
+    source_priority: int = 0
+    source_updated_at: Optional[datetime] = None
+
+
+class SourceRecordIngest(BaseModel):
+    source_connection_id: int = Field(..., gt=0)
+    entity_code: str = Field(..., min_length=1)
+    source_table: str = Field(..., min_length=1, max_length=500)
+    records: List[SourceRecordInput] = Field(..., min_length=1, max_length=1000)
+
+
+class SourceRecordRead(BaseModel):
+    id: int
+    source_connection_id: int
+    entity_code: str
+    source_table: str
+    source_pk: str
+    payload: Dict[str, Any]
+    master_record_id: Optional[int] = None
+    proposed_master_record_id: Optional[int] = None
+    status: str
+    confidence: Optional[float] = None
+    source_priority: int
+    source_updated_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SourceRecordIngestResult(BaseModel):
+    created: int
+    updated: int
+    records: List[SourceRecordRead]
+
+
+class MDMCandidate(BaseModel):
+    master_record_id: int
+    attributes: Dict[str, Any]
+    score: float = Field(ge=0.0, le=1.0)
+
+
+class MDMSuggestionResponse(BaseModel):
+    source_record_id: int
+    entity_code: str
+    candidates: List[MDMCandidate]
+
+
+class SourceRecordApprove(BaseModel):
+    master_record_id: Optional[int] = Field(default=None, gt=0)
+
+
+class MasterRecordMerge(BaseModel):
+    survivor_id: int = Field(..., gt=0)
+
+
+class MasterRecordLinkCreate(BaseModel):
+    parent_id: int = Field(..., gt=0)
+    child_id: int = Field(..., gt=0)
+    relation_type: str = Field(default="parent_of", min_length=1, max_length=100)
+
+
+class MasterRecordLinkRead(MasterRecordLinkCreate):
+    id: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MasterRecordQuality(BaseModel):
+    record: MasterRecordRead
+    score: float
+    violations: List[str]
+
+
+class EntityQualityReport(BaseModel):
+    entity_code: str
+    total_records: int
+    compliant_records: int
+    average_score: float
+    records: List[MasterRecordQuality]
+
+
+class MDMAgentRequest(BaseModel):
+    source_record_id: int = Field(..., gt=0)
+    max_steps: Optional[int] = Field(default=None, ge=1, le=20)

@@ -98,7 +98,6 @@ docker compose down
 | Service | Port | Description |
 |----------|-------|-------------|
 | PostgreSQL (db) | 5432 | Primary database |
-| PostgreSQL (targetdb) | 5433 | Demo database |
 | FastAPI (api) | 8000 | Backend API |
 | Reviewer UI | 5274 | Frontend UI |
 | Ollama | 11434 | LLM service |

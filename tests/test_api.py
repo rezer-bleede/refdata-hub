@@ -30,14 +30,17 @@ from api.app.config import Settings
 from api.app.database import create_db_engine, init_db, get_session
 from api.app.models import SourceSample, SystemConfig
 from api.app.services.source_connections import SourceConnectionServiceError
+from conftest import seed_test_data
 
 
-def build_test_client() -> TestClient:
+def build_test_client(*, seed_test_fixtures: bool = True) -> TestClient:
     settings = Settings(database_url="sqlite:///:memory:", match_threshold=0.9)
     app = create_app(settings)
     engine = create_db_engine(settings)
     app.state.engine = engine
     init_db(engine, settings=settings)
+    if seed_test_fixtures:
+        seed_test_data(engine)
 
     def session_override() -> Iterator[Session]:
         with Session(engine) as session:
@@ -1267,12 +1270,14 @@ def test_config_endpoint_auto_seeds_when_missing(tmp_path) -> None:
             assert config.matcher_backend == "lexical"
 
 
-def test_seeded_source_connection_available() -> None:
-    client = build_test_client()
+def test_app_starts_without_business_data() -> None:
+    client = build_test_client(seed_test_fixtures=False)
     response = client.get("/api/source/connections")
     assert response.status_code == 200
-    payload = response.json()
-    assert any(connection["name"] == "Target Demo Warehouse" for connection in payload)
+    assert response.json() == []
+    assert client.get("/api/reference/dimensions").json() == []
+    assert client.get("/api/reference/canonical").json() == []
+    assert client.get("/api/mdm/entities").json() == []
 
 
 def test_match_stats_without_samples_returns_empty_totals() -> None:
@@ -1281,11 +1286,11 @@ def test_match_stats_without_samples_returns_empty_totals() -> None:
     connection_response = client.post(
         "/api/source/connections",
         json={
-            "name": "Demo Warehouse",
+            "name": "stats-source",
             "db_type": "postgres",
             "host": "localhost",
             "port": 5432,
-            "database": "targetdb",
+            "database": "testdb",
             "username": "svc",
             "password": None,
             "options": None,

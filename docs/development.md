@@ -105,7 +105,7 @@ docker run -d \
 │   │   ├── models.py             # SQLModel database models
 │   │   ├── schemas.py            # Pydantic schemas for API
 │   │   ├── matcher.py            # Normalized name matching + optional LLM
-│   │   ├── seeds.py              # Database seeding
+│   │   ├── seeds.py              # Operational configuration initialization
 │   │   ├── routes/               # API route handlers
 │   │   │   ├── config.py        # System configuration endpoints
 │   │   │   ├── reference.py     # Canonical values & dimensions
@@ -145,9 +145,6 @@ docker run -d \
 │   ├── vite.config.ts         # Vite configuration
 │   └── Dockerfile            # Frontend container image
 │
-├── db/                        # Database scripts
-│   └── targetdb-init.sql       # Demo warehouse schema
-│
 ├── tests/                     # Test suites
 │   ├── conftest.py            # Pytest configuration
 │   ├── test_api.py            # API integration tests
@@ -156,7 +153,7 @@ docker run -d \
 │   ├── test_database_migrations.py
 │   ├── test_source_connections.py
 │   ├── test_value_mapping_io.py
-│   └── test_targetdb_seed.py
+│   └── test_mdm.py
 │
 ├── docs/                     # Documentation
 │   ├── architecture.md

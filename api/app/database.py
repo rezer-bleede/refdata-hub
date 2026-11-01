@@ -136,7 +136,7 @@ def _migrate_matcher_config(engine) -> None:
 
 
 def init_db(engine, settings: Settings | None = None) -> None:
-    """Create database tables and seed initial data."""
+    """Create database tables and initialize operational configuration."""
 
     SQLModel.metadata.create_all(engine)
     _ensure_canonical_attributes_column(engine)

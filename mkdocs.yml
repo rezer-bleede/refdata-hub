@@ -160,6 +160,7 @@ nav:
       - Dashboard: dashboard.md
       - Dimensions: dimensions.md
       - Canonical Library: canonical-library.md
+      - Master Data Management: mdm.md
 
   - Integration:
       - Source Connections: source-connections.md

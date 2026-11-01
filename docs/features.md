@@ -48,9 +48,7 @@
 - Expose REST and GraphQL APIs so downstream projects can query standardized values.
 - Ship SDK clients (Python, Java, JavaScript) for streamlined integration into applications and pipelines.
 - Emit webhooks when mappings change to keep dependent systems synchronized automatically.
-- Bundle a seeded Postgres `targetdb` with a multi-table warehouse—departments, employees,
-   globally diverse customers, loyalty tiers, addresses, products, orders, and line items—so
-   analysts can rehearse field mappings and semantic match flows without external dependencies.
+- Connect to existing source systems and ingest their real reference values and records.
 
 ## 5. Admin & Governance
 - Support role-based access control profiles for reviewers, administrators, and consumers.

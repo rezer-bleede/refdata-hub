@@ -8,7 +8,7 @@ UI and provides an Abu Dhabi–specific dataset ready for import.
 
 <figure class="rdh-figure">
   <img src="../screenshots/demo_canonical_library.gif" alt="Canonical reference library with dimension filters and metadata attributes">
-  <figcaption>The canonical reference library: dimension filters, keyword search, and per-value metadata attributes.</figcaption>
+  <figcaption>Illustrative UI capture — any values shown are not bundled runtime data.</figcaption>
 </figure>
 
 ## Page overview

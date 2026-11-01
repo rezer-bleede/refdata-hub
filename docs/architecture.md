@@ -19,7 +19,6 @@ graph TB
     
     subgraph "Data Layer"
         DB[(PostgreSQL<br/>Primary DB)]
-        TARGETDB[(PostgreSQL<br/>Target Demo DB)]
     end
     
     subgraph "External Services"
@@ -34,7 +33,6 @@ graph TB
     MATCHER -->|Optional| OLLAMA
     MATCHER -->|Optional| OPENAI
     API -->|Connection| SOURCES
-    API -->|Ingest| TARGETDB
 ```
 
 ## Components
@@ -51,6 +49,7 @@ graph TB
 - Provide user interface for data curation
 - Display match insights and analytics
 - Manage canonical library and dimensions
+- Curate generic master entities, golden records, and source-record crosswalks
 - Configure source connections and field mappings
 - Approve/reject semantic suggestions
 - Support dark/light/midnight themes
@@ -60,6 +59,7 @@ graph TB
 - **Canonical Library** – Manage curated reference values
 - **Dimensions** – Maintain dimension catalog and schemas
 - **Dimension Relations** – Model parent/child hierarchies
+- **Master Data** – Configure entity types, resolve identities, merge records, and inspect data quality
 - **Source Connections** – Register and manage upstream systems
 - **Field Mappings** – Align source fields to dimensions
 - **Match Insights** – Visualize harmonization statistics
@@ -99,6 +99,12 @@ graph TB
 │   ├── /connections/{id}/match-stats – Match statistics
 │   ├── /connections/{id}/unmatched – Unmatched values
 │   └── /value-mappings   – Approved raw-to-canonical mappings
+├── /mdm
+│   ├── /entities         – Generic entity type and governance configuration
+│   ├── /records          – Golden records, merges, and merge history
+│   ├── /source-records   – Crosswalk ingestion, matching, and stewardship
+│   ├── /links            – Record-level hierarchies
+│   └── /entities/{code}/quality – On-demand data quality report
 ├── /agent
 │   ├── /harmonize        – Advisory LLM agent loop (tool-calling)
 │   └── /tools            – Agent tool catalog
@@ -162,7 +168,7 @@ sequenceDiagram
 **Technology:** PostgreSQL 15 with SQLAlchemy
 
 **Schema Design:**
-- 10 core tables with proper indexing
+- Core reference and MDM tables with proper indexing
 - Foreign key relationships for referential integrity
 - JSON columns for flexible metadata
 - Timestamps for audit trails
@@ -176,6 +182,8 @@ sequenceDiagram
 - `valuemapping` – Approved raw-to-canonical mappings
 - `sourcesample` – Sample data from sources
 - `systemconfig` – Matcher and system settings
+- `masterentity`, `masterrecord`, `sourcerecord` – Generic MDM configuration, golden records, and source crosswalk
+- `recordlink`, `mergehistory` – Record hierarchies and reversible merge audit snapshots
 
 ## Data Flow
 

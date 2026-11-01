@@ -12,7 +12,7 @@ which is the unit you would realistically fix.
 
 <figure class="rdh-figure">
   <img src="../screenshots/demo_match_insights.gif" alt="Match insights coverage reporting and human curation workflow">
-  <figcaption>Match insights coverage reporting alongside the human curation workflow.</figcaption>
+  <figcaption>Illustrative UI capture — any values shown are not bundled runtime data.</figcaption>
 </figure>
 
 ## Reading the page

@@ -15,7 +15,6 @@ docker compose up --build
 # - API: http://localhost:8000
 # - API Docs: http://localhost:8000/docs
 # - PostgreSQL: localhost:5432
-# - Target DB: localhost:5433
 ```
 
 ### Manual Backend Setup
@@ -79,6 +78,18 @@ npm test -- --coverage
 # Run specific test file
 npm test -- CanonicalLibraryPage.test.tsx
 ```
+
+## Data Integrity Policy
+
+- Do not seed or display synthetic, demo, dummy, or placeholder business data in
+  the running application. Runtime dimensions, canonical values, entities,
+  records, and source connections must come from real connected sources or
+  explicit user actions.
+- Startup may create schema and operational configuration only; it must not
+  create domain records or example source connections.
+- Synthetic data is allowed only in isolated automated tests. Documentation
+  examples must be clearly labeled illustrative and must never be loaded into
+  the application database.
 
 ## Code Style Guidelines
 
@@ -192,9 +203,6 @@ Fixes #456
 │   ├── vite.config.ts         # Vite configuration
 │   └── Dockerfile            # Frontend container image
 │
-├── db/                        # Database scripts
-│   └── targetdb-init.sql       # Demo warehouse schema
-│
 ├── tests/                     # Test suites
 │   ├── conftest.py            # Pytest configuration
 │   ├── test_agent.py          # Agentic integration tests
@@ -204,7 +212,7 @@ Fixes #456
 │   ├── test_database_migrations.py
 │   ├── test_source_connections.py
 │   ├── test_value_mapping_io.py
-│   └── test_targetdb_seed.py
+│   └── test_mdm.py
 │
 ├── docs/                     # Documentation
 │   ├── assets/

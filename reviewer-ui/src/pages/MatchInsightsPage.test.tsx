@@ -32,11 +32,11 @@ describe('MatchInsightsPage empty-state messaging', () => {
     apiMocks.fetchSourceConnections.mockResolvedValue([
       {
         id: 1,
-        name: 'Target Demo Warehouse',
+        name: 'Test Source',
         db_type: 'postgres',
         host: 'localhost',
         port: 5432,
-        database: 'targetdb',
+        database: 'testdb',
         username: 'svc',
         options: null,
         created_at: '',
@@ -61,11 +61,11 @@ describe('MatchInsightsPage empty-state messaging', () => {
     apiMocks.fetchSourceConnections.mockResolvedValue([
       {
         id: 1,
-        name: 'Target Demo Warehouse',
+        name: 'Test Source',
         db_type: 'postgres',
         host: 'localhost',
         port: 5432,
-        database: 'targetdb',
+        database: 'testdb',
         username: 'svc',
         options: null,
         created_at: '',
@@ -99,11 +99,11 @@ describe('MatchInsightsPage empty-state messaging', () => {
     apiMocks.fetchSourceConnections.mockResolvedValue([
       {
         id: 1,
-        name: 'Target Demo Warehouse',
+        name: 'Test Source',
         db_type: 'postgres',
         host: 'localhost',
         port: 5432,
-        database: 'targetdb',
+        database: 'testdb',
         username: 'svc',
         options: null,
         created_at: '',
@@ -143,11 +143,11 @@ describe('MatchInsightsPage empty-state messaging', () => {
     apiMocks.fetchSourceConnections.mockResolvedValue([
       {
         id: 1,
-        name: 'Target Demo Warehouse',
+        name: 'Test Source',
         db_type: 'postgres',
         host: 'localhost',
         port: 5432,
-        database: 'targetdb',
+        database: 'testdb',
         username: 'svc',
         options: null,
         created_at: '',

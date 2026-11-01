@@ -56,7 +56,7 @@ screenshots/
    - Disable browser extensions
 
 2. **Prepare application:**
-   - Run with seeded demo data (`docker compose up --build`)
+   - Run with approved, non-sensitive source data; startup does not seed business records
    - Verify application is accessible at http://localhost:5274
    - Ensure no error toasts are showing
    - Wait for any loading states to complete
@@ -144,7 +144,7 @@ screenshots/
 1. **Same theme throughout:** Use dark mode for all screenshots
 2. **Consistent viewport:** Keep browser zoom at 100%
 3. **Clean UI:** Remove temporary elements before capture
-4. **Real data:** Use seeded demo data, not placeholders
+4. **Data integrity:** Capture real, approved, non-sensitive data; never add fabricated records to the running app
 5. **Full context:** Include navigation rail for pages
 6. **High contrast:** Ensure text is clearly readable
 7. **No personal info:** Mask any sensitive data if present

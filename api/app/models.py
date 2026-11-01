@@ -280,3 +280,145 @@ class DimensionRelationLink(SQLModel, table=True):
         """Update modification timestamp."""
 
         self.updated_at = datetime.now(timezone.utc)
+
+
+class MasterEntity(SQLModel, table=True):
+    """Configuration for one master-data entity type."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code: str = Field(index=True, sa_column_kwargs={"unique": True})
+    label: str
+    description: Optional[str] = None
+    attribute_schema: list[dict[str, Any]] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False, server_default="[]"),
+    )
+    match_fields: list[str] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False, server_default="[]"),
+    )
+    match_threshold: float = Field(default=0.95, ge=0.0, le=1.0)
+    survivorship_rules: dict[str, str] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON, nullable=False, server_default="{}"),
+    )
+    quality_rules: list[dict[str, Any]] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False, server_default="[]"),
+    )
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+    def touch(self) -> None:
+        self.updated_at = datetime.now(timezone.utc)
+
+
+class MasterRecord(SQLModel, table=True):
+    """Golden record for a configured entity type."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    entity_code: str = Field(foreign_key="masterentity.code", index=True)
+    attributes: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON, nullable=False, server_default="{}"),
+    )
+    status: str = Field(default="active", index=True)
+    merged_into_id: Optional[int] = Field(
+        default=None, foreign_key="masterrecord.id", index=True
+    )
+    version: int = Field(default=1, ge=1)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+
+class SourceRecord(SQLModel, table=True):
+    """Source-system record crosswalk and review state."""
+
+    __table_args__ = (
+        UniqueConstraint(
+            "source_connection_id", "source_table", "source_pk",
+            name="uq_source_record_identity",
+        ),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source_connection_id: int = Field(
+        foreign_key="sourceconnection.id", index=True, nullable=False
+    )
+    entity_code: str = Field(foreign_key="masterentity.code", index=True)
+    source_table: str = Field(index=True)
+    source_pk: str = Field(index=True)
+    payload: dict[str, Any] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON, nullable=False, server_default="{}"),
+    )
+    master_record_id: Optional[int] = Field(
+        default=None, foreign_key="masterrecord.id", index=True
+    )
+    proposed_master_record_id: Optional[int] = Field(
+        default=None, foreign_key="masterrecord.id", index=True
+    )
+    status: str = Field(default="pending", index=True)
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    source_priority: int = Field(default=0)
+    source_updated_at: Optional[datetime] = None
+    notes: Optional[str] = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+
+class RecordLink(SQLModel, table=True):
+    """Parent/child relationship between master records."""
+
+    __table_args__ = (
+        UniqueConstraint(
+            "parent_id", "child_id", "relation_type", name="uq_record_link"
+        ),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    parent_id: int = Field(foreign_key="masterrecord.id", index=True)
+    child_id: int = Field(foreign_key="masterrecord.id", index=True)
+    relation_type: str = Field(default="parent_of")
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+
+
+class MergeHistory(SQLModel, table=True):
+    """Snapshots required to audit and safely undo a record merge."""
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    survivor_id: int = Field(foreign_key="masterrecord.id", index=True)
+    merged_record_id: int = Field(foreign_key="masterrecord.id", index=True)
+    survivor_before: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False)
+    )
+    survivor_after: dict[str, Any] = Field(
+        sa_column=Column(JSON, nullable=False)
+    )
+    source_record_ids: list[int] = Field(
+        default_factory=list,
+        sa_column=Column(JSON, nullable=False, server_default="[]"),
+    )
+    survivorship_used: dict[str, str] = Field(
+        default_factory=dict,
+        sa_column=Column(JSON, nullable=False, server_default="{}"),
+    )
+    survivor_version_after: int = Field(default=1)
+    unmerged_at: Optional[datetime] = None
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )

@@ -55,15 +55,16 @@ Two endpoints let you verify credentials without persisting anything:
 | `POST` | `/api/source/connections/{id}/test` | Test a saved connection, optionally with overrides |
 
 ```bash
+# Replace these placeholders with an authorized, real PostgreSQL source.
 curl -X POST http://localhost:8000/api/source/connections/test \
   -H 'Content-Type: application/json' \
   -d '{
         "db_type": "postgresql",
-        "host": "localhost",
-        "port": 5433,
-        "database": "targetdb",
-        "username": "target",
-        "password": "target"
+        "host": "YOUR_REAL_DATABASE_HOST",
+        "port": 5432,
+        "database": "YOUR_REAL_DATABASE",
+        "username": "YOUR_AUTHORIZED_USERNAME",
+        "password": "YOUR_SECRET"
       }'
 ```
 
@@ -129,34 +130,15 @@ totals rather than the same string repeated.
     `DELETE` on a connection removes its field mappings, samples, and value
     mappings. If you only need to stop ingesting, edit the record instead.
 
-## The demo warehouse
+## Use a real source
 
-A seeded `targetdb` ships with the compose stack — departments, employees,
-globally diverse customers, loyalty tiers, addresses, products, orders, and line
-items. Register it as a connection to rehearse mappings end to end without any
-external dependency:
-
-```bash
-# From the repo root, after `docker compose up --build`
-curl -X POST http://localhost:8000/api/source/connections \
-  -H 'Content-Type: application/json' \
-  -d '{
-        "name": "demo-warehouse",
-        "db_type": "postgresql",
-        "host": "targetdb",
-        "port": 5432,
-        "database": "targetdb",
-        "username": "target",
-        "password": "target"
-      }'
-```
-
-Use host `targetdb` from inside the compose network, or `localhost` with port
-`5433` when running the API outside compose.
+The application does not bundle a synthetic source database or a preconfigured
+connection. Register an authorized source system using its actual connection
+details; examples above are placeholders and must be replaced before use.
 
 <figure class="rdh-figure">
   <img src="../screenshots/demo_source_connections.gif" alt="Source connections registration and schema profiling">
-  <figcaption>Registering a source connection and profiling its upstream schema.</figcaption>
+  <figcaption>Illustrative UI capture — any values shown are not bundled runtime data.</figcaption>
 </figure>
 
 ## Next steps

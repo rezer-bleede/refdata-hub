@@ -58,7 +58,7 @@ tests/
 ├── test_database_migrations.py
 ├── test_source_connections.py
 ├── test_value_mapping_io.py
-└── test_targetdb_seed.py
+└── test_mdm.py
 ```
 
 ### Fixtures

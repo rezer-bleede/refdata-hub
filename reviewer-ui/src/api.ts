@@ -33,6 +33,15 @@ import type {
   ValueMappingImportResult,
   ValueMappingClusterReviewResult,
   ValueMappingUpdatePayload,
+  EntityQualityReport,
+  MasterEntity,
+  MasterEntityPayload,
+  MasterRecord,
+  MasterRecordLink,
+  SourceRecord,
+  MDMCandidate,
+  MDMAgentResult,
+  MergeHistoryEntry,
 } from './types';
 
 const fallbackBaseUrl = () => {
@@ -568,4 +577,111 @@ export async function reviewValueMappingCluster(
 
 export async function deleteValueMapping(connectionId: number, mappingId: number): Promise<void> {
   await apiFetchVoid(`/api/source/connections/${connectionId}/value-mappings/${mappingId}`, { method: 'DELETE' });
+}
+
+export async function fetchMasterEntities(): Promise<MasterEntity[]> {
+  return apiFetchJson<MasterEntity[]>('/api/mdm/entities');
+}
+
+export async function createMasterEntity(payload: MasterEntityPayload): Promise<MasterEntity> {
+  return apiFetchJson<MasterEntity>('/api/mdm/entities', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+}
+
+export async function updateMasterEntity(code: string, payload: Partial<MasterEntityPayload>): Promise<MasterEntity> {
+  return apiFetchJson<MasterEntity>(`/api/mdm/entities/${encodeURIComponent(code)}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMasterEntity(code: string): Promise<void> {
+  await apiFetchVoid(`/api/mdm/entities/${encodeURIComponent(code)}`, { method: 'DELETE' });
+}
+
+export async function fetchMasterRecords(entityCode: string, includeMerged = false): Promise<MasterRecord[]> {
+  const params = new URLSearchParams({ entity_code: entityCode, include_merged: String(includeMerged) });
+  return apiFetchJson<MasterRecord[]>(`/api/mdm/records?${params}`);
+}
+
+export async function createMasterRecord(entity_code: string, attributes: Record<string, unknown>): Promise<MasterRecord> {
+  return apiFetchJson<MasterRecord>('/api/mdm/records', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entity_code, attributes }),
+  });
+}
+
+export async function updateMasterRecord(id: number, attributes: Record<string, unknown>): Promise<MasterRecord> {
+  return apiFetchJson<MasterRecord>(`/api/mdm/records/${id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ attributes }),
+  });
+}
+
+export async function fetchMDMSourceRecords(entityCode: string): Promise<SourceRecord[]> {
+  const params = new URLSearchParams({ entity_code: entityCode });
+  return apiFetchJson<SourceRecord[]>(`/api/mdm/source-records?${params}`);
+}
+
+export async function ingestMDMSourceRecords(payload: {
+  source_connection_id: number;
+  entity_code: string;
+  source_table: string;
+  records: Array<{ source_pk: string; payload: Record<string, unknown>; source_priority?: number; source_updated_at?: string }>;
+}): Promise<{ created: number; updated: number; records: SourceRecord[] }> {
+  return apiFetchJson('/api/mdm/source-records', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+}
+
+export async function suggestMDMMatches(sourceRecordId: number): Promise<MDMCandidate[]> {
+  const result = await apiFetchJson<{ candidates: MDMCandidate[] }>(`/api/mdm/source-records/${sourceRecordId}/suggestions`, { method: 'POST' });
+  return result.candidates;
+}
+
+export async function approveMDMSourceRecord(sourceRecordId: number, masterRecordId?: number): Promise<SourceRecord> {
+  return apiFetchJson<SourceRecord>(`/api/mdm/source-records/${sourceRecordId}/approve`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ master_record_id: masterRecordId }),
+  });
+}
+
+export async function rejectMDMSourceRecord(sourceRecordId: number): Promise<SourceRecord> {
+  return apiFetchJson<SourceRecord>(`/api/mdm/source-records/${sourceRecordId}/reject`, { method: 'POST' });
+}
+
+export async function runMDMAgent(sourceRecordId: number): Promise<MDMAgentResult> {
+  return apiFetchJson<MDMAgentResult>('/api/agent/mdm/harmonize', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ source_record_id: sourceRecordId }),
+  });
+}
+
+export async function mergeMasterRecord(recordId: number, survivorId: number): Promise<MasterRecord> {
+  return apiFetchJson<MasterRecord>(`/api/mdm/records/${recordId}/merge`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ survivor_id: survivorId }),
+  });
+}
+
+export async function unmergeMasterRecord(recordId: number): Promise<MasterRecord> {
+  return apiFetchJson<MasterRecord>(`/api/mdm/records/${recordId}/unmerge`, { method: 'POST' });
+}
+
+export async function fetchMasterRecordHistory(recordId: number): Promise<MergeHistoryEntry[]> {
+  return apiFetchJson<MergeHistoryEntry[]>(`/api/mdm/records/${recordId}/history`);
+}
+
+export async function fetchMasterRecordLinks(entityCode: string): Promise<MasterRecordLink[]> {
+  const params = new URLSearchParams({ entity_code: entityCode });
+  return apiFetchJson<MasterRecordLink[]>(`/api/mdm/links?${params}`);
+}
+
+export async function createMasterRecordLink(payload: Pick<MasterRecordLink, 'parent_id' | 'child_id' | 'relation_type'>): Promise<MasterRecordLink> {
+  return apiFetchJson<MasterRecordLink>('/api/mdm/links', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteMasterRecordLink(linkId: number): Promise<void> {
+  await apiFetchVoid(`/api/mdm/links/${linkId}`, { method: 'DELETE' });
+}
+
+export async function fetchEntityQuality(code: string): Promise<EntityQualityReport> {
+  return apiFetchJson<EntityQualityReport>(`/api/mdm/entities/${encodeURIComponent(code)}/quality`);
 }

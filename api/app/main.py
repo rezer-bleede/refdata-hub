@@ -9,6 +9,7 @@ from .config import Settings, load_settings
 from .database import create_db_engine, init_db
 from .routes import agent as agent_routes
 from .routes import config as config_routes
+from .routes import mdm as mdm_routes
 from .routes import reference as reference_routes
 from .routes import source as source_routes
 
@@ -36,6 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     api_router.include_router(reference_routes.router)
     api_router.include_router(config_routes.router)
     api_router.include_router(source_routes.router)
+    api_router.include_router(mdm_routes.router)
     api_router.include_router(agent_routes.router)
     app.include_router(api_router)
 

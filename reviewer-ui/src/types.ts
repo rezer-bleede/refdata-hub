@@ -340,3 +340,115 @@ export interface BulkImportColumnMapping {
   default_dimension?: string;
   dimension_definition?: DimensionCreatePayload;
 }
+
+export type MDMAttributeType = 'string' | 'number' | 'boolean' | 'date' | 'object';
+export type MDMSurvivorship = 'master_wins' | 'source_priority' | 'newest' | 'fill_nulls' | 'incoming_wins';
+
+export interface MDMAttributeDefinition {
+  key: string;
+  label?: string;
+  data_type: MDMAttributeType;
+  required?: boolean;
+}
+
+export interface MasterEntity {
+  id: number;
+  code: string;
+  label: string;
+  description?: string | null;
+  attribute_schema: MDMAttributeDefinition[];
+  match_fields: string[];
+  match_threshold: number;
+  survivorship_rules: Record<string, MDMSurvivorship>;
+  quality_rules: Array<Record<string, unknown>>;
+  created_at: string;
+  updated_at: string;
+}
+
+export type MasterEntityPayload = Omit<MasterEntity, 'id' | 'created_at' | 'updated_at'>;
+
+export interface MasterRecord {
+  id: number;
+  entity_code: string;
+  attributes: Record<string, unknown>;
+  status: 'active' | 'merged';
+  merged_into_id?: number | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SourceRecord {
+  id: number;
+  source_connection_id: number;
+  entity_code: string;
+  source_table: string;
+  source_pk: string;
+  payload: Record<string, unknown>;
+  master_record_id?: number | null;
+  proposed_master_record_id?: number | null;
+  status: string;
+  confidence?: number | null;
+  source_priority: number;
+  source_updated_at?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MDMCandidate {
+  master_record_id: number;
+  attributes: Record<string, unknown>;
+  score: number;
+}
+
+export interface MasterRecordLink {
+  id: number;
+  parent_id: number;
+  child_id: number;
+  relation_type: string;
+  created_at: string;
+}
+
+export interface MasterRecordQuality {
+  record: MasterRecord;
+  score: number;
+  violations: string[];
+}
+
+export interface EntityQualityReport {
+  entity_code: string;
+  total_records: number;
+  compliant_records: number;
+  average_score: number;
+  records: MasterRecordQuality[];
+}
+
+export interface MergeHistoryEntry {
+  id: number;
+  survivor_id: number;
+  merged_record_id: number;
+  survivor_before: Record<string, unknown>;
+  survivor_after: Record<string, unknown>;
+  source_record_ids: number[];
+  survivorship_used: Record<string, string>;
+  survivor_version_after: number;
+  unmerged_at?: string | null;
+  created_at: string;
+}
+
+export interface MDMAgentStep {
+  index: number;
+  tool: string;
+  arguments: Record<string, unknown>;
+  observation?: unknown;
+}
+
+export interface MDMAgentResult {
+  raw_text: string;
+  dimension: string;
+  status: 'completed' | 'incomplete' | 'error';
+  summary?: string | null;
+  steps: MDMAgentStep[];
+  error?: string | null;
+}

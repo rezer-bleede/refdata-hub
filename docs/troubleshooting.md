@@ -43,7 +43,7 @@ If the host portion of the URL is anything other than `http://localhost:8000`, u
 
 ## 2. Inspect backend logs
 
-The FastAPI service now emits structured log entries when seeding configuration data or serving configuration requests:
+The FastAPI service initializes operational configuration (not business data) and logs configuration requests:
 
 ```
 INFO api.app.services.config System configuration record missing; seeding defaults
@@ -61,7 +61,7 @@ options JSON without leaving the modal until it succeeds.
 
 ## 4. Review canonical library availability
 
-Requests to `/api/reference/canonical` log the number of values returned. If the log shows `count: 0`, reseed the database or add canonical entries through the UI. A zero-length response will not trigger the toast, but the debug output can help verify the request succeeded.
+Requests to `/api/reference/canonical` log the number of values returned. If the log shows `count: 0`, import authoritative values or add canonical entries through the UI; startup intentionally does not populate business data. A zero-length response will not trigger the toast, but the debug output can help verify the request succeeded.
 
 Bulk imports now produce structured log entries that call out the uploaded filename, detected headers, and any blocking
 validation issues. Look for messages such as `Bulk canonical import received` and `Bulk import aborted: missing canonical label

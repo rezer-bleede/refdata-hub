@@ -40,7 +40,7 @@ This guide explains how to capture professional screenshots for RefData Hub docu
    Wait for all services to start (approximately 2-3 minutes).
 
 2. **Demo Data Loaded**
-   The application should be seeded with demo canonical values and the `targetdb` should be populated.
+   Load approved, non-sensitive data from a real source. The application starts without business data.
 
 3. **Browser Preparation**
    - Chrome, Firefox, or Safari
@@ -119,7 +119,7 @@ You can use browser DevTools to set exact viewport sizes:
 1. **Use Dark Mode:** All screenshots should use the dark/slate theme for consistency
 2. **Include Navigation:** For full page screenshots, include the left navigation rail
 3. **Clean UI:** Remove temporary notifications, toasts, or loading indicators
-4. **Real Data:** Use seeded demo data, not placeholder text
+4. **Real Data:** Use approved, non-sensitive source data; do not seed fabricated runtime records
 5. **Focused Elements:** Where applicable, show focused input fields
 6. **No Personal Info:** Mask any sensitive data if present
 
@@ -171,7 +171,7 @@ You can use browser DevTools to set exact viewport sizes:
 
 **connections-grid.png** (1600x900)
 1. Navigate to Source Connections
-2. Ensure the demo `targetdb` connection is visible
+2. Ensure the authorized source connection is visible
 3. Show connection status indicators
 
 **connection-form.png** (1200x800)
@@ -180,7 +180,7 @@ You can use browser DevTools to set exact viewport sizes:
 3. Fill in sample values (don't save)
 
 **test-connection.png** (1000x500)
-1. Click "Test connection" on demo connection
+1. Click "Test connection" on the authorized connection
 2. Capture the success message with latency
 
 **schema-explorer.png** (1600x900)
@@ -249,7 +249,7 @@ You can use browser DevTools to set exact viewport sizes:
 
 Before finalizing a screenshot, verify:
 
-- [ ] Application is running with demo data
+- [ ] Application is running with approved source data
 - [ ] Browser is in dark mode
 - [ ] Browser zoom is at 100%
 - [ ] Console is clear (no errors)

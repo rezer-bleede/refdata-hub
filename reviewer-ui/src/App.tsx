@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import ConnectionsPage from './pages/ConnectionsPage';
@@ -29,6 +29,8 @@ import type { ToastMessage } from './types';
 
 export { navItems };
 
+const MDMPage = lazy(() => import('./pages/MDMPage'));
+
 const SIDEBAR_STORAGE_KEY = 'refdata-hub:sidebar-collapsed';
 
 interface AppScaffoldProps {
@@ -45,6 +47,7 @@ const pageSubtitles: Record<string, string> = {
   '/dimensions': 'Browse and curate the reference dimensions harmonized across your programs.',
   '/canonical-library': 'The approved canonical values that raw source data maps into.',
   '/dimension-relations': 'Visualize how dimensions cross-reference each other.',
+  '/master-data': 'Curate golden records, resolve source identities, and govern entity quality.',
   '/connections': 'Manage source systems and explore their live schemas.',
   '/field-mappings': 'Connect source fields to canonical dimensions for matching.',
   '/match-insights': 'Understand semantic match quality and clustering across sources.',
@@ -210,6 +213,14 @@ const AppScaffold = ({
               <Route path="/dimensions/:code" element={<DimensionDetailPage onToast={onToast} />} />
               <Route path="/canonical-library" element={<CanonicalLibraryPage onToast={onToast} />} />
               <Route path="/dimension-relations" element={<DimensionRelationsPage onToast={onToast} />} />
+              <Route
+                path="/master-data"
+                element={(
+                  <Suspense fallback={<p className="text-sm text-text-tertiary">Loading master data…</p>}>
+                    <MDMPage onToast={onToast} />
+                  </Suspense>
+                )}
+              />
               <Route path="/connections" element={<ConnectionsPage onToast={onToast} />} />
               <Route
                 path="/connections/:connectionId"

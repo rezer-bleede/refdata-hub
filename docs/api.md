@@ -742,12 +742,95 @@ Returns the discoverable tool catalog with JSON parameter schemas:
 
 ---
 
+## Master Data Management
+
+MDM endpoints operate on entity-level golden records and are independent of
+`/api/reference` value mappings. LLM/rule-based match results are advisory;
+only the explicit approval endpoint creates a source crosswalk.
+
+### Entity types and golden records
+
+```http
+GET|POST /api/mdm/entities
+GET|PUT|DELETE /api/mdm/entities/{code}
+GET|POST /api/mdm/records
+PUT /api/mdm/records/{record_id}
+```
+
+Entity create payloads define `attribute_schema`, `match_fields`,
+`match_threshold`, `survivorship_rules`, and `quality_rules`. Entity codes are
+immutable. Types with records cannot be deleted. Golden record writes validate
+attribute names and data types; missing required values remain quality findings
+so existing records can be remediated without losing them.
+
+### Source crosswalk and stewardship
+
+```http
+POST /api/mdm/source-records
+GET  /api/mdm/source-records?entity_code=organization&status=pending
+POST /api/mdm/source-records/{source_record_id}/suggestions
+POST /api/mdm/source-records/{source_record_id}/approve
+POST /api/mdm/source-records/{source_record_id}/reject
+```
+
+Ingestion accepts a batch of up to 1,000 rows:
+
+```json
+{
+  "source_connection_id": 1,
+  "entity_code": "organization",
+  "source_table": "companies",
+  "records": [
+    {"source_pk": "42", "payload": {"name": "Acme Ltd", "domain": "acme.com"}, "source_priority": 10}
+  ]
+}
+```
+
+The idempotency key is `(source_connection_id, source_table, source_pk)`.
+`approve` accepts `{"master_record_id": 12}` to link an existing active record;
+send `{}` to create a new golden record from the source payload. Suggestions
+use the configured matcher backend, including the optional LLM, but do not
+approve automatically.
+
+### Merge, hierarchy, and quality
+
+```http
+POST   /api/mdm/records/{record_id}/merge      {"survivor_id": 12}
+POST   /api/mdm/records/{record_id}/unmerge
+GET    /api/mdm/records/{record_id}/history
+GET    /api/mdm/links?entity_code=organization
+POST   /api/mdm/links                          {"parent_id": 12, "child_id": 13, "relation_type": "subsidiary_of"}
+DELETE /api/mdm/links/{link_id}
+GET    /api/mdm/entities/{code}/quality
+```
+
+Merge history snapshots the survivor attributes, survivorship choices, and
+crosswalk row IDs. Unmerge returns `409` if the survivor has changed after the
+merge. Hierarchies reject self-links, cross-entity links, and cycles. Quality
+reports evaluate required, pattern, min, max, and enum checks on demand.
+
+### MDM advisory agent
+
+```http
+GET  /api/agent/mdm/tools
+POST /api/agent/mdm/harmonize
+Content-Type: application/json
+```
+
+Request: `{"source_record_id": 42, "max_steps": 8}`. The configured LLM can
+rank master records and persist a pending proposal or flag the source row for
+review. It cannot approve, reject, or merge records. The response is one
+`AgentRunResult` with a full step trace.
+
+---
+
 ## Error Responses
 
 All endpoints may return the following error responses:
 
 - **400 Bad Request**: Invalid request data
 - **404 Not Found**: Resource not found
+- **409 Conflict**: Duplicate identity, protected delete, or merge state conflict
 - **500 Internal Server Error**: Server error
 
 Error responses include a descriptive message:
